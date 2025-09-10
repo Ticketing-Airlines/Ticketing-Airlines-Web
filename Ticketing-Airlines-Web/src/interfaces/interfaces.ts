@@ -1,69 +1,185 @@
-// TypeScript interfaces for the airline ticketing application
+export type Role = 'Admin' | 'Scheduler' | 'Agent' | 'Customer';
+export type CabinClass = 'Economy' | 'Premium' | 'Business';
+export type FlightStatus = 'Scheduled' | 'Cancelled' | 'Delayed' | 'Departed' | 'Arrived';
+export type SeatStatus = 'Available' | 'Held' | 'Sold' | 'Blocked';
+export type FareCode = 'Y' | 'M' | 'B';
+export type BookingStatus = 'Pending' | 'Paid' | 'Ticketed' | 'Cancelled' | 'Refunded';
+export type TicketStatus = 'Issued' | 'Void' | 'Refunded';
+export type PaymentStatus = 'Pending' | 'Authorized' | 'Captured' | 'Failed' | 'Refunded';
+export type PaxType = 'ADT' | 'CHD' | 'INF';
 
-export interface Destination {
-  id: number
-  name: string
-  description: string
-  price: number
-  originalPrice: number
-  badge: 'HOT DEAL' | 'POPULAR' | 'NEW ROUTE' | 'INTERNATIONAL' | 'TRENDING'
-  savings: number
-  image: string
+export interface User {
+  userId: string;
+  email: string;
+  passwordHash?: string;
+  name: string;
+  phone?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UserRole {
+  userId: string;
+  role: Role;
+}
+
+export interface Airline {
+  airlineId: number;
+  name: string;
+  iataCode: string;
+  icaoCode?: string;
+  countryIso2: string;
 }
 
 export interface Airport {
-  code: string
-  name: string
-  city: string
-  country: string
+  airportId: number;
+  name: string;
+  city: string;
+  countryIso2: string;
+  iataCode: string;      // 3-letter IATA
+  timezone: string;      // IANA (e.g., "Asia/Manila")
+  latitude?: number;
+  longitude?: number;
 }
 
-export interface FlightSearchParams {
-  from: string
-  to: string
-  departureDate: Date | null
-  returnDate: Date | null
-  passengers: number
-  tripType: 'round-trip' | 'one-way' | 'multi-city'
+export interface Aircraft {
+  aircraftId: number;
+  model: string;
+  icaoType: string;      // e.g., A320
+  seatCapacity: number;
+  airlineId: number;
 }
 
-export interface Flight {
-  id: string
-  airline: string
-  flightNumber: string
-  from: Airport
-  to: Airport
-  departureTime: Date
-  arrivalTime: Date
-  duration: string
-  price: number
-  availableSeats: number
-  aircraft: string
+export interface SeatBlueprint {
+  seatBlueprintId: number;
+  aircraftId: number;
+  seatNumber: string;
+  cabinClass: CabinClass;
+  isExitRow?: boolean;
+  isAisle?: boolean;
+  isWindow?: boolean;
 }
 
-export interface BookingDetails {
-  id: string
-  flight: Flight
-  passengers: Passenger[]
-  totalPrice: number
-  bookingDate: Date
-  status: 'confirmed' | 'pending' | 'cancelled'
+export interface FlightSchedule {
+  flightScheduleId: number;
+  flightNumber: string;
+  originAirportId: number;
+  destinationAirportId: number;
+  aircraftId: number;
+  operatingAirlineId: number;
+  marketingAirlineId?: number;
+  stdLocal: string; // "HH:mm"
+  staLocal: string; // "HH:mm"
+  published: boolean;
+}
+
+export interface FlightInstance {
+  flightInstanceId: string;
+  flightScheduleId: number;
+  flightDate: string;    // YYYY-MM-DD (local date of origin)
+  departureUtc: string;  // ISO instant
+  arrivalUtc: string;    // ISO instant
+  status: FlightStatus;
+}
+
+export interface FlightSeat {
+  flightSeatId: string;
+  flightInstanceId: string;
+  seatNumber: string;
+  cabinClass: CabinClass;
+  status: SeatStatus;
+}
+
+export interface FareBucket {
+  fareBucketId: string;
+  flightInstanceId: string;
+  code: FareCode;
+  price: number;
+  currency: string;
+  total: number;
+  held: number;
+  sold: number;
 }
 
 export interface Passenger {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  dateOfBirth: Date
-  passportNumber?: string
-  nationality: string
+  passengerId: string;
+  userId?: string; // nullable for guest-owned passengers
+  firstName: string;
+  lastName: string;
+  dob?: string; // YYYY-MM-DD
+  nationality?: string;
+  passportNumber?: string;
+}
+
+export interface Booking {
+  bookingId: string;
+  pnr: string;
+  bookingDate: string;
+  totalAmount: number;
+  currency: string;
+  status: BookingStatus;
+  userId?: string; // nullable (guest bookings)
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+}
+
+export interface BookingPassenger {
+  bookingPassengerId: string;
+  bookingId: string;
+  passengerId: string;
+  paxType: PaxType;
+}
+
+export interface Ticket {
+  ticketId: string;
+  bookingId: string;
+  bookingPassengerId: string;
+  flightInstanceId: string;
+  flightSeatId?: string;
+  eticketNumber: string;
+  segmentIndex: number;
+  issueDateUtc: string;
+  status: TicketStatus;
+}
+
+export interface Payment {
+  paymentId: string;
+  bookingId: string;
+  provider: string;
+  providerRef: string;
+  idempotencyKey: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paidAtUtc?: string;
+}
+
+// Home/marketing UI
+export interface DestinationCard {
+  id: number;
+  label: string;
+  primaryAirportCode: string; // e.g., 'MPH'
+  description: string;
+  price: number;
+  originalPrice: number;
+  badge?: 'HOT DEAL' | 'POPULAR' | 'NEW ROUTE' | 'INTERNATIONAL' | 'TRENDING';
+  savings: number;
+  image: string; // imported asset path
 }
 
 export interface Feature {
-  id: number
-  title: string
-  description: string
-  icon: string
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface FlightSearchParams {
+  from: string;
+  to: string;
+  departureDate: Date | null;
+  returnDate: Date | null;
+  passengers: number;
+  tripType: string;
 }
