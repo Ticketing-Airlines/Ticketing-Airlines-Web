@@ -10,8 +10,8 @@ import type { DateValue } from '@internationalized/date'
 import { getLocalTimeZone } from '@internationalized/date'
 import { Plane, MapPin, Shield, Heart, DollarSign, Search, Users, Calendar as CalendarIcon } from 'lucide-vue-next'
 
-import type { Destination, FlightSearchParams } from '@/interfaces/interfaces'
-import { destinations, airports, getAirportByCode } from '@/data/mockData'
+import type { DestinationCard, Airport, FlightSearchParams } from '@/interfaces/interfaces'
+import { destinationCards, airports } from '@/data/mockData'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 
@@ -31,6 +31,11 @@ const formatDate = (date: DateValue | undefined): string => {
     day: 'numeric',
     year: 'numeric'
   })
+}
+
+// Helper function to get airport by code
+const getAirportByCode = (code: string): Airport | undefined => {
+  return airports.find(airport => airport.iataCode === code)
 }
 
 // Computed properties
@@ -58,9 +63,9 @@ const selectTripType = (type: 'round-trip' | 'one-way' | 'multi-city') => {
 }
 
 // Destination booking
-const bookDestination = (destination: Destination) => {
+const bookDestination = (destination: DestinationCard) => {
   console.log('Booking destination:', destination)
-  alert(`Booking ${destination.name} for ₱${destination.price.toLocaleString()}`)
+  alert(`Booking ${destination.label} for ₱${destination.price.toLocaleString()}`)
 }
 </script>
 
@@ -141,12 +146,12 @@ const bookDestination = (destination: Destination) => {
                 <SelectTrigger size="lg" class="w-full px-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black text-gray-700">
                   <div class="flex items-center gap-2">
                     <MapPin class="w-4 h-4 text-gray-600" />
-                    <SelectValue :placeholder="fromAirport ? `${fromAirport.city} (${fromAirport.code})` : 'Select departure city'" />
+                    <SelectValue :placeholder="fromAirport ? `${fromAirport.city} (${fromAirport.iataCode})` : 'Select departure city'" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="airport in airports" :key="airport.code" :value="airport.code">
-                    {{ airport.city }} ({{ airport.code }})
+                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                    {{ airport.city }} ({{ airport.iataCode }})
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -158,12 +163,12 @@ const bookDestination = (destination: Destination) => {
                 <SelectTrigger size="lg" class="w-full px-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black text-gray-700">
                   <div class="flex items-center gap-2">
                     <MapPin class="w-4 h-4 text-gray-600" />
-                    <SelectValue :placeholder="toAirport ? `${toAirport.city} (${toAirport.code})` : 'Select destination city'" />
+                    <SelectValue :placeholder="toAirport ? `${toAirport.city} (${toAirport.iataCode})` : 'Select destination city'" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="airport in airports" :key="airport.code" :value="airport.code">
-                    {{ airport.city }} ({{ airport.code }})
+                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                    {{ airport.city }} ({{ airport.iataCode }})
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -314,7 +319,7 @@ const bookDestination = (destination: Destination) => {
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card 
-            v-for="destination in destinations" 
+            v-for="destination in destinationCards" 
             :key="destination.id"
             class="group overflow-hidden bg-white border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-[1.02] rounded-3xl p-0 gap-0"
           >
@@ -322,7 +327,7 @@ const bookDestination = (destination: Destination) => {
               <!-- Background Image -->
               <img 
                 :src="destination.image" 
-                :alt="destination.name"
+                :alt="destination.label"
                 class="absolute inset-0 w-full h-full object-cover opacity-60"
               />
               <!-- Badge -->
@@ -348,7 +353,7 @@ const bookDestination = (destination: Destination) => {
               
               <!-- Content -->
               <div class="absolute bottom-6 left-6 right-6">
-                <CardTitle class="text-3xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors duration-300">{{ destination.name }}</CardTitle>
+                <CardTitle class="text-3xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors duration-300">{{ destination.label }}</CardTitle>
                 <CardDescription class="text-gray-200 font-medium text-lg">{{ destination.description }}</CardDescription>
               </div>
             </div>
