@@ -4,17 +4,21 @@ on:
   push:
     branches:
       - '**'
+    paths:
+      - 'Ticketing-Airlines-Web/**'
   pull_request:
     branches:
       - '**'
+    paths:
+      - 'Ticketing-Airlines-Web/**'
 
 jobs:
   build-and-test:
+    runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: Ticketing-Airlines-Web
-
-    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
