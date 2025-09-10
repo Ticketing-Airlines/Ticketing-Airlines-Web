@@ -12,6 +12,11 @@ const handleSignIn = () => {
   isMobileMenuOpen.value = false
 }
 
+const handleLogoClick = () => {
+  router.push('/')
+  isMobileMenuOpen.value = false
+}
+
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
@@ -25,7 +30,7 @@ const closeMobileMenu = () => {
   <nav class="bg-white border-b border-gray-200 top-0 z-50 backdrop-blur-sm shadow-sm relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-20">
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity" @click="handleLogoClick">
           <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center shadow-lg">
             <Plane class="w-7 h-7 text-white" />
           </div>
