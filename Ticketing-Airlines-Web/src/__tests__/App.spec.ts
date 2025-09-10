@@ -7,7 +7,7 @@ describe('App', () => {
   it('runs and loads successfully on first try', () => {
     // Test that the App component can be imported without errors
     expect(App).toBeDefined()
-    expect(typeof App).toBe('string')
+    expect(typeof App).toBe('object')
     expect(App).not.toBeNull()
   })
   
