@@ -92,6 +92,8 @@ const customerUserId = uuid('user')
 export const users: User[] = [
   { userId: adminUserId, email: 'admin@sunskies.example', name: 'Admin User', passwordHash: '***', createdAt: now },
   { userId: customerUserId, email: 'jane.doe@example.com', name: 'Jane Doe', createdAt: now },
+  { userId: uuid('user'), email: 'john.smith@example.com', name: 'John Smith', createdAt: now },
+  { userId: uuid('user'), email: 'test@example.com', name: 'Test User', createdAt: now },
 ]
 export const userRoles: UserRole[] = [
   { userId: adminUserId, role: 'Admin' },
