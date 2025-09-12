@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,10 @@ import type { DestinationCard, Airport, FlightSearchParams } from '@/interfaces/
 import { destinationCards, airports } from '@/data/mockData'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import LoadingScreen from '@/components/LoadingScreen.vue'
+
+// Loading state
+const isLoading = ref(true)
 
 // Reactive state
 const departureDate = ref<DateValue>()
@@ -67,10 +71,23 @@ const bookDestination = (destination: DestinationCard) => {
   console.log('Booking destination:', destination)
   alert(`Booking ${destination.label} for ₱${destination.price.toLocaleString()}`)
 }
+
+// Loading screen handlers
+const handleLoadingFinished = () => {
+  isLoading.value = false
+}
+
+// Initialize loading on component mount
+onMounted(() => {
+  isLoading.value = true
+})
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+  <!-- Loading Screen -->
+  <LoadingScreen :is-visible="isLoading" @finished="handleLoadingFinished" />
+  
+  <div v-show="!isLoading" class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
     <!-- Navigation -->
     <NavigationBar />
 
