@@ -14,7 +14,7 @@ const loadingText = ref('Preparing your flight experience...')
 const progress = ref(0)
 const circumference = 2 * Math.PI * 54 // radius = 54
 
-let progressInterval: NodeJS.Timeout | null = null
+let progressInterval: ReturnType<typeof setInterval> | null = null
 
 const cleanup = () => {
   if (progressInterval) {
