@@ -27,9 +27,9 @@ const startLoading = () => {
   progress.value = 0
   loadingText.value = 'Preparing your flight experience...'
 
-  // Progress animation over 5 seconds
+  // Progress animation over 3 seconds
   progressInterval = setInterval(() => {
-    progress.value += 2
+    progress.value += 4
 
     // Update text based on progress
     if (progress.value >= 80) {
@@ -46,7 +46,7 @@ const startLoading = () => {
         emit('finished')
       }, 300)
     }
-  }, 50) // 100ms * 50 iterations = 5 seconds
+  }, 120) // 120ms * 25 iterations = 3 seconds
 }
 
 // Watch for visibility changes to start loading
