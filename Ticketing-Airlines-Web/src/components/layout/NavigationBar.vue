@@ -57,11 +57,15 @@ const closeMobileMenu = () => {
                 </NavigationMenuTrigger>
                 <NavigationMenuContent class="absolute top-full left-0 mt-2 bg-white border border-gray-200 shadow-lg rounded-md p-4 min-w-[200px] z-50">
                   <div class="grid gap-2">
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Flights
+                    <NavigationMenuLink as-child>
+                      <router-link to="/flights" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Flights
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Seat Sale
+                    <NavigationMenuLink as-child>
+                      <router-link to="/seat-sale" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Seat Sale
+                      </router-link>
                     </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
@@ -74,14 +78,20 @@ const closeMobileMenu = () => {
                 </NavigationMenuTrigger>
                 <NavigationMenuContent class="bg-white border border-gray-200 shadow-lg rounded-md p-4 min-w-[200px]">
                   <div class="grid gap-2">
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Check in
+                    <NavigationMenuLink as-child>
+                      <router-link to="/check-in" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Check in
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Manage Booking
+                    <NavigationMenuLink as-child>
+                      <router-link to="/manage-booking" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Manage Booking
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Flight Status
+                    <NavigationMenuLink as-child>
+                      <router-link to="/flight-status" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Flight Status
+                      </router-link>
                     </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
@@ -92,19 +102,27 @@ const closeMobileMenu = () => {
                 <NavigationMenuTrigger class="text-white hover:text-white/80 bg-transparent hover:bg-white/10 data-[state=open]:bg-white/10 data-[state=open]:text-white focus:bg-white/10 focus:text-white data-[state=open]:hover:bg-white/10 data-[state=open]:hover:text-white" style="color: white !important; background-color: transparent !important;">
                   Travel Info
                 </NavigationMenuTrigger>
-                <NavigationMenuContent class="bg-white border border-gray-200 shadow-lg rounded-md p-4 min-w-[220px]">
+                <NavigationMenuContent class="bg-white border border-gray-200 shadow-lg rounded-md p-4 min-w-[200px]">
                   <div class="grid gap-2">
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Baggage Information
+                    <NavigationMenuLink as-child>
+                      <router-link to="/baggage-information" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Baggage Information
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Payment Options
+                    <NavigationMenuLink as-child>
+                      <router-link to="/payment-options" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Payment Options
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Travel Advisories
+                    <NavigationMenuLink as-child>
+                      <router-link to="/travel-advisories" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Travel Advisories
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Travel Documents
+                    <NavigationMenuLink as-child>
+                      <router-link to="/travel-documents" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Travel Documents
+                      </router-link>
                     </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
@@ -115,13 +133,17 @@ const closeMobileMenu = () => {
                 <NavigationMenuTrigger class="text-white hover:text-white/80 bg-transparent hover:bg-white/10 data-[state=open]:bg-white/10 data-[state=open]:text-white focus:bg-white/10 focus:text-white data-[state=open]:hover:bg-white/10 data-[state=open]:hover:text-white" style="color: white !important; background-color: transparent !important;">
                   Explore
                 </NavigationMenuTrigger>
-                <NavigationMenuContent class="bg-white border border-gray-200 shadow-lg rounded-md p-4 min-w-[220px]">
+                <NavigationMenuContent class="bg-white border border-gray-200 shadow-lg rounded-md p-4 min-w-[200px]">
                   <div class="grid gap-2">
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      Philippine Destinations
+                    <NavigationMenuLink as-child>
+                      <router-link to="/philippine-destinations" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        Philippine Destinations
+                      </router-link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink href="#" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
-                      International Destinations
+                    <NavigationMenuLink as-child>
+                      <router-link to="/international-destinations" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                        International Destinations
+                      </router-link>
                     </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
@@ -161,8 +183,8 @@ const closeMobileMenu = () => {
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">Book</h3>
             <div class="pl-4 space-y-2">
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Flights</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Seat Sale</a>
+              <router-link to="/flights" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Flights</router-link>
+              <router-link to="/seat-sale" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Seat Sale</router-link>
             </div>
           </div>
 
@@ -170,9 +192,9 @@ const closeMobileMenu = () => {
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">Manage</h3>
             <div class="pl-4 space-y-2">
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Check in</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Manage Booking</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Flight Status</a>
+              <router-link to="/check-in" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Check in</router-link>
+              <router-link to="/manage-booking" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Manage Booking</router-link>
+              <router-link to="/flight-status" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Flight Status</router-link>
             </div>
           </div>
 
@@ -180,10 +202,10 @@ const closeMobileMenu = () => {
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">Travel Info</h3>
             <div class="pl-4 space-y-2">
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Baggage Information</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Payment Options</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Travel Advisories</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Travel Documents</a>
+              <router-link to="/baggage-information" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Baggage Information</router-link>
+              <router-link to="/payment-options" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Payment Options</router-link>
+              <router-link to="/travel-advisories" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Travel Advisories</router-link>
+              <router-link to="/travel-documents" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Travel Documents</router-link>
             </div>
           </div>
 
@@ -191,8 +213,8 @@ const closeMobileMenu = () => {
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">Explore</h3>
             <div class="pl-4 space-y-2">
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Philippine Destinations</a>
-              <a href="#" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">International Destinations</a>
+              <router-link to="/philippine-destinations" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">Philippine Destinations</router-link>
+              <router-link to="/international-destinations" @click="closeMobileMenu" class="block text-gray-600 hover:text-black transition-colors py-1">International Destinations</router-link>
             </div>
           </div>
 
