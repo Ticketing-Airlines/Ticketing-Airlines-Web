@@ -37,8 +37,8 @@
                 <div class="absolute top-4 left-0 right-0 h-px bg-white"></div>
                 <div class="absolute bottom-0 left-0 right-0 h-px bg-white"></div>
                 <div class="absolute bottom-4 left-0 right-0 h-px bg-white"></div>
-              </div>
-              
+    </div>
+
               <div class="relative flex items-center justify-between">
                 <div class="flex items-center gap-4">
                   <div class="w-14 h-14 bg-white rounded-lg flex items-center justify-center">
@@ -54,52 +54,52 @@
                   <div class="text-white text-lg font-black">WEB</div>
                 </div>
               </div>
-            </div>
+          </div>
 
             <!-- Main Form Section -->
             <div class="px-8 py-10 bg-white">
               <form @submit.prevent="checkIn" class="space-y-8">
                 <div class="grid md:grid-cols-2 gap-6">
-                  <!-- Booking Reference -->
+            <!-- Booking Reference -->
                   <div class="space-y-3">
                     <div class="flex items-center justify-between">
                       <Label for="bookingRef" class="text-xs font-black text-gray-900 uppercase tracking-widest">
                         Booking Reference
-                      </Label>
+              </Label>
                       <div class="flex items-center gap-1 text-xs text-gray-500">
                         <FileText class="w-3 h-3" />
                         <span>PNR</span>
                       </div>
                     </div>
-                    <Input 
-                      id="bookingRef"
-                      v-model="checkInForm.bookingReference" 
-                      type="text" 
+              <Input 
+                id="bookingRef"
+                v-model="checkInForm.bookingReference" 
+                type="text" 
                       placeholder="ABC123"
                       class="h-16 text-2xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-blue-600 focus:ring-0 transition-all uppercase tracking-widest text-center"
-                      maxlength="6"
-                      @input="formatBookingRef"
-                      required
-                    />
+                maxlength="6"
+                @input="formatBookingRef"
+                required
+              />
                     <div class="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-                  </div>
+            </div>
 
-                  <!-- Last Name -->
+            <!-- Last Name -->
                   <div class="space-y-3">
                     <div class="flex items-center justify-between">
                       <Label for="lastName" class="text-xs font-black text-gray-900 uppercase tracking-widest">
                         Passenger Name
-                      </Label>
+              </Label>
                       <div class="text-xs text-gray-500">Last Name</div>
                     </div>
-                    <Input 
-                      id="lastName"
-                      v-model="checkInForm.lastName" 
-                      type="text" 
+              <Input 
+                id="lastName"
+                v-model="checkInForm.lastName" 
+                type="text" 
                       placeholder="SURNAME"
                       class="h-16 text-2xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-blue-600 focus:ring-0 transition-all uppercase tracking-wide text-center"
-                      required
-                    />
+                required
+              />
                     <div class="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                   </div>
                 </div>
@@ -116,14 +116,14 @@
                       <div class="w-3 h-3 rounded-full bg-gray-900"></div>
                     </div>
                   </div>
-                </div>
+            </div>
 
-                <!-- Check-in Button -->
-                <Button 
-                  type="submit" 
+            <!-- Check-in Button -->
+            <Button 
+              type="submit" 
                   class="w-full h-20 text-xl font-black bg-gray-900 text-white hover:bg-blue-600 transition-all duration-300 uppercase tracking-widest relative overflow-hidden group"
-                  :disabled="!isFormValid || isLoading"
-                >
+              :disabled="!isFormValid || isLoading"
+            >
                   <!-- Animated Background -->
                   <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                   
@@ -141,9 +141,9 @@
                     <div class="flex gap-1">
                       <div class="w-1 h-6 bg-white/50"></div>
                       <div class="w-1 h-6 bg-white"></div>
-                    </div>
-                  </div>
-                </Button>
+              </div>
+              </div>
+            </Button>
 
                 <!-- Info Strip -->
                 <div class="bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 -mx-8 px-8 py-4 border-t-2 border-dashed border-gray-200">
@@ -160,7 +160,7 @@
                     </div>
                   </div>
                 </div>
-              </form>
+          </form>
             </div>
           </div>
 
@@ -373,8 +373,8 @@
               <!-- Number Badge -->
               <div class="absolute -top-6 -left-6 w-16 h-16 bg-gray-900 flex items-center justify-center">
                 <span class="text-3xl font-black text-white">1</span>
-              </div>
-              
+    </div>
+
               <!-- Corner Cut -->
               <div class="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-blue-600 border-l-[40px] border-l-transparent"></div>
               
@@ -457,20 +457,20 @@
             <h3 class="text-4xl font-bold mb-4 text-white">Need Help?</h3>
             <p class="text-gray-300 mb-8 text-lg max-w-2xl mx-auto">
               If you're having trouble checking in online, our customer service team is here to help 24/7.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <Button class="bg-white text-black hover:bg-gray-100 h-14 px-8 rounded-2xl font-bold text-base shadow-lg">
                 <Phone class="mr-2 h-5 w-5" />
-                Call Support
-              </Button>
+              Call Support
+            </Button>
               <Button variant="outline" class="border-2 border-white text-white hover:bg-white/10 h-14 px-8 rounded-2xl font-bold text-base">
                 <MessageCircle class="mr-2 h-5 w-5" />
-                Live Chat
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              Live Chat
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
     </section>
 
     <!-- Footer -->

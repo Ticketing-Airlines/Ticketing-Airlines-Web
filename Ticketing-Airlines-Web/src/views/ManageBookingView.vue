@@ -478,42 +478,142 @@ const cancelBooking = () => {
         </div>
       </div>
 
-      <!-- Quick Actions - Cards -->
+      <!-- Quick Actions - Brutalist Cards -->
       <div class="container mx-auto px-4 py-16">
-        <div class="text-center mb-12">
-          <h2 class="text-4xl font-black text-gray-900 mb-3 uppercase tracking-tight">Quick Services</h2>
-          <p class="text-gray-600 font-semibold text-lg">Access essential travel services</p>
+        <div class="mb-12">
+          <div class="flex items-end gap-4 mb-2">
+            <h2 class="text-5xl font-black text-gray-900 uppercase tracking-tighter leading-none">Quick</h2>
+            <div class="w-3 h-3 bg-blue-600 mb-2"></div>
+            <h2 class="text-5xl font-black text-blue-600 uppercase tracking-tighter leading-none">Services</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="h-1 w-24 bg-gray-900"></div>
+            <p class="text-gray-600 font-bold text-sm uppercase tracking-wider">Essential travel utilities</p>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <!-- Online Check-in -->
-          <div class="bg-white shadow-xl p-8 text-center cursor-pointer group hover:shadow-2xl transition-all relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-blue-400"></div>
-            <div class="w-20 h-20 bg-blue-100 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Plane class="w-10 h-10 text-blue-600" />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-0 max-w-6xl mx-auto">
+          <!-- Online Check-in - Offset Design -->
+          <div class="relative group cursor-pointer transform md:translate-y-8">
+            <!-- Main Card -->
+            <div class="bg-blue-600 p-8 relative overflow-hidden transition-all duration-300 group-hover:-translate-y-2">
+              <!-- Background Pattern -->
+              <div class="absolute top-0 right-0 w-32 h-32 border-4 border-white/10 transform rotate-12"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 border-4 border-white/10 transform -rotate-12"></div>
+              
+              <div class="relative z-10">
+                <!-- Icon Container -->
+                <div class="mb-6 relative">
+                  <div class="w-16 h-16 bg-white border-4 border-black flex items-center justify-center transform -rotate-6 group-hover:rotate-0 transition-transform duration-300">
+                    <Plane class="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div class="absolute top-1 left-1 w-16 h-16 border-4 border-black -z-10"></div>
+                </div>
+                
+                <div class="space-y-3">
+                  <h3 class="text-2xl font-black text-white uppercase tracking-tight leading-tight">
+                    Online<br/>Check-in
+                  </h3>
+                  <div class="h-1 w-12 bg-white"></div>
+                  <p class="text-white/90 font-bold text-sm leading-relaxed">
+                    Skip the queue. Get your boarding pass in seconds.
+                  </p>
+                </div>
+                
+                <!-- Arrow Indicator -->
+                <div class="mt-6 flex items-center gap-2 text-white font-black text-xs uppercase tracking-wider">
+                  <span>Access Now</span>
+                  <ArrowRight class="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </div>
             </div>
-            <h3 class="text-xl font-black text-gray-900 mb-3 uppercase tracking-tight">Online Check-in</h3>
-            <p class="text-gray-600 font-semibold text-sm">Check in online and get your boarding pass instantly</p>
+            <!-- Shadow Block -->
+            <div class="absolute top-2 left-2 w-full h-full bg-black -z-10"></div>
           </div>
           
-          <!-- Flight Status -->
-          <div class="bg-white shadow-xl p-8 text-center cursor-pointer group hover:shadow-2xl transition-all relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-600 to-green-400"></div>
-            <div class="w-20 h-20 bg-green-100 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Clock class="w-10 h-10 text-green-600" />
+          <!-- Flight Status - Bold Design -->
+          <div class="relative group cursor-pointer">
+            <!-- Main Card -->
+            <div class="bg-white border-8 border-black p-8 relative overflow-hidden transition-all duration-300 group-hover:border-green-600">
+              <!-- Corner Accents -->
+              <div class="absolute top-0 left-0 w-0 h-0 border-t-[30px] border-t-green-600 border-r-[30px] border-r-transparent"></div>
+              <div class="absolute bottom-0 right-0 w-0 h-0 border-b-[30px] border-b-green-600 border-l-[30px] border-l-transparent"></div>
+              
+              <div class="relative z-10">
+                <!-- Icon with Circle Background -->
+                <div class="mb-6 relative inline-block">
+                  <div class="w-20 h-20 border-4 border-black bg-green-100 flex items-center justify-center relative z-10">
+                    <Clock class="w-10 h-10 text-green-600 group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <div class="absolute -top-2 -right-2 w-8 h-8 bg-green-600"></div>
+                </div>
+                
+                <div class="space-y-3">
+                  <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">
+                    Flight<br/>Status
+                  </h3>
+                  <div class="flex gap-1">
+                    <div class="w-3 h-1 bg-gray-900"></div>
+                    <div class="w-3 h-1 bg-green-600"></div>
+                    <div class="w-3 h-1 bg-gray-900"></div>
+                  </div>
+                  <p class="text-gray-700 font-bold text-sm leading-relaxed">
+                    Real-time updates. Live tracking. Zero surprises.
+                  </p>
+                </div>
+                
+                <!-- Status Indicator -->
+                <div class="mt-6 inline-flex items-center gap-2 bg-green-600 px-4 py-2">
+                  <div class="w-2 h-2 bg-white animate-pulse"></div>
+                  <span class="text-white font-black text-xs uppercase tracking-wider">Live Now</span>
+                </div>
+              </div>
             </div>
-            <h3 class="text-xl font-black text-gray-900 mb-3 uppercase tracking-tight">Flight Status</h3>
-            <p class="text-gray-600 font-semibold text-sm">Check real-time flight information and updates</p>
           </div>
           
-          <!-- Customer Support -->
-          <div class="bg-white shadow-xl p-8 text-center cursor-pointer group hover:shadow-2xl transition-all relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-600 to-purple-400"></div>
-            <div class="w-20 h-20 bg-purple-100 mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Phone class="w-10 h-10 text-purple-600" />
+          <!-- Customer Support - Layered Design -->
+          <div class="relative group cursor-pointer transform md:translate-y-8">
+            <!-- Main Card -->
+            <div class="bg-gray-900 p-8 relative overflow-hidden transition-all duration-300 group-hover:bg-purple-900">
+              <!-- Striped Pattern -->
+              <div class="absolute inset-0 opacity-5" style="background: repeating-linear-gradient(45deg, transparent, transparent 10px, #fff 10px, #fff 20px);"></div>
+              
+              <div class="relative z-10">
+                <!-- Icon Container -->
+                <div class="mb-6 relative">
+                  <div class="w-16 h-16 bg-purple-600 flex items-center justify-center">
+                    <Phone class="w-8 h-8 text-white group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <div class="absolute -bottom-2 -right-2 w-16 h-16 border-4 border-purple-600"></div>
+                </div>
+                
+                <div class="space-y-3">
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-2xl font-black text-white uppercase tracking-tight leading-tight">
+                      Support
+                    </h3>
+                    <div class="w-2 h-2 bg-purple-600"></div>
+                  </div>
+                  <div class="bg-white h-1 w-full relative">
+                    <div class="absolute top-0 left-0 h-full bg-purple-600 w-3/4"></div>
+                  </div>
+                  <p class="text-white/90 font-bold text-sm leading-relaxed">
+                    Human help. Instant answers. Always available.
+                  </p>
+                </div>
+                
+                <!-- Badge -->
+                <div class="mt-6 inline-block">
+                  <div class="bg-purple-600 px-4 py-2 relative">
+                    <span class="text-white font-black text-xs uppercase tracking-wider">24/7</span>
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-white"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3 class="text-xl font-black text-gray-900 mb-3 uppercase tracking-tight">Customer Support</h3>
-            <p class="text-gray-600 font-semibold text-sm">Get help with your booking anytime, anywhere</p>
+            <!-- Multiple Shadow Layers -->
+            <div class="absolute top-1 left-1 w-full h-full bg-purple-600 -z-10"></div>
+            <div class="absolute top-2 left-2 w-full h-full bg-black -z-20"></div>
           </div>
         </div>
       </div>
