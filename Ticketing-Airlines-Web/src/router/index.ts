@@ -45,11 +45,11 @@ const router = createRouter({
       name: 'BaggageInformation',
       component: () => import('@/views/BaggageInfoView.vue')
     },
-    // {
-    //   path: '/payment-options',
-    //   name: 'PaymentOptions',
-    //   component: () => import('@/views/PaymentOptionsView.vue')
-    // },
+    {
+      path: '/payment-options',
+      name: 'PaymentOptions',
+      component: () => import('@/views/PaymentOptionsView.vue')
+    },
     // {
     //   path: '/travel-advisories',
     //   name: 'TravelAdvisories',
