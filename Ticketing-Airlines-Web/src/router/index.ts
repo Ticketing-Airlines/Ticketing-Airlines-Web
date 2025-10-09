@@ -35,17 +35,16 @@ const router = createRouter({
       name: 'ManageBooking',
       component: () => import('../views/ManageBookingView.vue')
     },
-    // {
-    //   path: '/flight-status',
-    //   name: 'FlightStatus',
-    //   component: () => import('../views/FlightStatusView.vue')
-    // },
-    // Travel Info routes
-    // {
-    //   path: '/baggage-information',
-    //   name: 'BaggageInformation',
-    //   component: () => import('@/views/BaggageInfoView.vue')
-    // },
+    {
+      path: '/flight-status',
+      name: 'FlightStatus',
+      component: () => import('@/views/FlightStatusView.vue')
+    },
+    {
+      path: '/baggage-information',
+      name: 'BaggageInformation',
+      component: () => import('@/views/BaggageInfoView.vue')
+    },
     // {
     //   path: '/payment-options',
     //   name: 'PaymentOptions',
