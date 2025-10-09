@@ -239,14 +239,14 @@ onMounted(() => {
                   <SelectTrigger class="h-14 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black">
                     <div class="flex items-center gap-2">
                       <MapPin class="w-4 h-4 text-gray-600" />
-                      <SelectValue placeholder="Select departure city" />
+                    <SelectValue placeholder="Select departure city" />
                     </div>
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea class="h-60">
-                      <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
-                        {{ airport.city }} ({{ airport.iataCode }})
-                      </SelectItem>
+                    <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                      {{ airport.city }} ({{ airport.iataCode }})
+                    </SelectItem>
                     </ScrollArea>
                   </SelectContent>
                 </Select>
@@ -258,14 +258,14 @@ onMounted(() => {
                   <SelectTrigger class="h-14 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black">
                     <div class="flex items-center gap-2">
                       <MapPin class="w-4 h-4 text-gray-600" />
-                      <SelectValue placeholder="Select destination city" />
+                    <SelectValue placeholder="Select destination city" />
                     </div>
                   </SelectTrigger>
                   <SelectContent>
                     <ScrollArea class="h-60">
-                      <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
-                        {{ airport.city }} ({{ airport.iataCode }})
-                      </SelectItem>
+                    <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                      {{ airport.city }} ({{ airport.iataCode }})
+                    </SelectItem>
                     </ScrollArea>
                   </SelectContent>
                 </Select>
@@ -278,12 +278,12 @@ onMounted(() => {
                 <Label for="departure" class="text-sm font-bold text-gray-700 uppercase tracking-wide">Departure Date</Label>
                 <div class="relative">
                   <CalendarIcon class="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600 z-10" />
-                  <Input
-                    v-model="searchForm.departureDate"
-                    type="date"
+                <Input
+                  v-model="searchForm.departureDate"
+                  type="date"
                     class="h-14 pl-12 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black"
-                    :min="today"
-                  />
+                  :min="today"
+                />
                 </div>
               </div>
 
@@ -291,12 +291,12 @@ onMounted(() => {
                 <Label for="return" class="text-sm font-bold text-gray-700 uppercase tracking-wide">Return Date</Label>
                 <div class="relative">
                   <CalendarIcon class="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600 z-10" />
-                  <Input
-                    v-model="searchForm.returnDate"
-                    type="date"
+                <Input
+                  v-model="searchForm.returnDate"
+                  type="date"
                     class="h-14 pl-12 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black"
-                    :min="searchForm.departureDate"
-                  />
+                  :min="searchForm.departureDate"
+                />
                 </div>
               </div>
             </div>
@@ -371,7 +371,7 @@ onMounted(() => {
             </div>
             <h3 class="text-xl font-bold text-black mb-3">Global Network</h3>
             <p class="text-gray-600">Extensive network covering major destinations worldwide.</p>
-          </div>
+    </div>
 
           <div class="text-center group">
             <div class="bg-white border-2 border-gray-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-blue-600 transition-all duration-300 shadow-lg">
@@ -478,7 +478,7 @@ onMounted(() => {
               </Button>
             </CardContent>
           </Card>
-        </div>
+          </div>
 
         <div class="text-center mt-16">
           <Button class="inline-flex items-center justify-center gap-3 h-16 px-10 rounded-2xl font-bold text-lg bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 hover:bg-white hover:text-gray-900 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 shadow-2xl hover:shadow-white/20">
