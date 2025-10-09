@@ -15,7 +15,6 @@ import {
   Lock,
   Banknote,
   Landmark,
-  AlertCircle,
   Info,
   Star,
   TrendingUp
@@ -131,33 +130,6 @@ const selectCategory = (category: string) => {
   selectedCategory.value = category
 }
 
-// Security features
-const securityFeatures = ref([
-  {
-    id: 1,
-    title: 'SSL Encryption',
-    description: '256-bit encryption for all transactions',
-    icon: Lock
-  },
-  {
-    id: 2,
-    title: 'PCI DSS Compliant',
-    description: 'Highest security standards',
-    icon: Shield
-  },
-  {
-    id: 3,
-    title: 'Fraud Protection',
-    description: 'Advanced fraud detection system',
-    icon: AlertCircle
-  },
-  {
-    id: 4,
-    title: 'Secure Gateway',
-    description: 'Trusted payment processors',
-    icon: CheckCircle
-  }
-])
 
 // Payment FAQs
 const faqs = ref([
@@ -417,81 +389,6 @@ const faqs = ref([
       </div>
     </section>
 
-    <!-- Security Features Section -->
-    <section class="py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-black text-white overflow-hidden relative">
-      <!-- Background Pattern -->
-      <div class="absolute inset-0 opacity-5">
-        <div class="absolute top-0 left-0 w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, #fff 20px, #fff 21px);"></div>
-      </div>
-
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="text-center mb-16">
-          <div class="inline-flex items-center rounded-full px-4 py-2 mb-6" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
-            <Shield class="w-4 h-4 mr-2 text-white" />
-            <span class="font-semibold text-sm text-white">Bank-Level Security</span>
-          </div>
-          <h2 class="text-5xl font-black text-white mb-4 uppercase tracking-tighter">Your Money is Safe</h2>
-          <p class="text-xl text-white/80 font-semibold">Industry-leading security for every transaction</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div 
-            v-for="(feature, index) in securityFeatures" 
-            :key="feature.id"
-            class="bg-white/10 backdrop-blur-md border-2 border-white/20 p-8 relative group hover:bg-white/20 transition-all"
-          >
-            <!-- Number Badge -->
-            <div 
-              class="absolute -top-5 -left-5 w-14 h-14 border-4 border-white flex items-center justify-center z-10 transform rotate-12 group-hover:rotate-0 transition-transform"
-              :class="{
-                'bg-blue-600': index === 0,
-                'bg-green-600': index === 1,
-                'bg-purple-600': index === 2,
-                'bg-orange-600': index === 3
-              }"
-            >
-              <span class="text-2xl font-black text-white">{{ index + 1 }}</span>
-            </div>
-
-            <div class="mt-4">
-              <div class="w-12 h-12 bg-white/20 flex items-center justify-center mb-4">
-                <component :is="feature.icon" class="w-6 h-6 text-white" />
-              </div>
-              
-              <h3 class="text-2xl font-black text-white mb-3 uppercase tracking-tight">{{ feature.title }}</h3>
-              <p class="text-white/90 font-semibold leading-relaxed">{{ feature.description }}</p>
-            </div>
-
-            <!-- Corner Accent -->
-            <div class="absolute bottom-0 right-0 w-0 h-0 border-b-[30px] border-b-white/20 border-l-[30px] border-l-transparent"></div>
-          </div>
-        </div>
-
-        <!-- Trust Badges -->
-        <div class="mt-16 flex flex-wrap justify-center items-center gap-8">
-          <div class="bg-white/10 backdrop-blur-sm px-6 py-4 border-2 border-white/20">
-            <div class="flex items-center gap-3">
-              <Lock class="w-6 h-6 text-green-400" />
-              <span class="font-black text-white uppercase tracking-wider">SSL Secured</span>
-            </div>
-          </div>
-          
-          <div class="bg-white/10 backdrop-blur-sm px-6 py-4 border-2 border-white/20">
-            <div class="flex items-center gap-3">
-              <Shield class="w-6 h-6 text-blue-400" />
-              <span class="font-black text-white uppercase tracking-wider">PCI DSS Compliant</span>
-            </div>
-          </div>
-          
-          <div class="bg-white/10 backdrop-blur-sm px-6 py-4 border-2 border-white/20">
-            <div class="flex items-center gap-3">
-              <CheckCircle class="w-6 h-6 text-purple-400" />
-              <span class="font-black text-white uppercase tracking-wider">Verified Secure</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- How to Pay Section - Step by Step -->
     <section class="py-20 bg-gray-50 relative overflow-hidden">
