@@ -10,6 +10,8 @@ export interface AuthState {
   showPassword: boolean
   isLoading: boolean
   rememberMe: boolean
+  isSignUp: boolean
+  acceptTerms: boolean
   successMessage: string
   errorMessage: string
   emailError: string
@@ -25,6 +27,8 @@ export const useAuthStore = defineStore('auth', {
     showPassword: false,
     isLoading: false,
     rememberMe: false,
+    isSignUp: false,
+    acceptTerms: false,
     successMessage: '',
     errorMessage: '',
     emailError: '',
@@ -174,8 +178,50 @@ export const useAuthStore = defineStore('auth', {
       this.successMessage = 'Password reset instructions will be sent to your email.'
     },
 
-    signUp() {
-      this.successMessage = 'Sign up feature coming soon! Please contact support for account creation.'
+    async signUp(userData: { firstName: string; lastName: string; email: string; phone: string; password: string }) {
+      this.clearMessages()
+      this.isLoading = true
+      
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Check if user already exists
+        const existingUser = users.find(user => user.email === userData.email)
+        
+        if (existingUser) {
+          this.errorMessage = 'An account with this email already exists. Please sign in instead.'
+          return false
+        }
+        
+        // Create new user (in real app, this would be sent to backend)
+        const newUser = {
+          userId: `user-${Date.now()}`,
+          email: userData.email,
+          name: `${userData.firstName} ${userData.lastName}`,
+          createdAt: new Date().toISOString()
+        }
+        
+        this.user = newUser
+        this.isAuthenticated = true
+        
+        console.log('Sign up successful:', { 
+          userData,
+          user: this.user
+        })
+        
+        this.successMessage = `Account created successfully! Welcome, ${userData.firstName}!`
+        
+        // Store auth token
+        localStorage.setItem('authToken', `token-${newUser.userId}`)
+        
+        return true
+      } catch (error) {
+        console.error('Sign up failed:', error)
+        this.errorMessage = 'Sign up failed. Please try again.'
+        return false
+      } finally {
+        this.isLoading = false
+      }
     },
 
     loadRememberedEmail() {

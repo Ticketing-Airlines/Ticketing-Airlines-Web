@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { Plane } from 'lucide-vue-next'
+import { Plane, Zap, Globe, Shield } from 'lucide-vue-next'
 
 const props = defineProps<{
   isVisible: boolean
@@ -10,9 +10,16 @@ const emit = defineEmits<{
   finished: []
 }>()
 
-const loadingText = ref('Preparing your flight experience...')
+const loadingText = ref('INITIALIZING FLIGHT SYSTEMS...')
 const progress = ref(0)
 const circumference = 2 * Math.PI * 54 // radius = 54
+const loadingSteps = ref([
+  { text: 'INITIALIZING FLIGHT SYSTEMS...', icon: Zap, color: 'blue' },
+  { text: 'PREPARING YOUR JOURNEY...', icon: Plane, color: 'green' },
+  { text: 'LOADING DESTINATIONS...', icon: Globe, color: 'purple' },
+  { text: 'SECURING YOUR BOOKING...', icon: Shield, color: 'orange' },
+  { text: 'ALMOST READY...', icon: Zap, color: 'red' }
+])
 
 let progressInterval: ReturnType<typeof setInterval> | null = null
 
@@ -25,7 +32,7 @@ const cleanup = () => {
 
 const startLoading = () => {
   progress.value = 0
-  loadingText.value = 'Preparing your flight experience...'
+  loadingText.value = loadingSteps.value[0].text
 
   // Progress animation over 3 seconds
   progressInterval = setInterval(() => {
@@ -33,11 +40,13 @@ const startLoading = () => {
 
     // Update text based on progress
     if (progress.value >= 80) {
-      loadingText.value = 'Almost ready...'
+      loadingText.value = loadingSteps.value[4].text
     } else if (progress.value >= 60) {
-      loadingText.value = 'Loading destinations...'
+      loadingText.value = loadingSteps.value[3].text
     } else if (progress.value >= 40) {
-      loadingText.value = 'Preparing your journey...'
+      loadingText.value = loadingSteps.value[2].text
+    } else if (progress.value >= 20) {
+      loadingText.value = loadingSteps.value[1].text
     }
 
     if (progress.value >= 100) {
@@ -74,63 +83,134 @@ onMounted(() => {
     leave-from-class="opacity-100"
     leave-to-class="opacity-0"
   >
-    <div v-if="isVisible" class="fixed inset-0 z-[9999] bg-white flex items-center justify-center overflow-hidden">
-      <!-- Subtle background pattern -->
-      <div class="absolute inset-0 bg-gradient-to-br from-gray-50 to-blue-50"></div>
+    <div v-if="isVisible" class="fixed inset-0 z-[9999] bg-white overflow-hidden">
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 opacity-10" style="background: repeating-linear-gradient(45deg, transparent, transparent 20px, #1f2937 20px, #1f2937 21px);"></div>
+      
+      <!-- Corner Accents -->
+      <div class="absolute top-0 right-0 w-0 h-0 border-t-[200px] border-t-blue-600 border-l-[200px] border-l-transparent"></div>
+      <div class="absolute bottom-0 left-0 w-0 h-0 border-b-[150px] border-b-green-600 border-r-[150px] border-r-transparent"></div>
 
       <!-- Main Loading Content -->
-      <div class="relative text-center">
-        <!-- Circular Progress Container -->
-        <div class="relative mb-8">
-          <!-- Background Circle -->
-          <div class="w-32 h-32 rounded-full border-4 border-gray-200 mx-auto"></div>
+      <div class="relative flex items-center justify-center min-h-screen px-4">
+        <div class="text-center max-w-2xl mx-auto">
+          <!-- Logo Section -->
+          <div class="relative mb-12">
+            <!-- Shadow Block -->
+            <div class="absolute top-4 left-4 w-32 h-32 bg-blue-600 -z-10"></div>
+            
+            <!-- Main Logo -->
+            <div class="relative w-32 h-32 bg-gray-900 flex items-center justify-center mx-auto">
+              <Plane class="w-16 h-16 text-white" />
+            </div>
+            
+            <!-- Corner Accent -->
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-green-600 border-l-[40px] border-l-transparent"></div>
+          </div>
 
-          <!-- Progress Circle -->
-          <svg
-            class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-32 -rotate-90"
-            viewBox="0 0 120 120"
-          >
-            <circle
-              cx="60"
-              cy="60"
-              r="54"
-              stroke="#3b82f6"
-              stroke-width="4"
-              fill="none"
-              stroke-linecap="round"
-              :stroke-dasharray="circumference"
-              :stroke-dashoffset="circumference - (progress / 100) * circumference"
-              class="transition-all duration-300 ease-out"
-            />
-          </svg>
+          <!-- Brand Name -->
+          <div class="mb-8">
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4 uppercase tracking-tight">
+              AIRLINES
+            </h1>
+            <div class="flex items-center justify-center gap-4 mb-2">
+              <div class="h-1 w-16 bg-gray-900"></div>
+              <div class="w-2 h-2 bg-blue-600"></div>
+              <div class="h-1 w-16 bg-gray-900"></div>
+            </div>
+            <h2 class="text-xl font-black text-gray-600 uppercase tracking-widest">
+              TICKETING
+            </h2>
+          </div>
 
-          <!-- Logo in Center -->
-          <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-              <Plane class="w-8 h-8 text-white" />
+          <!-- Progress Section -->
+          <div class="bg-white border-4 border-gray-900 p-8 mb-8 relative">
+            <!-- Corner Accent -->
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[30px] border-t-purple-600 border-l-[30px] border-l-transparent"></div>
+            
+            <!-- Progress Circle -->
+            <div class="relative mb-6">
+              <div class="w-24 h-24 mx-auto relative">
+                <!-- Progress Circle -->
+                <svg
+                  class="w-24 h-24 -rotate-90"
+                  viewBox="0 0 100 100"
+                >
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="46"
+                    stroke="#1f2937"
+                    stroke-width="8"
+                    fill="none"
+                    stroke-linecap="square"
+                    :stroke-dasharray="circumference"
+                    :stroke-dashoffset="circumference - (progress / 100) * circumference"
+                    class="transition-all duration-300 ease-out"
+                  />
+                </svg>
+                
+                <!-- Progress Percentage -->
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <span class="text-2xl font-black text-gray-900">{{ progress }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading Text -->
+            <div class="mb-4">
+              <p class="text-lg font-black text-gray-900 uppercase tracking-wider">
+                {{ loadingText }}
+              </p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full h-4 bg-gray-900 border-2 border-gray-900">
+              <div 
+                class="h-full bg-blue-600 transition-all duration-300 ease-out"
+                :style="{ width: `${progress}%` }"
+              ></div>
             </div>
           </div>
+
+          <!-- Status Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-white border-4 border-gray-900 p-4 text-center">
+              <div class="w-8 h-8 bg-blue-600 mx-auto mb-2 flex items-center justify-center">
+                <Zap class="w-4 h-4 text-white" />
+              </div>
+              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">SYSTEMS</p>
+            </div>
+            
+            <div class="bg-white border-4 border-gray-900 p-4 text-center">
+              <div class="w-8 h-8 bg-green-600 mx-auto mb-2 flex items-center justify-center">
+                <Plane class="w-4 h-4 text-white" />
+              </div>
+              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">FLIGHTS</p>
+            </div>
+            
+            <div class="bg-white border-4 border-gray-900 p-4 text-center">
+              <div class="w-8 h-8 bg-purple-600 mx-auto mb-2 flex items-center justify-center">
+                <Globe class="w-4 h-4 text-white" />
+              </div>
+              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">ROUTES</p>
+            </div>
+            
+            <div class="bg-white border-4 border-gray-900 p-4 text-center">
+              <div class="w-8 h-8 bg-orange-600 mx-auto mb-2 flex items-center justify-center">
+                <Shield class="w-4 h-4 text-white" />
+              </div>
+              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">SECURITY</p>
+            </div>
+          </div>
+
+          <!-- Tagline -->
+          <div class="mt-8">
+            <p class="text-sm font-black text-gray-600 uppercase tracking-widest">
+              PHILIPPINES' FAVORITE AIRLINE
+            </p>
+          </div>
         </div>
-
-        <!-- Brand Name -->
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">
-          Ticketing Airlines
-        </h1>
-
-        <!-- Tagline -->
-        <p class="text-gray-600 text-sm mb-6">
-          Philippines' Favorite Airline
-        </p>
-
-        <!-- Progress Percentage -->
-        <div class="mb-4">
-          <span class="text-3xl font-light text-blue-600">{{ progress }}%</span>
-        </div>
-
-        <!-- Loading Text -->
-        <p class="text-gray-700 font-medium">
-          {{ loadingText }}
-        </p>
       </div>
     </div>
   </Transition>
@@ -140,5 +220,37 @@ onMounted(() => {
 /* Ensure the loading screen covers everything */
 body {
   overflow: hidden;
+}
+
+/* Brutalist loading animations */
+@keyframes pulse-brutal {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse-brutal {
+  animation: pulse-brutal 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
 }
 </style>
