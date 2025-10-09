@@ -40,12 +40,11 @@ const router = createRouter({
       name: 'FlightStatus',
       component: () => import('@/views/FlightStatusView.vue')
     },
-    // Travel Info routes
-    // {
-    //   path: '/baggage-information',
-    //   name: 'BaggageInformation',
-    //   component: () => import('@/views/BaggageInfoView.vue')
-    // },
+    {
+      path: '/baggage-information',
+      name: 'BaggageInformation',
+      component: () => import('@/views/BaggageInfoView.vue')
+    },
     // {
     //   path: '/payment-options',
     //   name: 'PaymentOptions',
