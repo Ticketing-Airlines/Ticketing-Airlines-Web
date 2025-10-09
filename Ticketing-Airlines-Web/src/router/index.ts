@@ -35,11 +35,11 @@ const router = createRouter({
       name: 'ManageBooking',
       component: () => import('../views/ManageBookingView.vue')
     },
-    // {
-    //   path: '/flight-status',
-    //   name: 'FlightStatus',
-    //   component: () => import('../views/FlightStatusView.vue')
-    // },
+    {
+      path: '/flight-status',
+      name: 'FlightStatus',
+      component: () => import('@/views/FlightStatusView.vue')
+    },
     // Travel Info routes
     // {
     //   path: '/baggage-information',
