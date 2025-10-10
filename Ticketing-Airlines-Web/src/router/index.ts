@@ -60,12 +60,11 @@ const router = createRouter({
       name: 'TravelDocuments',
       component: () => import('@/views/TravelDocumentsView.vue')
     },
-    // // Explore routes
-    // {
-    //   path: '/philippine-destinations',
-    //   name: 'PhilippineDestinations',
-    //   component: () => import('@/views/PhilippineDestinationsView.vue')
-    // },
+    {
+      path: '/philippine-destinations',
+      name: 'PhilippineDestinations',
+      component: () => import('@/views/PhilippinesDestinationsView.vue')
+    },
     // {
     //   path: '/international-destinations',
     //   name: 'InternationalDestinations',
