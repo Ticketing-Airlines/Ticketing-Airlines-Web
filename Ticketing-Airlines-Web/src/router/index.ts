@@ -65,11 +65,11 @@ const router = createRouter({
       name: 'PhilippineDestinations',
       component: () => import('@/views/PhilippinesDestinationsView.vue')
     },
-    // {
-    //   path: '/international-destinations',
-    //   name: 'InternationalDestinations',
-    //   component: () => import('@/views/InternationalDestinationsView.vue')
-    // },
+    {
+      path: '/international-destinations',
+      name: 'InternationalDestinations',
+      component: () => import('@/views/InternationalDestinationsView.vue')
+    },
   ],
 })
 
