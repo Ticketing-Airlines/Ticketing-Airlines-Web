@@ -463,10 +463,10 @@
                 <Phone class="mr-2 h-5 w-5" />
               Call Support
             </Button>
-              <Button variant="outline" class="border-2 border-white text-white hover:bg-white/10 h-14 px-8 rounded-2xl font-bold text-base">
+              <Button variant="outline" class="border-2 border-white text-black bg-white hover:bg-white/10 hover:text-white h-14 px-8 rounded-2xl font-bold text-base transition-all duration-300">
                 <MessageCircle class="mr-2 h-5 w-5" />
-              Live Chat
-            </Button>
+                Live Chat
+              </Button>
           </div>
         </CardContent>
       </Card>
