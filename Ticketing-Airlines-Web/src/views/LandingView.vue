@@ -123,7 +123,7 @@ onMounted(() => {
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
               
               <!-- Hero Content -->
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-36">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-24">
                 <!-- Badge -->
                 <div class="inline-flex items-center px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
                   <Plane class="w-4 h-4 mr-2 text-white" />
@@ -159,7 +159,7 @@ onMounted(() => {
               <img :src="cebuImg" alt="Cebu" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
               
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-36">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-24">
                 <div class="inline-flex items-center px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
                   <Plane class="w-4 h-4 mr-2 text-white" />
                   <span class="font-black text-xs text-white uppercase tracking-widest">Explore Cebu</span>
@@ -191,7 +191,7 @@ onMounted(() => {
               <img :src="palawanImg" alt="Palawan" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
               
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-36">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-24">
                 <div class="inline-flex items-center px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
                   <Plane class="w-4 h-4 mr-2 text-white" />
                   <span class="font-black text-xs text-white uppercase tracking-widest">Discover Palawan</span>
@@ -223,7 +223,7 @@ onMounted(() => {
               <img :src="davaoImg" alt="Davao" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
               
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-36">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-24">
                 <div class="inline-flex items-center px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
                   <Plane class="w-4 h-4 mr-2 text-white" />
                   <span class="font-black text-xs text-white uppercase tracking-widest">Explore Davao</span>
@@ -255,7 +255,7 @@ onMounted(() => {
               <img :src="singaporeImg" alt="Singapore" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
               
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-36">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-24">
                 <div class="inline-flex items-center px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
                   <Plane class="w-4 h-4 mr-2 text-white" />
                   <span class="font-black text-xs text-white uppercase tracking-widest">Visit Singapore</span>
@@ -287,7 +287,7 @@ onMounted(() => {
               <img :src="hongkongImg" alt="Hong Kong" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
               
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-36">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-24">
                 <div class="inline-flex items-center px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
                   <Plane class="w-4 h-4 mr-2 text-white" />
                   <span class="font-black text-xs text-white uppercase tracking-widest">Explore Hong Kong</span>

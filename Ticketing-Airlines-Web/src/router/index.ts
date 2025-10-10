@@ -50,16 +50,16 @@ const router = createRouter({
       name: 'PaymentOptions',
       component: () => import('@/views/PaymentOptionsView.vue')
     },
-    // {
-    //   path: '/travel-advisories',
-    //   name: 'TravelAdvisories',
-    //   component: () => import('@/views/TravelAdvisoriesView.vue')
-    // },
-    // {
-    //   path: '/travel-documents',
-    //   name: 'TravelDocuments',
-    //   component: () => import('@/views/TravelDocumentsView.vue')
-    // },
+    {
+      path: '/travel-advisories',
+      name: 'TravelAdvisories',
+      component: () => import('@/views/TravelAdvisoriesView.vue')
+    },
+    {
+      path: '/travel-documents',
+      name: 'TravelDocuments',
+      component: () => import('@/views/TravelDocumentsView.vue')
+    },
     // // Explore routes
     // {
     //   path: '/philippine-destinations',
