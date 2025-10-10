@@ -55,11 +55,11 @@ const router = createRouter({
       name: 'TravelAdvisories',
       component: () => import('@/views/TravelAdvisoriesView.vue')
     },
-    // {
-    //   path: '/travel-documents',
-    //   name: 'TravelDocuments',
-    //   component: () => import('@/views/TravelDocumentsView.vue')
-    // },
+    {
+      path: '/travel-documents',
+      name: 'TravelDocuments',
+      component: () => import('@/views/TravelDocumentsView.vue')
+    },
     // // Explore routes
     // {
     //   path: '/philippine-destinations',
