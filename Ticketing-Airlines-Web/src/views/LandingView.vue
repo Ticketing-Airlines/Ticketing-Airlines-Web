@@ -28,6 +28,7 @@ import { destinationCards, airports } from '@/data/mockData'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import LoadingScreen from '@/components/LoadingScreen.vue'
+import { useRouter } from 'vue-router'
 
 // Import hero images
 import boracayImg from '@/assets/boracay.webp'
@@ -36,6 +37,9 @@ import davaoImg from '@/assets/davao.webp'
 import singaporeImg from '@/assets/singapore.webp'
 import palawanImg from '@/assets/palawan.webp'
 import hongkongImg from '@/assets/hongkong.webp'
+
+// Router
+const router = useRouter()
 
 // Loading state
 const isLoading = ref(true)
@@ -78,7 +82,19 @@ const searchFlights = () => {
   }
 
   console.log('Searching flights with params:', searchParams)
-  alert(`Searching flights from ${fromAirport.value?.city} to ${toAirport.value?.city}`)
+  
+  // Navigate to flights page with search parameters
+  router.push({
+    path: '/flights',
+    query: {
+      from: searchParams.from,
+      to: searchParams.to,
+      departure: searchParams.departureDate?.toISOString().split('T')[0],
+      return: searchParams.returnDate?.toISOString().split('T')[0],
+      passengers: searchParams.passengers.toString(),
+      type: searchParams.tripType
+    }
+  })
 }
 
 // Trip type selection
