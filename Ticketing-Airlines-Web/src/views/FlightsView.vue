@@ -1,131 +1,48 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
+import { useRoute, useRouter } from 'vue-router'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Plane, Shield, Heart, MapPin, DollarSign, Calendar as CalendarIcon, Search } from 'lucide-vue-next'
+import { 
+  Plane,  
+  MapPin,  
+  Search,
+  ArrowLeft,
+  Filter,
+  SortAsc,
+  SortDesc,
+  X,
+  AlertCircle,
+  Loader2
+} from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import type { 
+  FlightSearchParams, 
+  FlightSearchResult, 
+  RoundTripResult, 
+  MultiCityResult,
+  Airport 
+} from '@/interfaces/interfaces'
+import { flightSearchService } from '@/services/flightSearchService'
+import { airports } from '@/data/mockData'
 
-// Import destination images
-import cebuImg from '@/assets/cebu.webp'
-import davaoImg from '@/assets/davao.webp'
-import singaporeImg from '@/assets/singapore.webp'
-import hongkongImg from '@/assets/hongkong.webp'
-import iloiloImg from '@/assets/iloilo.webp'
-import tokyoImg from '@/assets/tokyo.webp'
-import seoulImg from '@/assets/seoul.webp'
-import bangkokImg from '@/assets/bangkok.webp'
+const route = useRoute()
+const router = useRouter()
 
-// Mock data for airports
-const airports = ref([
-  { iataCode: 'MNL', city: 'Manila', country: 'Philippines' },
-  { iataCode: 'CEB', city: 'Cebu', country: 'Philippines' },
-  { iataCode: 'DVO', city: 'Davao', country: 'Philippines' },
-  { iataCode: 'ILO', city: 'Iloilo', country: 'Philippines' },
-  { iataCode: 'BCD', city: 'Bacolod', country: 'Philippines' },
-  { iataCode: 'SIN', city: 'Singapore', country: 'Singapore' },
-  { iataCode: 'HKG', city: 'Hong Kong', country: 'Hong Kong' },
-  { iataCode: 'NRT', city: 'Tokyo', country: 'Japan' },
-  { iataCode: 'ICN', city: 'Seoul', country: 'South Korea' },
-  { iataCode: 'BKK', city: 'Bangkok', country: 'Thailand' }
-])
+// Reactive state
+const isLoading = ref(false)
+const searchResults = ref<FlightSearchResult[] | RoundTripResult[] | MultiCityResult[]>([])
+const totalResults = ref(0)
+const showFilters = ref(false)
+const sortOrder = ref<'asc' | 'desc'>('asc')
 
-const popularDestinations = ref([
-  { 
-    code: 'CEB', 
-    city: 'Cebu', 
-    country: 'Philippines', 
-    price: 3500,
-    originalPrice: 7000,
-    savings: 50,
-    badge: 'HOT DEAL',
-    description: 'Queen City of the South',
-    image: cebuImg
-  },
-  { 
-    code: 'DVO', 
-    city: 'Davao', 
-    country: 'Philippines', 
-    price: 4200,
-    originalPrice: 8400,
-    savings: 50,
-    badge: 'POPULAR',
-    description: 'Home of Mount Apo',
-    image: davaoImg
-  },
-  { 
-    code: 'SIN', 
-    city: 'Singapore', 
-    country: 'Singapore', 
-    price: 8900,
-    originalPrice: 15000,
-    savings: 41,
-    badge: 'INTERNATIONAL',
-    description: 'Lion City',
-    image: singaporeImg
-  },
-  { 
-    code: 'HKG', 
-    city: 'Hong Kong', 
-    country: 'Hong Kong', 
-    price: 12500,
-    originalPrice: 22000,
-    savings: 43,
-    badge: 'INTERNATIONAL',
-    description: 'Pearl of the Orient',
-    image: hongkongImg
-  },
-  { 
-    code: 'BKK', 
-    city: 'Bangkok', 
-    country: 'Thailand', 
-    price: 15800,
-    originalPrice: 25000,
-    savings: 37,
-    badge: 'TRENDING',
-    description: 'City of Angels',
-    image: bangkokImg
-  },
-  { 
-    code: 'NRT', 
-    city: 'Tokyo', 
-    country: 'Japan', 
-    price: 25000,
-    originalPrice: 42000,
-    savings: 40,
-    badge: 'INTERNATIONAL',
-    description: 'Land of the Rising Sun',
-    image: tokyoImg
-  },
-  { 
-    code: 'ICN', 
-    city: 'Seoul', 
-    country: 'South Korea', 
-    price: 18500,
-    originalPrice: 32000,
-    savings: 42,
-    badge: 'TRENDING',
-    description: 'Heart of South Korea',
-    image: seoulImg
-  },
-  { 
-    code: 'ILO', 
-    city: 'Iloilo', 
-    country: 'Philippines', 
-    price: 3800,
-    originalPrice: 7200,
-    savings: 47,
-    badge: 'NEW ROUTE',
-    description: 'City of Love',
-    image: iloiloImg
-  }
-])
-
-const tripType = ref('roundtrip')
+// Search form state
+const tripType = ref<'one-way' | 'round-trip' | 'multi-city'>('round-trip')
 const searchForm = ref({
   origin: '',
   destination: '',
@@ -133,6 +50,14 @@ const searchForm = ref({
   returnDate: '',
   passengers: '1',
   class: 'Economy'
+})
+
+// Filter state
+const filters = ref({
+  priceRange: [0, 50000],
+  airlines: [] as string[],
+  departureTime: [] as string[],
+  duration: [] as string[]
 })
 
 const today = computed(() => {
@@ -143,350 +68,560 @@ const isFormValid = computed(() => {
   return searchForm.value.origin &&
          searchForm.value.destination &&
          searchForm.value.departureDate &&
-         (tripType.value === 'oneway' || searchForm.value.returnDate)
+         (tripType.value === 'one-way' || searchForm.value.returnDate)
 })
 
-const searchFlights = () => {
-  if (isFormValid.value) {
-    // Here you would typically make an API call to search for flights
-    console.log('Searching flights with:', searchForm.value)
-    // For now, we'll just show an alert
-    alert('Flight search functionality will be implemented with backend integration')
+const filteredResults = computed(() => {
+  let results = [...searchResults.value]
+  
+  // Apply sorting
+  if (Array.isArray(results) && results.length > 0) {
+    results = results.sort((a, b) => {
+      const aVal = 'price' in a ? a.price : 'totalPrice' in a ? a.totalPrice : 0
+      const bVal = 'price' in b ? b.price : 'totalPrice' in b ? b.totalPrice : 0
+      return sortOrder.value === 'asc' ? aVal - bVal : bVal - aVal
+    })
+  }
+  
+  return results
+})
+
+// Initialize search from route params
+onMounted(() => {
+  const { from, to, departure, return: returnDate, passengers, type } = route.query
+  
+  if (from && to && departure) {
+    searchForm.value.origin = from as string
+    searchForm.value.destination = to as string
+    searchForm.value.departureDate = departure as string
+    searchForm.value.returnDate = returnDate as string || ''
+    searchForm.value.passengers = passengers as string || '1'
+    tripType.value = (type as 'one-way' | 'round-trip' | 'multi-city') || 'round-trip'
+    
+    // Auto-search if we have the required params
+    if (isFormValid.value) {
+      searchFlights()
+    }
+  }
+})
+
+const searchFlights = async () => {
+  if (!isFormValid.value) return
+  
+  isLoading.value = true
+  
+  try {
+    const searchParams: FlightSearchParams = {
+      from: searchForm.value.origin,
+      to: searchForm.value.destination,
+      departureDate: new Date(searchForm.value.departureDate),
+      returnDate: searchForm.value.returnDate ? new Date(searchForm.value.returnDate) : null,
+      passengers: parseInt(searchForm.value.passengers),
+      tripType: tripType.value
+    }
+    
+    const response = await flightSearchService.searchFlights(searchParams)
+    searchResults.value = response.results
+    totalResults.value = response.totalResults
+    
+    // Update URL with search params
+    const query = {
+      from: searchForm.value.origin,
+      to: searchForm.value.destination,
+      departure: searchForm.value.departureDate,
+      return: searchForm.value.returnDate,
+      passengers: searchForm.value.passengers,
+      type: tripType.value
+    }
+    
+    router.push({ path: '/flights', query })
+    
+  } catch (error) {
+    console.error('Flight search error:', error)
+    searchResults.value = []
+    totalResults.value = 0
+  } finally {
+    isLoading.value = false
   }
 }
 
-const bookDestination = (destination: any) => {
-  console.log('Booking destination:', destination)
-  alert(`Booking ${destination.city} for ₱${destination.price.toLocaleString()}`)
+const selectFlight = (result: FlightSearchResult | RoundTripResult | MultiCityResult) => {
+  console.log('Selected flight:', result)
+  // Navigate to booking page
+  router.push('/booking')
 }
 
-onMounted(() => {
-  // Set default departure date to tomorrow
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  searchForm.value.departureDate = tomorrow.toISOString().split('T')[0]
+const formatPrice = (price: number) => {
+  return `₱${price.toLocaleString()}`
+}
 
-  // Set default return date to 7 days from departure
-  const returnDate = new Date(tomorrow)
-  returnDate.setDate(returnDate.getDate() + 7)
-  searchForm.value.returnDate = returnDate.toISOString().split('T')[0]
-})
+const getAirportByCode = (code: string): Airport | undefined => {
+  return airports.find(airport => airport.iataCode === code)
+}
+
+const clearFilters = () => {
+  filters.value = {
+    priceRange: [0, 50000],
+    airlines: [],
+    departureTime: [],
+    duration: []
+  }
+}
+
+const toggleSort = () => {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+  <div class="min-h-screen bg-gray-50">
     <!-- Navigation Bar -->
     <NavigationBar />
 
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white py-32 overflow-hidden">
-      <!-- Background decoration -->
-      <div class="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
-      
-      <div class="relative container mx-auto px-4 text-center z-10 pt-12">
-        <div class="inline-flex items-center rounded-full px-4 py-2 mb-6" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
-          <Plane class="w-4 h-4 mr-2 text-white" />
-          <span class="font-semibold text-sm text-white">Book Your Flight</span>
-        </div>
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
-          Find Your Perfect Flight
-        </h1>
-        <p class="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto font-medium">
-          Discover the best deals to your favorite destinations worldwide
-        </p>
-      </div>
-    </section>
-
-    <!-- Flight Search Form -->
-    <div class="container mx-auto px-4 -mt-16 relative z-20 mb-16">
-      <Card class="shadow-2xl bg-white/95 backdrop-blur-md border-0">
-        <CardContent class="p-6 sm:p-8">
-          <form @submit.prevent="searchFlights" class="space-y-6">
-            <!-- Trip Type -->
-            <div class="flex flex-wrap gap-2 mb-6">
-              <button
-                type="button"
-                @click="tripType = 'roundtrip'"
-                :class="[
-                  'px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-sm shadow-lg transition-all duration-300 whitespace-nowrap',
-                  tripType === 'roundtrip'
-                    ? 'bg-black text-white hover:bg-gray-800'
-                    : 'text-gray-600 hover:text-black border border-gray-300 hover:border-black'
-                ]"
-              >
-                Round Trip
-              </button>
-              <button
-                type="button"
-                @click="tripType = 'oneway'"
-                :class="[
-                  'px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-sm shadow-lg transition-all duration-300 whitespace-nowrap',
-                  tripType === 'oneway'
-                    ? 'bg-black text-white hover:bg-gray-800'
-                    : 'text-gray-600 hover:text-black border border-gray-300 hover:border-black'
-                ]"
-              >
-                One Way
-              </button>
-            </div>
-
-            <!-- Origin and Destination -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <Label for="origin" class="text-sm font-bold text-gray-700 uppercase tracking-wide">From</Label>
-                <Select v-model="searchForm.origin">
-                  <SelectTrigger class="h-14 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black">
-                    <div class="flex items-center gap-2">
-                      <MapPin class="w-4 h-4 text-gray-600" />
-                    <SelectValue placeholder="Select departure city" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <ScrollArea class="h-60">
-                    <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
-                      {{ airport.city }} ({{ airport.iataCode }})
-                    </SelectItem>
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div class="space-y-2">
-                <Label for="destination" class="text-sm font-bold text-gray-700 uppercase tracking-wide">To</Label>
-                <Select v-model="searchForm.destination">
-                  <SelectTrigger class="h-14 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black">
-                    <div class="flex items-center gap-2">
-                      <MapPin class="w-4 h-4 text-gray-600" />
-                    <SelectValue placeholder="Select destination city" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <ScrollArea class="h-60">
-                    <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
-                      {{ airport.city }} ({{ airport.iataCode }})
-                    </SelectItem>
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <!-- Dates -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <Label for="departure" class="text-sm font-bold text-gray-700 uppercase tracking-wide">Departure Date</Label>
-                <div class="relative">
-                  <CalendarIcon class="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600 z-10" />
-                <Input
-                  v-model="searchForm.departureDate"
-                  type="date"
-                    class="h-14 pl-12 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black"
-                  :min="today"
-                />
-                </div>
-              </div>
-
-              <div class="space-y-2" v-if="tripType === 'roundtrip'">
-                <Label for="return" class="text-sm font-bold text-gray-700 uppercase tracking-wide">Return Date</Label>
-                <div class="relative">
-                  <CalendarIcon class="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600 z-10" />
-                <Input
-                  v-model="searchForm.returnDate"
-                  type="date"
-                    class="h-14 pl-12 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black"
-                  :min="searchForm.departureDate"
-                />
-                </div>
-              </div>
-            </div>
-
-            <!-- Passengers and Class -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="space-y-2">
-                <Label for="passengers" class="text-sm font-bold text-gray-700 uppercase tracking-wide">Passengers</Label>
-                <Select v-model="searchForm.passengers">
-                  <SelectTrigger class="h-14 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black">
-                    <SelectValue placeholder="Select passengers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="i in 9" :key="i" :value="i.toString()">
-                      {{ i }} {{ i === 1 ? 'Passenger' : 'Passengers' }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div class="space-y-2">
-                <Label for="class" class="text-sm font-bold text-gray-700 uppercase tracking-wide">Class</Label>
-                <Select v-model="searchForm.class">
-                  <SelectTrigger class="h-14 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black">
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Economy">Economy</SelectItem>
-                    <SelectItem value="Premium">Premium Economy</SelectItem>
-                    <SelectItem value="Business">Business</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <!-- Search Button -->
-            <Button
-              type="submit"
-              class="w-full h-14 sm:h-16 text-lg font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all duration-300 flex items-center justify-center gap-2"
-              :disabled="!isFormValid"
-            >
-              <Search class="h-5 w-5" />
-              <span>Search Flights</span>
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-
-    <!-- Features Section -->
-    <section class="py-16 bg-gradient-to-b from-white to-gray-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl font-bold text-black mb-4">Why Choose Ticketing Airlines?</h2>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience world-class service with every flight. We're committed to making air travel accessible and memorable.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="text-center group">
-            <div class="bg-white border-2 border-gray-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-blue-600 transition-all duration-300 shadow-lg">
-              <DollarSign class="w-10 h-10 text-blue-600" />
-            </div>
-            <h3 class="text-xl font-bold text-black mb-3">Best Prices</h3>
-            <p class="text-gray-600">Unbeatable fares with no hidden fees. Save up to 50% on flights!</p>
-          </div>
-
-          <div class="text-center group">
-            <div class="bg-white border-2 border-gray-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-blue-600 transition-all duration-300 shadow-lg">
-              <MapPin class="w-10 h-10 text-blue-600" />
-            </div>
-            <h3 class="text-xl font-bold text-black mb-3">Global Network</h3>
-            <p class="text-gray-600">Extensive network covering major destinations worldwide.</p>
-    </div>
-
-          <div class="text-center group">
-            <div class="bg-white border-2 border-gray-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-blue-600 transition-all duration-300 shadow-lg">
-              <Shield class="w-10 h-10 text-blue-600" />
-            </div>
-            <h3 class="text-xl font-bold text-black mb-3">Safety First</h3>
-            <p class="text-gray-600">IATA certified with modern fleet and world-class safety standards.</p>
-          </div>
-
-          <div class="text-center group">
-            <div class="bg-white border-2 border-gray-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:border-blue-600 transition-all duration-300 shadow-lg">
-              <Heart class="w-10 h-10 text-blue-600" />
-            </div>
-            <h3 class="text-xl font-bold text-black mb-3">24/7 Support</h3>
-            <p class="text-gray-600">Dedicated customer service to assist you anytime, anywhere.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Popular Destinations -->
-    <section class="py-20 bg-gradient-to-br from-black via-gray-900 to-blue-900">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-20">
-          <div class="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full mb-8">
-            <MapPin class="w-5 h-5 text-blue-400" />
-            <span class="text-blue-300 font-semibold text-sm uppercase tracking-wider">Popular Destinations</span>
-          </div>
-          <h2 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Explore Amazing
-            <span class="block text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">Destinations</span>
-          </h2>
-          <p class="text-xl text-gray-300 max-w-4xl mx-auto font-medium leading-relaxed">
-            From tropical beaches to bustling cities, discover the world with unbeatable prices
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card
-            v-for="destination in popularDestinations"
-            :key="destination.code"
-            class="group overflow-hidden bg-white border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-[1.02] rounded-3xl p-0 gap-0"
+    <!-- Search Form Section -->
+    <section class="bg-white border-b-4 border-gray-900 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Back Button -->
+        <Button
+          @click="router.push('/')"
+          variant="ghost"
+          class="mb-6 text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-bold"
+        >
+          <ArrowLeft class="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+        <!-- Trip Type Selection -->
+        <div class="flex flex-wrap gap-3 mb-6">
+          <button
+            v-for="type in ['round-trip', 'one-way', 'multi-city']"
+            :key="type"
+            @click="tripType = type as any"
+            :class="[
+              'px-6 py-3 font-black text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
+              tripType === type
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
+            ]"
           >
-            <div class="relative h-56 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-              <!-- Background Image -->
-              <img
-                :src="destination.image"
-                :alt="destination.city"
-                class="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 transition-opacity duration-500"
-              />
-              
-              <!-- Gradient Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-              
-              <!-- Badge -->
-              <div class="absolute top-4 right-4 z-10">
-                <span
-                  :class="{
-                    'bg-gradient-to-r from-red-500 to-pink-500 text-white': destination.badge === 'HOT DEAL',
-                    'bg-gradient-to-r from-purple-500 to-indigo-500 text-white': destination.badge === 'POPULAR',
-                    'bg-gradient-to-r from-green-500 to-emerald-500 text-white': destination.badge === 'NEW ROUTE',
-                    'bg-gradient-to-r from-blue-500 to-cyan-500 text-white': destination.badge === 'INTERNATIONAL',
-                    'bg-gradient-to-r from-orange-500 to-yellow-500 text-white': destination.badge === 'TRENDING',
-                  }"
-                  class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-sm"
-                >
-                  {{ destination.badge }}
-                </span>
-              </div>
+            {{ type.replace('-', ' ') }}
+          </button>
+        </div>
 
-              <!-- Decorative elements -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-
-              <!-- Content -->
-              <div class="absolute bottom-4 left-4 right-4 z-10">
-                <CardTitle class="text-2xl font-bold text-white mb-1 group-hover:text-blue-300 transition-colors duration-300">{{ destination.city }}</CardTitle>
-                <CardDescription class="text-gray-200 font-medium text-sm">{{ destination.description }}</CardDescription>
-              </div>
-            </div>
-
-            <CardContent class="p-6 bg-white">
-              <div class="flex justify-between items-start mb-4">
-                <div class="space-y-1">
-                  <div class="flex items-baseline gap-2">
-                    <span class="text-3xl font-bold text-gray-900">₱{{ destination.price.toLocaleString() }}</span>
-                    <span class="text-sm text-gray-400 line-through font-medium">₱{{ destination.originalPrice.toLocaleString() }}</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-600 font-medium">Round trip</span>
-                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Save {{ destination.savings }}%</span>
-                  </div>
+        <!-- Search Form -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <!-- From -->
+          <div>
+            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">From</Label>
+            <Select v-model="searchForm.origin">
+              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+                <div class="flex items-center gap-2">
+                  <MapPin class="w-4 h-4 text-gray-600" />
+                  <SelectValue placeholder="Select departure city" />
                 </div>
-              </div>
-
-              <Button
-                @click="bookDestination(destination)"
-                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white h-12 rounded-2xl font-bold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group-hover:scale-105"
-              >
-                <span class="flex items-center justify-center gap-2">
-                  <Plane class="w-4 h-4" />
-                  Book Now
-                </span>
-              </Button>
-            </CardContent>
-          </Card>
+              </SelectTrigger>
+              <SelectContent class="border-4 border-gray-900 rounded-none">
+                <ScrollArea class="h-60">
+                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                    {{ airport.city }} ({{ airport.iataCode }})
+                  </SelectItem>
+                </ScrollArea>
+              </SelectContent>
+            </Select>
           </div>
 
-        <div class="text-center mt-16">
-          <Button class="inline-flex items-center justify-center gap-3 h-16 px-10 rounded-2xl font-bold text-lg bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 hover:bg-white hover:text-gray-900 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 shadow-2xl hover:shadow-white/20">
-            <span>View All Destinations</span>
-            <svg class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+          <!-- To -->
+          <div>
+            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">To</Label>
+            <Select v-model="searchForm.destination">
+              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+                <div class="flex items-center gap-2">
+                  <MapPin class="w-4 h-4 text-gray-600" />
+                  <SelectValue placeholder="Select destination city" />
+                </div>
+              </SelectTrigger>
+              <SelectContent class="border-4 border-gray-900 rounded-none">
+                <ScrollArea class="h-60">
+                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                    {{ airport.city }} ({{ airport.iataCode }})
+                  </SelectItem>
+                </ScrollArea>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <!-- Departure Date -->
+          <div>
+            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure</Label>
+            <Input
+              v-model="searchForm.departureDate"
+              type="date"
+              class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              :min="today"
+            />
+          </div>
+
+          <!-- Return Date -->
+          <div v-if="tripType === 'round-trip'">
+            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Return</Label>
+            <Input
+              v-model="searchForm.returnDate"
+              type="date"
+              class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              :min="searchForm.departureDate"
+            />
+          </div>
+
+          <!-- Passengers -->
+          <div v-if="tripType !== 'round-trip'">
+            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Passengers</Label>
+            <Select v-model="searchForm.passengers">
+              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent class="border-4 border-gray-900 rounded-none">
+                <SelectItem v-for="i in 9" :key="i" :value="i.toString()">
+                  {{ i }} {{ i === 1 ? 'Passenger' : 'Passengers' }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <!-- Search Button -->
+        <Button
+          @click="searchFlights"
+          :disabled="!isFormValid || isLoading"
+          class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-lg uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-3"
+        >
+          <Loader2 v-if="isLoading" class="w-5 h-5 animate-spin" />
+          <Search v-else class="w-5 h-5" />
+          <span>{{ isLoading ? 'Searching...' : 'Search Flights' }}</span>
+        </Button>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section v-if="searchResults.length > 0" class="py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Results Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div>
+            <h2 class="text-3xl font-black text-gray-900 mb-2">
+              {{ totalResults }} Flight{{ totalResults !== 1 ? 's' : '' }} Found
+            </h2>
+            <p class="text-gray-600 font-bold">
+              {{ getAirportByCode(searchForm.origin)?.city }} → {{ getAirportByCode(searchForm.destination)?.city }}
+            </p>
+          </div>
+          
+          <div class="flex gap-3 mt-4 sm:mt-0">
+            <Button
+              @click="showFilters = !showFilters"
+              variant="outline"
+              class="border-4 border-gray-900 rounded-none font-black"
+            >
+              <Filter class="w-4 h-4 mr-2" />
+              Filters
+            </Button>
+            
+            <Button
+              @click="toggleSort"
+              variant="outline"
+              class="border-4 border-gray-900 rounded-none font-black"
+            >
+              <SortAsc v-if="sortOrder === 'asc'" class="w-4 h-4 mr-2" />
+              <SortDesc v-else class="w-4 h-4 mr-2" />
+              Sort by Price
+            </Button>
+          </div>
+        </div>
+
+        <!-- Filters Panel -->
+        <div v-if="showFilters" class="bg-white border-4 border-gray-900 p-6 mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-black text-gray-900">Filters</h3>
+            <Button @click="clearFilters" variant="ghost" class="text-gray-600 hover:text-gray-900">
+              <X class="w-4 h-4 mr-2" />
+              Clear All
+            </Button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Price Range -->
+            <div>
+              <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Price Range</Label>
+              <div class="flex gap-2">
+                <Input
+                  v-model.number="filters.priceRange[0]"
+                  type="number"
+                  placeholder="Min"
+                  class="border-4 border-gray-900 rounded-none"
+                />
+                <Input
+                  v-model.number="filters.priceRange[1]"
+                  type="number"
+                  placeholder="Max"
+                  class="border-4 border-gray-900 rounded-none"
+                />
+              </div>
+            </div>
+            
+            <!-- Departure Time -->
+            <div>
+              <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure Time</Label>
+              <div class="space-y-2">
+                <label v-for="time in ['Morning', 'Afternoon', 'Evening', 'Night']" :key="time" class="flex items-center">
+                  <input type="checkbox" class="mr-2" />
+                  <span class="font-bold">{{ time }}</span>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Duration -->
+            <div>
+              <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Duration</Label>
+              <div class="space-y-2">
+                <label v-for="duration in ['Under 2h', '2-4h', '4-6h', 'Over 6h']" :key="duration" class="flex items-center">
+                  <input type="checkbox" class="mr-2" />
+                  <span class="font-bold">{{ duration }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flight Results -->
+        <div class="space-y-4">
+          <!-- One-way Results -->
+          <div v-if="tripType === 'one-way'">
+            <Card
+              v-for="flight in filteredResults as FlightSearchResult[]"
+              :key="flight.flightInstanceId"
+              class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
+            >
+              <CardContent class="p-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                  <!-- Flight Info -->
+                  <div class="flex-1">
+                    <div class="flex items-center gap-4 mb-4">
+                      <div class="w-12 h-12 bg-blue-600 flex items-center justify-center">
+                        <Plane class="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 class="text-xl font-black text-gray-900">{{ flight.flightNumber }}</h3>
+                        <p class="text-gray-600 font-bold">{{ flight.airline.name }}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-8">
+                      <div class="text-center">
+                        <div class="text-2xl font-black text-gray-900">{{ flight.departureTime }}</div>
+                        <div class="text-sm text-gray-600 font-bold">{{ flight.originAirport.iataCode }}</div>
+                        <div class="text-xs text-gray-500">{{ flight.originAirport.city }}</div>
+                      </div>
+                      
+                      <div class="flex-1 text-center">
+                        <div class="text-sm text-gray-600 font-bold mb-1">{{ flight.duration }}</div>
+                        <div class="h-px bg-gray-300 relative">
+                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-blue-600 rotate-45"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">{{ flight.aircraft.model }}</div>
+                      </div>
+                      
+                      <div class="text-center">
+                        <div class="text-2xl font-black text-gray-900">{{ flight.arrivalTime }}</div>
+                        <div class="text-sm text-gray-600 font-bold">{{ flight.destinationAirport.iataCode }}</div>
+                        <div class="text-xs text-gray-500">{{ flight.destinationAirport.city }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Price and Actions -->
+                  <div class="text-center lg:text-right">
+                    <div class="text-3xl font-black text-gray-900 mb-2">{{ formatPrice(flight.price) }}</div>
+                    <div class="text-sm text-gray-600 font-bold mb-4">{{ flight.fareCode }} Fare</div>
+                    <Button
+                      @click="selectFlight(flight)"
+                      class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+                    >
+                      Select Flight
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <!-- Round-trip Results -->
+          <div v-else-if="tripType === 'round-trip'">
+            <Card
+              v-for="trip in filteredResults as RoundTripResult[]"
+              :key="`${trip.outbound.flightInstanceId}-${trip.return?.flightInstanceId}`"
+              class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
+            >
+              <CardContent class="p-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                  <!-- Outbound Flight -->
+                  <div class="flex-1">
+                    <div class="mb-4">
+                      <h4 class="text-lg font-black text-gray-900 mb-2">Outbound Flight</h4>
+                      <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-600 flex items-center justify-center">
+                          <Plane class="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <div class="font-black text-gray-900">{{ trip.outbound.flightNumber }}</div>
+                          <div class="text-sm text-gray-600 font-bold">{{ trip.outbound.airline.name }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-6">
+                      <div class="text-center">
+                        <div class="text-xl font-black text-gray-900">{{ trip.outbound.departureTime }}</div>
+                        <div class="text-sm text-gray-600 font-bold">{{ trip.outbound.originAirport.iataCode }}</div>
+                      </div>
+                      
+                      <div class="flex-1 text-center">
+                        <div class="text-sm text-gray-600 font-bold mb-1">{{ trip.outbound.duration }}</div>
+                        <div class="h-px bg-gray-300 relative">
+                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-blue-600 rotate-45"></div>
+                        </div>
+                      </div>
+                      
+                      <div class="text-center">
+                        <div class="text-xl font-black text-gray-900">{{ trip.outbound.arrivalTime }}</div>
+                        <div class="text-sm text-gray-600 font-bold">{{ trip.outbound.destinationAirport.iataCode }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Return Flight -->
+                  <div v-if="trip.return" class="flex-1">
+                    <div class="mb-4">
+                      <h4 class="text-lg font-black text-gray-900 mb-2">Return Flight</h4>
+                      <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-green-600 flex items-center justify-center">
+                          <ArrowLeft class="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <div class="font-black text-gray-900">{{ trip.return.flightNumber }}</div>
+                          <div class="text-sm text-gray-600 font-bold">{{ trip.return.airline.name }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-6">
+                      <div class="text-center">
+                        <div class="text-xl font-black text-gray-900">{{ trip.return.departureTime }}</div>
+                        <div class="text-sm text-gray-600 font-bold">{{ trip.return.originAirport.iataCode }}</div>
+                      </div>
+                      
+                      <div class="flex-1 text-center">
+                        <div class="text-sm text-gray-600 font-bold mb-1">{{ trip.return.duration }}</div>
+                        <div class="h-px bg-gray-300 relative">
+                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-green-600 rotate-45"></div>
+                        </div>
+                      </div>
+                      
+                      <div class="text-center">
+                        <div class="text-xl font-black text-gray-900">{{ trip.return.arrivalTime }}</div>
+                        <div class="text-sm text-gray-600 font-bold">{{ trip.return.destinationAirport.iataCode }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Price and Actions -->
+                  <div class="text-center lg:text-right">
+                    <div class="text-3xl font-black text-gray-900 mb-2">{{ formatPrice(trip.totalPrice) }}</div>
+                    <div class="text-sm text-gray-600 font-bold mb-4">Total Price</div>
+                    <Button
+                      @click="selectFlight(trip)"
+                      class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+                    >
+                      Select Trip
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <!-- Multi-city Results -->
+          <div v-else-if="tripType === 'multi-city'">
+            <Card
+              v-for="trip in filteredResults as MultiCityResult[]"
+              :key="trip.segments.map(s => s.flightInstanceId).join('-')"
+              class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
+            >
+              <CardContent class="p-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                  <!-- Segments -->
+                  <div class="flex-1">
+                    <h4 class="text-lg font-black text-gray-900 mb-4">Multi-City Trip</h4>
+                    <div class="space-y-4">
+                      <div
+                        v-for="(segment, index) in trip.segments"
+                        :key="segment.flightInstanceId"
+                        class="flex items-center gap-4"
+                      >
+                        <div class="w-8 h-8 bg-blue-600 flex items-center justify-center text-white font-black text-sm">
+                          {{ index + 1 }}
+                        </div>
+                        <div class="flex-1">
+                          <div class="font-black text-gray-900">{{ segment.flightNumber }}</div>
+                          <div class="text-sm text-gray-600 font-bold">{{ segment.originAirport.iataCode }} → {{ segment.destinationAirport.iataCode }}</div>
+                          <div class="text-xs text-gray-500">{{ segment.departureTime }} - {{ segment.arrivalTime }} ({{ segment.duration }})</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Price and Actions -->
+                  <div class="text-center lg:text-right">
+                    <div class="text-3xl font-black text-gray-900 mb-2">{{ formatPrice(trip.totalPrice) }}</div>
+                    <div class="text-sm text-gray-600 font-bold mb-4">Total Price</div>
+                    <Button
+                      @click="selectFlight(trip)"
+                      class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+                    >
+                      Select Trip
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Empty State -->
+    <section v-else-if="!isLoading && searchResults.length === 0" class="py-20">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-8">
+          <AlertCircle class="w-12 h-12 text-gray-400" />
+        </div>
+        
+        <h2 class="text-4xl font-black text-gray-900 mb-4">No Flights Found</h2>
+        <p class="text-xl text-gray-600 font-bold mb-8">
+          We couldn't find any flights matching your search criteria. Try adjusting your search parameters.
+        </p>
+        
+        <div class="space-y-4">
+          <Button
+            @click="searchFlights"
+            class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+          >
+            <Search class="w-5 h-5 mr-2" />
+            Try Different Dates
           </Button>
+          
+          <div class="text-sm text-gray-500 font-bold">
+            <p>• Try searching for nearby airports</p>
+            <p>• Check different departure dates</p>
+            <p>• Consider flexible travel dates</p>
+          </div>
         </div>
       </div>
     </section>

@@ -28,6 +28,7 @@ import { destinationCards, airports } from '@/data/mockData'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import LoadingScreen from '@/components/LoadingScreen.vue'
+import { useRouter } from 'vue-router'
 
 // Import hero images
 import boracayImg from '@/assets/boracay.webp'
@@ -36,6 +37,9 @@ import davaoImg from '@/assets/davao.webp'
 import singaporeImg from '@/assets/singapore.webp'
 import palawanImg from '@/assets/palawan.webp'
 import hongkongImg from '@/assets/hongkong.webp'
+
+// Router
+const router = useRouter()
 
 // Loading state
 const isLoading = ref(true)
@@ -78,7 +82,19 @@ const searchFlights = () => {
   }
 
   console.log('Searching flights with params:', searchParams)
-  alert(`Searching flights from ${fromAirport.value?.city} to ${toAirport.value?.city}`)
+  
+  // Navigate to flights page with search parameters
+  router.push({
+    path: '/flights',
+    query: {
+      from: searchParams.from,
+      to: searchParams.to,
+      departure: searchParams.departureDate?.toISOString().split('T')[0],
+      return: searchParams.returnDate?.toISOString().split('T')[0],
+      passengers: searchParams.passengers.toString(),
+      type: searchParams.tripType
+    }
+  })
 }
 
 // Trip type selection
@@ -487,59 +503,59 @@ onMounted(() => {
         <!-- Features Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <!-- Feature 1 -->
-          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300">
+          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-blue-600">
             <!-- Corner Accent -->
             <div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-blue-600 border-r-[50px] border-r-transparent"></div>
             
-            <div class="w-16 h-16 bg-blue-100 flex items-center justify-center mb-6 group-hover:bg-blue-600 transition-colors duration-300">
-              <DollarSign class="w-8 h-8 text-blue-600 group-hover:text-white transition-colors duration-300" />
+            <div class="w-16 h-16 bg-blue-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
+              <DollarSign class="w-8 h-8 text-blue-600 group-hover:text-blue-600 transition-colors duration-300" />
             </div>
             
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-gray-900 transition-colors">Lowest Fares</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-gray-700 transition-colors">Unbeatable prices with no hidden fees. Save up to 50% on domestic flights!</p>
+            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">Lowest Fares</h3>
+            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Unbeatable prices with no hidden fees. Save up to 50% on domestic flights!</p>
             
             <!-- Shadow Block -->
             <div class="absolute top-2 left-2 w-full h-full bg-blue-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
           </div>
 
           <!-- Feature 2 -->
-          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300">
+          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-green-600">
             <div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-green-600 border-r-[50px] border-r-transparent"></div>
             
-            <div class="w-16 h-16 bg-green-100 flex items-center justify-center mb-6 group-hover:bg-green-600 transition-colors duration-300">
-              <MapPin class="w-8 h-8 text-green-600 group-hover:text-white transition-colors duration-300" />
+            <div class="w-16 h-16 bg-green-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
+              <MapPin class="w-8 h-8 text-green-600 group-hover:text-green-600 transition-colors duration-300" />
             </div>
             
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-gray-900 transition-colors">7,641 Islands</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-gray-700 transition-colors">Extensive network covering all major Philippine destinations and beyond.</p>
+            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">7,641 Islands</h3>
+            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Extensive network covering all major Philippine destinations and beyond.</p>
             
             <div class="absolute top-2 left-2 w-full h-full bg-green-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
           </div>
 
           <!-- Feature 3 -->
-          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300">
+          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-purple-600">
             <div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-purple-600 border-r-[50px] border-r-transparent"></div>
             
-            <div class="w-16 h-16 bg-purple-100 flex items-center justify-center mb-6 group-hover:bg-purple-600 transition-colors duration-300">
-              <Shield class="w-8 h-8 text-purple-600 group-hover:text-white transition-colors duration-300" />
+            <div class="w-16 h-16 bg-purple-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
+              <Shield class="w-8 h-8 text-purple-600 group-hover:text-purple-600 transition-colors duration-300" />
             </div>
             
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-gray-900 transition-colors">Safety First</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-gray-700 transition-colors">IATA certified with modern Airbus fleet and world-class safety standards.</p>
+            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">Safety First</h3>
+            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">IATA certified with modern Airbus fleet and world-class safety standards.</p>
             
             <div class="absolute top-2 left-2 w-full h-full bg-purple-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
           </div>
 
           <!-- Feature 4 -->
-          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300">
+          <div class="bg-white p-8 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-orange-600">
             <div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-orange-600 border-r-[50px] border-r-transparent"></div>
             
-            <div class="w-16 h-16 bg-orange-100 flex items-center justify-center mb-6 group-hover:bg-orange-600 transition-colors duration-300">
-              <Heart class="w-8 h-8 text-orange-600 group-hover:text-white transition-colors duration-300" />
+            <div class="w-16 h-16 bg-orange-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
+              <Heart class="w-8 h-8 text-orange-600 group-hover:text-orange-600 transition-colors duration-300" />
             </div>
             
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-gray-900 transition-colors">Filipino Hospitality</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-gray-700 transition-colors">Warm, friendly service that makes every passenger feel like family.</p>
+            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">Filipino Hospitality</h3>
+            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Warm, friendly service that makes every passenger feel like family.</p>
             
             <div class="absolute top-2 left-2 w-full h-full bg-orange-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
           </div>
