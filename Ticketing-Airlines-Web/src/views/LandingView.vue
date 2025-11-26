@@ -331,10 +331,8 @@ onMounted(() => {
         </CarouselContent>
 
         <!-- Carousel Controls -->
-        <div class="absolute left-6 right-6 bottom-8 z-20 flex items-center justify-between">
-          <CarouselPrevious class="relative bg-white/20 hover:bg-white/40 border-4 border-white/40 text-white w-16 h-16 rounded-none" />
-          <CarouselNext class="relative bg-white/20 hover:bg-white/40 border-4 border-white/40 text-white w-16 h-16 rounded-none" />
-        </div>
+        <CarouselPrevious class="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-16 h-16" />
+        <CarouselNext class="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-16 h-16" />
       </Carousel>
 
       <!-- Search Form Overlay -->
