@@ -64,6 +64,33 @@ const isFormValid = computed(() => {
          (searchParams.value.tripType === 'one-way' || searchParams.value.returnDate)
 })
 
+// Computed properties to handle Date <-> String conversion for date inputs
+const departureDateString = computed({
+  get: () => {
+    if (!searchParams.value.departureDate) return ''
+    if (searchParams.value.departureDate instanceof Date) {
+      return searchParams.value.departureDate.toISOString().split('T')[0]
+    }
+    return searchParams.value.departureDate
+  },
+  set: (value: string) => {
+    searchParams.value.departureDate = value ? new Date(value) : null
+  }
+})
+
+const returnDateString = computed({
+  get: () => {
+    if (!searchParams.value.returnDate) return ''
+    if (searchParams.value.returnDate instanceof Date) {
+      return searchParams.value.returnDate.toISOString().split('T')[0]
+    }
+    return searchParams.value.returnDate
+  },
+  set: (value: string) => {
+    searchParams.value.returnDate = value ? new Date(value) : null
+  }
+})
+
 const filteredResults = computed(() => {
   let results = [...searchResults.value]
   
@@ -232,7 +259,7 @@ const toggleSort = () => {
           <div>
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure</Label>
             <Input
-              v-model="searchParams.departureDate"
+              v-model="departureDateString"
               type="date"
               class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
               :min="today"
@@ -243,10 +270,10 @@ const toggleSort = () => {
           <div v-if="searchParams.tripType === 'round-trip'">
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Return</Label>
             <Input
-              v-model="searchParams.returnDate"
+              v-model="returnDateString"
               type="date"
               class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
-              :min="searchParams.departureDate instanceof Date ? searchParams.departureDate.toISOString().split('T')[0] : searchParams.departureDate"
+              :min="departureDateString"
             />
           </div>
 

@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Calendar } from '@/components/ui/calendar'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
 import type { DateValue } from '@internationalized/date'
-import { getLocalTimeZone, today, parseDate } from '@internationalized/date'
+import { getLocalTimeZone, parseDate } from '@internationalized/date'
 import { 
   Plane, 
   MapPin, 
@@ -64,24 +64,36 @@ const getAirportByCode = (code: string): Airport | undefined => {
 }
 
 // Computed properties
-const fromAirport = computed(() => getAirportByCode(searchParams.value.origin))
-const toAirport = computed(() => getAirportByCode(searchParams.value.destination))
+const fromAirport = computed(() => getAirportByCode(searchParams.value.from))
+const toAirport = computed(() => getAirportByCode(searchParams.value.to))
+
+// Helper to convert Date to string in YYYY-MM-DD format
+const dateToString = (date: Date | null): string => {
+  if (!date) return ''
+  return date.toISOString().split('T')[0]
+}
 
 // Date handling for Calendar component (needs DateValue)
 const departureDateValue = computed({
-  get: () => searchParams.value.departureDate ? parseDate(searchParams.value.departureDate) : undefined,
+  get: () => {
+    const dateStr = dateToString(searchParams.value.departureDate)
+    return dateStr ? parseDate(dateStr) : undefined
+  },
   set: (val: DateValue | undefined) => {
     if (val) {
-      searchParams.value.departureDate = val.toString()
+      searchParams.value.departureDate = new Date(val.toString())
     }
   }
 })
 
 const returnDateValue = computed({
-  get: () => searchParams.value.returnDate ? parseDate(searchParams.value.returnDate) : undefined,
+  get: () => {
+    const dateStr = dateToString(searchParams.value.returnDate)
+    return dateStr ? parseDate(dateStr) : undefined
+  },
   set: (val: DateValue | undefined) => {
     if (val) {
-      searchParams.value.returnDate = val.toString()
+      searchParams.value.returnDate = new Date(val.toString())
     }
   }
 })
@@ -94,10 +106,10 @@ const searchFlights = () => {
   router.push({
     path: '/flights',
     query: {
-      from: searchParams.value.origin,
-      to: searchParams.value.destination,
-      departure: searchParams.value.departureDate,
-      return: searchParams.value.returnDate,
+      from: searchParams.value.from,
+      to: searchParams.value.to,
+      departure: dateToString(searchParams.value.departureDate),
+      return: dateToString(searchParams.value.returnDate),
       passengers: searchParams.value.passengers.toString(),
       type: searchParams.value.tripType
     }
@@ -118,10 +130,10 @@ const handleLoadingFinished = () => {
 const bookDestination = (destination: DestinationCard) => {
   console.log('Booking destination:', destination)
   // Pre-fill search params based on destination
-  searchParams.value.destination = 'MPH' // Example: Boracay (Caticlan)
-  if (destination.label.includes('Cebu')) searchParams.value.destination = 'CEB'
-  if (destination.label.includes('Davao')) searchParams.value.destination = 'DVO'
-  if (destination.label.includes('Palawan')) searchParams.value.destination = 'PPS'
+  searchParams.value.to = 'MPH' // Example: Boracay (Caticlan)
+  if (destination.label.includes('Cebu')) searchParams.value.to = 'CEB'
+  if (destination.label.includes('Davao')) searchParams.value.to = 'DVO'
+  if (destination.label.includes('Palawan')) searchParams.value.to = 'PPS'
   
   // Navigate to search results
   searchFlights()
@@ -397,7 +409,7 @@ onMounted(() => {
                 <!-- From -->
                 <div class="relative">
                   <label class="block text-sm font-black text-gray-900 mb-3 uppercase tracking-widest">From</label>
-                  <Select v-model="searchParams.origin">
+                  <Select v-model="searchParams.from">
                     <SelectTrigger class="h-14 px-4 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold">
                       <div class="flex items-center gap-3">
                         <MapPin class="w-5 h-5 text-gray-600" />
@@ -417,7 +429,7 @@ onMounted(() => {
                 <!-- To -->
                 <div class="relative">
                   <label class="block text-sm font-black text-gray-900 mb-3 uppercase tracking-widest">To</label>
-                  <Select v-model="searchParams.destination">
+                  <Select v-model="searchParams.to">
                     <SelectTrigger class="h-14 px-4 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold">
                       <div class="flex items-center gap-3">
                         <MapPin class="w-5 h-5 text-gray-600" />

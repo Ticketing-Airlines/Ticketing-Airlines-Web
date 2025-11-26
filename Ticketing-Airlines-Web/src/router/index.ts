@@ -80,6 +80,33 @@ const router = createRouter({
       name: 'InternationalDestinations',
       component: () => import('@/views/InternationalDestinationsView.vue')
     },
+    // New Routes
+    {
+      path: '/profile',
+      name: 'UserProfile',
+      component: () => import('@/views/UserProfileView.vue')
+    },
+    {
+      path: '/my-bookings',
+      name: 'MyBookings',
+      component: () => import('@/views/MyBookingsView.vue')
+    },
+    {
+      path: '/support',
+      name: 'Support',
+      component: () => import('@/views/SupportView.vue')
+    },
+    {
+      path: '/admin',
+      name: 'AdminDashboard',
+      component: () => import('@/views/AdminDashboardView.vue')
+    },
+    // 404 - Must be last
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('@/views/NotFoundView.vue')
+    }
   ],
 })
 
