@@ -1,29 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
+import { onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { 
   Plane, 
-  MapPin, 
-  Calendar,
-  Clock,
   ArrowRight,
   ArrowLeft,
   CreditCard,
   Shield,
   CheckCircle,
-  AlertCircle,
   Loader2,
-  User,
-  Mail,
-  Phone,
   CreditCard as CardIcon,
-  Lock,
   Eye,
   EyeOff,
   Wallet,
@@ -34,67 +26,29 @@ import {
   Landmark
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
-import type { 
-  FlightSearchResult, 
-  RoundTripResult, 
-  MultiCityResult,
-  Airport 
-} from '@/interfaces/interfaces'
-import { airports } from '@/data/mockData'
+import { useBookingStore } from '@/stores/bookingStore'
 
-const route = useRoute()
 const router = useRouter()
+const bookingStore = useBookingStore()
 
-// Booking state
-const currentStep = ref(1)
-const isLoading = ref(false)
-const selectedFlight = ref<FlightSearchResult | RoundTripResult | MultiCityResult | null>(null)
-const showPassword = ref(false)
+// Store state
+const { 
+  currentStep, 
+  selectedFlight, 
+  passengers, 
+  contactInfo, 
+  paymentInfo, 
+  isProcessing,
+  totalPrice,
+  baseFare,
+  taxes,
+  fees
+} = storeToRefs(bookingStore)
 
-// Get passenger count from route params
-const passengerCount = parseInt(route.query.passengers as string) || 1
-
-// Passenger information
-const passengers = ref(
-  Array.from({ length: passengerCount }, (_, index) => ({
-    id: index + 1,
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    nationality: 'PH',
-    passportNumber: '',
-    dateOfBirth: '',
-    passengerType: 'Adult'
-  }))
-)
-
-// Contact information
-const contactInfo = ref({
-  email: '',
-  phone: '',
-  address: '',
-  city: '',
-  postalCode: '',
-  country: 'Philippines'
-})
-
-// Payment information
-const selectedPaymentMethod = ref('')
-const paymentInfo = ref({
-  cardNumber: '',
-  expiryDate: '',
-  cvv: '',
-  cardholderName: '',
-  billingAddress: '',
-  city: '',
-  postalCode: '',
-  country: 'Philippines'
-})
+const showPassword = computed(() => false) // Simplified for now, or add local state if needed
 
 // Payment methods data
-const paymentMethods = ref([
+const paymentMethods = [
   {
     id: 1,
     category: 'Cards',
@@ -191,17 +145,7 @@ const paymentMethods = ref([
     featured: false,
     providers: ['PayPal']
   }
-])
-
-// Booking summary
-const bookingSummary = ref({
-  totalPassengers: 1,
-  baseFare: 0,
-  taxes: 0,
-  fees: 0,
-  total: 0,
-  currency: 'PHP'
-})
+]
 
 const totalSteps = 4
 
@@ -227,8 +171,8 @@ const isStepValid = computed(() => {
     case 3:
       return contactInfo.value.email && contactInfo.value.phone && contactInfo.value.address
     case 4:
-      return selectedPaymentMethod.value !== '' && (
-        selectedPaymentMethod.value === 'Credit/Debit Cards' 
+      return paymentInfo.value.method !== '' && (
+        paymentInfo.value.method === 'Credit/Debit Cards' 
           ? paymentInfo.value.cardNumber && paymentInfo.value.expiryDate && 
             paymentInfo.value.cvv && paymentInfo.value.cardholderName
           : true
@@ -255,40 +199,22 @@ const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
 }
 
-const formatTime = (time: string) => {
-  return time
-}
-
-const getAirportByCode = (code: string): Airport | undefined => {
-  return airports.find(airport => airport.iataCode === code)
-}
-
-
 const nextStep = () => {
   if (isStepValid.value && currentStep.value < totalSteps) {
-    currentStep.value++
+    bookingStore.setStep(currentStep.value + 1)
   }
 }
 
 const prevStep = () => {
   if (currentStep.value > 1) {
-    currentStep.value--
+    bookingStore.setStep(currentStep.value - 1)
   }
 }
 
-const processPayment = async () => {
-  isLoading.value = true
-  
-  try {
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Navigate to confirmation page
+const handlePayment = async () => {
+  const success = await bookingStore.processPayment()
+  if (success) {
     router.push('/booking-confirmation')
-  } catch (error) {
-    console.error('Payment error:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -308,42 +234,10 @@ const getFlightProperty = (property: string) => {
   return ''
 }
 
-const calculateTotal = () => {
-  if (selectedFlight.value) {
-    const basePrice = 'price' in selectedFlight.value ? selectedFlight.value.price : selectedFlight.value.totalPrice
-    const taxes = Math.round(basePrice * 0.12) // 12% tax
-    const fees = 500 // Fixed fees
-    
-    bookingSummary.value = {
-      totalPassengers: passengers.value.length,
-      baseFare: basePrice,
-      taxes,
-      fees,
-      total: basePrice + taxes + fees,
-      currency: 'PHP'
-    }
-  }
-}
-
 onMounted(() => {
-  // Initialize with mock flight data for demo
-  selectedFlight.value = {
-    flightInstanceId: 'demo-flight',
-    flightNumber: 'SS101',
-    originAirport: getAirportByCode('MNL')!,
-    destinationAirport: getAirportByCode('CEB')!,
-    departureTime: '08:00',
-    arrivalTime: '09:15',
-    duration: '1h 15m',
-    price: 2899,
-    currency: 'PHP',
-    fareCode: 'Y',
-    availableSeats: 50,
-    aircraft: { aircraftId: 1, model: 'Airbus A320-200', icaoType: 'A320', seatCapacity: 180, airlineId: 1 },
-    airline: { airlineId: 1, name: 'SunSkies Air', iataCode: 'SS', icaoCode: 'SUN', countryIso2: 'PH' }
+  if (!selectedFlight.value) {
+    router.push('/flights')
   }
-  
-  calculateTotal()
 })
 </script>
 
@@ -634,10 +528,10 @@ onMounted(() => {
                     <div
                       v-for="method in paymentMethods"
                       :key="method.id"
-                      @click="selectedPaymentMethod = method.name"
+                      @click="paymentInfo.method = method.name"
                       :class="[
                         'p-4 border-4 rounded-none cursor-pointer transition-all duration-300 transform hover:-translate-y-1',
-                        selectedPaymentMethod === method.name
+                        paymentInfo.method === method.name
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-gray-300 bg-white hover:border-gray-400'
                       ]"
@@ -681,7 +575,7 @@ onMounted(() => {
                         </div>
                         
                         <div 
-                          v-if="selectedPaymentMethod === method.name"
+                          v-if="paymentInfo.method === method.name"
                           class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
                         >
                           <CheckCircle class="w-4 h-4 text-white" />
@@ -692,7 +586,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Credit Card Form (only show if Credit/Debit Cards is selected) -->
-                <div v-if="selectedPaymentMethod === 'Credit/Debit Cards'" class="bg-gray-50 p-6 border-4 border-gray-200">
+                <div v-if="paymentInfo.method === 'Credit/Debit Cards'" class="bg-gray-50 p-6 border-4 border-gray-200">
                   <h4 class="text-lg font-black text-gray-900 mb-4">Card Details</h4>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
@@ -785,13 +679,13 @@ onMounted(() => {
             
             <Button
               v-else
-              @click="processPayment"
-              :disabled="!isStepValid || isLoading"
+              @click="handlePayment"
+              :disabled="!isStepValid || isProcessing"
               class="bg-green-600 hover:bg-green-700 text-white rounded-none font-black px-8 py-3"
             >
-              <Loader2 v-if="isLoading" class="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 v-if="isProcessing" class="w-4 h-4 mr-2 animate-spin" />
               <CreditCard v-else class="w-4 h-4 mr-2" />
-              {{ isLoading ? 'Processing...' : 'Complete Booking' }}
+              {{ isProcessing ? 'Processing...' : 'Complete Booking' }}
             </Button>
           </div>
         </div>
@@ -819,21 +713,24 @@ onMounted(() => {
               <!-- Price Breakdown -->
               <div class="space-y-3 mb-6">
                 <div class="flex justify-between">
-                  <span class="text-sm text-gray-600 font-bold">Base Fare ({{ bookingSummary.totalPassengers }} pax)</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(bookingSummary.baseFare) }}</span>
+                  <span class="text-gray-600 font-bold">Passengers</span>
+                  <span class="font-black text-gray-900">{{ passengers.length }} Passenger{{ passengers.length > 1 ? 's' : '' }}</span>
                 </div>
+                
                 <div class="flex justify-between">
-                  <span class="text-sm text-gray-600 font-bold">Taxes & Fees</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(bookingSummary.taxes) }}</span>
+                  <span class="text-gray-600 font-bold">Base Fare</span>
+                  <span class="font-black text-gray-900">{{ formatPrice(baseFare * passengers.length) }}</span>
                 </div>
+                
                 <div class="flex justify-between">
-                  <span class="text-sm text-gray-600 font-bold">Service Fee</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(bookingSummary.fees) }}</span>
+                  <span class="text-gray-600 font-bold">Taxes & Fees</span>
+                  <span class="font-black text-gray-900">{{ formatPrice((taxes + fees) * passengers.length) }}</span>
                 </div>
-                <div class="border-t-2 border-gray-300 pt-3">
+                
+                <div class="border-t-2 border-gray-300 pt-4">
                   <div class="flex justify-between">
-                    <span class="text-lg font-black text-gray-900">Total</span>
-                    <span class="text-lg font-black text-gray-900">{{ formatPrice(bookingSummary.total) }}</span>
+                    <span class="text-xl font-black text-gray-900">Total</span>
+                    <span class="text-xl font-black text-gray-900">{{ formatPrice(totalPrice) }}</span>
                   </div>
                 </div>
               </div>
