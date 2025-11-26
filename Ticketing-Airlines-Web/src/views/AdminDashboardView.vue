@@ -52,12 +52,30 @@ const getOccupancyColor = (percentage: number) => {
       </div>
       
       <div class="relative container mx-auto px-4 z-10">
-        <div class="inline-flex items-center rounded-full px-4 py-2 mb-4" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
-          <BarChart3 class="w-4 h-4 mr-2 text-white" />
-          <span class="font-semibold text-sm text-white">ADMIN PANEL</span>
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <div class="inline-flex items-center rounded-full px-4 py-2 mb-4" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
+              <BarChart3 class="w-4 h-4 mr-2 text-white" />
+              <span class="font-semibold text-sm text-white">ADMIN PANEL</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tight">Dashboard</h1>
+            <p class="text-xl text-white/90 max-w-2xl font-medium">Monitor and manage your airline operations</p>
+          </div>
+          
+          <!-- Admin Info & Logout -->
+          <div class="flex items-center gap-4">
+            <div class="text-right">
+              <div class="text-xs font-bold text-white/60 uppercase">Logged in as</div>
+              <div class="text-sm font-black text-white">{{ adminStore.adminEmail }}</div>
+            </div>
+            <Button
+              @click="() => { adminStore.logout(); $router.push('/admin/login'); }"
+              class="bg-red-600 hover:bg-red-700 text-white border-4 border-white rounded-none font-black uppercase tracking-wider"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
-        <h1 class="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tight">Dashboard</h1>
-        <p class="text-xl text-white/90 max-w-2xl font-medium">Monitor and manage your airline operations</p>
       </div>
     </section>
 

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export interface DashboardStats {
     totalBookings: number
@@ -28,6 +28,12 @@ export interface Flight {
     status: 'On Time' | 'Delayed' | 'Cancelled'
     capacity: number
     booked: number
+}
+
+// Admin credentials (mocked for frontend demo)
+const ADMIN_CREDENTIALS = {
+    email: 'admin@airlines.com',
+    password: 'admin123'
 }
 
 export const useAdminStore = defineStore('admin', () => {
@@ -106,8 +112,68 @@ export const useAdminStore = defineStore('admin', () => {
     ])
 
     const isLoading = ref(false)
+    const isAuthenticated = ref(false)
+    const adminEmail = ref<string | null>(null)
+    const errorMessage = ref<string | null>(null)
+
+    // Initialize authentication state from localStorage
+    const initAuth = () => {
+        const stored = localStorage.getItem('admin_authenticated')
+        const storedEmail = localStorage.getItem('admin_email')
+        if (stored === 'true' && storedEmail) {
+            isAuthenticated.value = true
+            adminEmail.value = storedEmail
+        }
+    }
+
+    // Computed
+    const isAdmin = computed(() => isAuthenticated.value)
 
     // Actions
+    async function adminLogin(email: string, password: string): Promise<boolean> {
+        isLoading.value = true
+        errorMessage.value = null
+
+        try {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 800))
+
+            // Check credentials
+            if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+                isAuthenticated.value = true
+                adminEmail.value = email
+
+                // Persist authentication
+                localStorage.setItem('admin_authenticated', 'true')
+                localStorage.setItem('admin_email', email)
+
+                console.log('Admin login successful')
+                return true
+            } else {
+                errorMessage.value = 'Invalid admin credentials'
+                return false
+            }
+        } catch (error) {
+            console.error('Admin login error:', error)
+            errorMessage.value = 'An error occurred during login'
+            return false
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    function logout() {
+        isAuthenticated.value = false
+        adminEmail.value = null
+        localStorage.removeItem('admin_authenticated')
+        localStorage.removeItem('admin_email')
+        console.log('Admin logged out')
+    }
+
+    function clearError() {
+        errorMessage.value = null
+    }
+
     async function getDashboardStats() {
         isLoading.value = true
         try {
@@ -145,11 +211,21 @@ export const useAdminStore = defineStore('admin', () => {
         }
     }
 
+    // Initialize on store creation
+    initAuth()
+
     return {
         stats,
         recentBookings,
         flights,
         isLoading,
+        isAuthenticated,
+        isAdmin,
+        adminEmail,
+        errorMessage,
+        adminLogin,
+        logout,
+        clearError,
         getDashboardStats,
         getRecentBookings,
         getFlights,

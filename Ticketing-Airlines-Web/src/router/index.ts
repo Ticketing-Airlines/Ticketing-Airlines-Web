@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAdminStore } from '@/stores/adminStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,19 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: () => import('@/views/LoginView.vue'),
+    },
+    // Admin routes
+    {
+      path: '/admin/login',
+      name: 'AdminLogin',
+      component: () => import('@/views/AdminLoginView.vue'),
+      meta: { isAdminAuth: true }
+    },
+    {
+      path: '/admin',
+      name: 'AdminDashboard',
+      component: () => import('@/views/AdminDashboardView.vue'),
+      meta: { requiresAdmin: true }
     },
     // Book routes
     {
@@ -104,11 +118,6 @@ const router = createRouter({
       name: 'Support',
       component: () => import('@/views/SupportView.vue')
     },
-    {
-      path: '/admin',
-      name: 'AdminDashboard',
-      component: () => import('@/views/AdminDashboardView.vue')
-    },
     // 404 - Must be last
     {
       path: '/:pathMatch(.*)*',
@@ -116,6 +125,30 @@ const router = createRouter({
       component: () => import('@/views/NotFoundView.vue')
     }
   ],
+})
+
+// Navigation guard for admin routes
+router.beforeEach((to, from, next) => {
+  const adminStore = useAdminStore()
+
+  // Check if route requires admin authentication
+  if (to.meta.requiresAdmin) {
+    if (adminStore.isAuthenticated) {
+      next()
+    } else {
+      // Redirect to admin login if not authenticated
+      next('/admin/login')
+    }
+  }
+  // If admin is already authenticated and trying to access login page
+  else if (to.meta.isAdminAuth && adminStore.isAuthenticated) {
+    // Redirect to admin dashboard
+    next('/admin')
+  }
+  // Otherwise proceed normally
+  else {
+    next()
+  }
 })
 
 export default router
