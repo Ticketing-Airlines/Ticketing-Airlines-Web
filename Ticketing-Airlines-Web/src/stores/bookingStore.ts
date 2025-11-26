@@ -58,6 +58,11 @@ export const useBookingStore = defineStore('booking', () => {
     const bookingReference = ref<string>('')
     const isProcessing = ref(false)
 
+    // Manage Booking State
+    const retrievedBooking = ref<any>(null)
+    const isSearchingBooking = ref(false)
+    const bookingError = ref('')
+
     // Getters
     const baseFare = computed(() => {
         if (!selectedFlight.value) return 0
@@ -159,6 +164,73 @@ export const useBookingStore = defineStore('booking', () => {
         isProcessing.value = false
     }
 
+    async function retrieveBooking(reference: string, lastName: string) {
+        isSearchingBooking.value = true
+        bookingError.value = ''
+        try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1500))
+
+            // Mock validation
+            if (reference.length < 6 || lastName.length < 2) {
+                throw new Error('Invalid booking reference or last name')
+            }
+
+            // Mock booking data
+            retrievedBooking.value = {
+                reference: reference.toUpperCase(),
+                status: 'Confirmed',
+                bookingDate: 'January 15, 2024',
+                outbound: {
+                    from: 'Manila (MNL)',
+                    to: 'Cebu (CEB)',
+                    flightNumber: '5J 561',
+                    date: 'February 15, 2024',
+                    time: '06:00 - 07:25',
+                    duration: '1h 25m'
+                },
+                return: {
+                    from: 'Cebu (CEB)',
+                    to: 'Manila (MNL)',
+                    flightNumber: '5J 562',
+                    date: 'February 18, 2024',
+                    time: '08:00 - 09:25',
+                    duration: '1h 25m'
+                },
+                passengers: [
+                    {
+                        id: 1,
+                        name: 'John Doe',
+                        type: 'Adult',
+                        seat: '12A',
+                        meal: 'Standard'
+                    },
+                    {
+                        id: 2,
+                        name: 'Jane Doe',
+                        type: 'Adult',
+                        seat: '12B',
+                        meal: 'Vegetarian'
+                    }
+                ],
+                pricing: {
+                    baseFare: 8500,
+                    taxes: 1200,
+                    addOns: 500,
+                    total: 10200
+                }
+            }
+            return true
+        } catch (error: any) {
+            console.error('Failed to retrieve booking:', error)
+            bookingError.value = error.message || 'Booking not found'
+            retrievedBooking.value = null
+            return false
+        } finally {
+            isSearchingBooking.value = false
+        }
+    }
+
     return {
         currentStep,
         selectedFlight,
@@ -171,12 +243,16 @@ export const useBookingStore = defineStore('booking', () => {
         taxes,
         fees,
         totalPrice,
+        retrievedBooking,
+        isSearchingBooking,
+        bookingError,
         initBooking,
         updatePassenger,
         setContactInfo,
         setPaymentInfo,
         setStep,
         processPayment,
-        resetBooking
+        resetBooking,
+        retrieveBooking
     }
 })
