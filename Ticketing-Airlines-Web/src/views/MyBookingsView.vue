@@ -56,6 +56,20 @@ const viewBooking = (reference: string) => {
   router.push(`/manage-booking?ref=${reference}`)
 }
 
+const viewBoardingPass = (booking: any) => {
+  router.push(`/boarding-pass/${booking.reference}?` +
+    `name=${encodeURIComponent('PASSENGER NAME')}&` +
+    `from=${encodeURIComponent(booking.from.split('(')[1]?.replace(')', '') || booking.from)}&` +
+    `to=${encodeURIComponent(booking.to.split('(')[1]?.replace(')', '') || booking.to)}&` +
+    `flight=SS-${Math.floor(Math.random() * 900 + 100)}&` +
+    `date=${encodeURIComponent(booking.departureDate)}&` +
+    `boarding=10:30 AM&` +
+    `gate=G${Math.floor(Math.random() * 10 + 1)}&` +
+    `seat=${Math.floor(Math.random() * 30 + 1)}${String.fromCharCode(65 + Math.floor(Math.random() * 6))}&` +
+    `class=Economy`
+  )
+}
+
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Upcoming': return 'bg-blue-600'
@@ -240,18 +254,20 @@ const getStatusColor = (status: string) => {
               </Button>
               <Button
                 v-if="booking.status === 'Upcoming'"
-                @click="router.push('/check-in')"
+                @click="router.push(`/check-in?ref=${booking.reference}`)"
                 class="bg-green-600 hover:bg-green-700 font-black uppercase text-xs"
               >
                 <Plane class="w-4 h-4 mr-2" />
                 Check In
               </Button>
               <Button
+                v-if="booking.status === 'Completed' || booking.status === 'Upcoming'"
+                @click="viewBoardingPass(booking)"
                 variant="outline"
-                class="border-2 border-gray-900 font-black uppercase text-xs"
+                class="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-black uppercase text-xs"
               >
                 <Download class="w-4 h-4 mr-2" />
-                Download
+                View Boarding Pass
               </Button>
             </div>
           </div>

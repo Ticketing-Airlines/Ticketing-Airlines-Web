@@ -41,33 +41,38 @@ const downloadPDF = async () => {
     isDownloading.value = true
     
     const boardingPassElement = document.getElementById('boarding-pass-container')
-    if (!boardingPassElement) return
+    if (!boardingPassElement) {
+      alert('Boarding pass not found. Please refresh the page.')
+      return
+    }
+
+    // Wait a bit for all images and QR code to load
+    await new Promise(resolve => setTimeout(resolve, 500))
 
     // Convert boarding pass to canvas
     const canvas = await html2canvas(boardingPassElement, {
       scale: 2,
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      useCORS: true,
+      allowTaint: true
     })
 
     // Create PDF
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
+      unit: 'px',
+      format: [canvas.width, canvas.height]
     })
 
-    const imgWidth = 210 // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-
     const imgData = canvas.toDataURL('image/png')
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
 
     // Download
     pdf.save(`BoardingPass_${boardingPassData.value.bookingReference}.pdf`)
   } catch (error) {
     console.error('PDF generation failed:', error)
-    alert('Failed to generate PDF. Please try again.')
+    alert('Failed to generate PDF. Please try the Print option instead.')
   } finally {
     isDownloading.value = false
   }
@@ -227,26 +232,22 @@ const goBack = () => {
 
 <style scoped>
 @media print {
-  /* Hide everything except boarding pass */
-  body * {
-    visibility: hidden;
+  /* Print only the boarding pass */
+  :deep(.max-w-7xl) {
+    max-width: 100% !important;
+    padding: 0 !important;
   }
-  
-  #boarding-pass-container,
-  #boarding-pass-container * {
-    visibility: visible;
-  }
-  
+
+  /* Force boarding pass to be full width */
   #boarding-pass-container {
-    position: absolute;
-    left: 0;
-    top: 0;
+    page-break-inside: avoid;
     width: 100%;
   }
 
   /* Remove page margins */
   @page {
-    margin: 10mm;
+    margin: 0;
+    size: auto;
   }
 }
 </style>

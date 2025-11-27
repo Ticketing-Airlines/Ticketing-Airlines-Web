@@ -36,7 +36,7 @@ onMounted(async () => {
   } catch (error) {
     console.error('QR Code generation failed:', error)
   }
-  })
+})
 </script>
 
 <template>

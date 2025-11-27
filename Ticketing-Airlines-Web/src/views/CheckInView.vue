@@ -573,8 +573,24 @@ const checkIn = async () => {
 }
 
 const downloadBoardingPass = () => {
-  // In a real application, this would generate and download the boarding pass
-  alert('Boarding pass download started! Check your downloads folder.')
+  if (!retrievedBooking.value) return
+  
+  // Navigate to boarding pass view with booking data
+  const booking = retrievedBooking.value
+  const passenger = booking.passengers[0] // First passenger
+  
+  window.open(`/boarding-pass/${booking.bookingReference}?` + 
+    `name=${encodeURIComponent(passenger.name)}&` +
+    `from=${encodeURIComponent(booking.outbound.from.split(' ')[0])}&` +
+    `to=${encodeURIComponent(booking.outbound.to.split(' ')[0])}&` +
+    `flight=${booking.outbound.flightNumber}&` +
+    `date=${encodeURIComponent(booking.outbound.date)}&` +
+    `boarding=${encodeURIComponent(booking.outbound.time.split(' - ')[0])}&` +
+    `gate=${passenger.gate || 'G5'}&` +
+    `seat=${passenger.seat}&` +
+    `class=${booking.fareClass || 'Economy'}`,
+    '_blank'
+  )
 }
 
 const closeSuccess = () => {
