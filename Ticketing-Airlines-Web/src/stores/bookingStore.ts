@@ -58,6 +58,13 @@ export const useBookingStore = defineStore('booking', () => {
     const bookingReference = ref<string>('')
     const isProcessing = ref(false)
 
+    // Add-ons State
+    const addOns = ref({
+        baggage: [] as { passengerId: number, weight: number, price: number }[],
+        meals: [] as { passengerId: number, mealId: string, price: number }[],
+        seats: [] as { passengerId: number, seatNumber: string, price: number }[]
+    })
+
     // Manage Booking State
     const retrievedBooking = ref<any>(null)
     const isSearchingBooking = ref(false)
@@ -78,7 +85,12 @@ export const useBookingStore = defineStore('booking', () => {
     const fees = computed(() => 500)
 
     const totalPrice = computed(() => {
-        return (baseFare.value + taxes.value + fees.value) * passengers.value.length
+        const addOnsTotal =
+            addOns.value.baggage.reduce((sum, item) => sum + item.price, 0) +
+            addOns.value.meals.reduce((sum, item) => sum + item.price, 0) +
+            addOns.value.seats.reduce((sum, item) => sum + item.price, 0)
+
+        return ((baseFare.value + taxes.value + fees.value) * passengers.value.length) + addOnsTotal
     })
 
     // Actions
@@ -112,6 +124,41 @@ export const useBookingStore = defineStore('booking', () => {
 
     function setPaymentInfo(data: Partial<PaymentInfo>) {
         paymentInfo.value = { ...paymentInfo.value, ...data }
+    }
+
+    function updateBaggage(passengerId: number, weight: number, price: number) {
+        const index = addOns.value.baggage.findIndex(b => b.passengerId === passengerId)
+        if (index !== -1) {
+            if (weight === 0) {
+                addOns.value.baggage.splice(index, 1)
+            } else {
+                addOns.value.baggage[index] = { passengerId, weight, price }
+            }
+        } else if (weight > 0) {
+            addOns.value.baggage.push({ passengerId, weight, price })
+        }
+    }
+
+    function updateMeal(passengerId: number, mealId: string, price: number) {
+        const index = addOns.value.meals.findIndex(m => m.passengerId === passengerId)
+        if (index !== -1) {
+            if (!mealId) {
+                addOns.value.meals.splice(index, 1)
+            } else {
+                addOns.value.meals[index] = { passengerId, mealId, price }
+            }
+        } else if (mealId) {
+            addOns.value.meals.push({ passengerId, mealId, price })
+        }
+    }
+
+    function selectSeat(passengerId: number, seatNumber: string, price: number) {
+        const index = addOns.value.seats.findIndex(s => s.passengerId === passengerId)
+        if (index !== -1) {
+            addOns.value.seats[index] = { passengerId, seatNumber, price }
+        } else {
+            addOns.value.seats.push({ passengerId, seatNumber, price })
+        }
     }
 
     function setStep(step: number) {
@@ -253,6 +300,10 @@ export const useBookingStore = defineStore('booking', () => {
         setStep,
         processPayment,
         resetBooking,
-        retrieveBooking
+        retrieveBooking,
+        addOns,
+        updateBaggage,
+        updateMeal,
+        selectSeat
     }
 })

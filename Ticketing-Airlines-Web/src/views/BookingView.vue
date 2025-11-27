@@ -26,7 +26,9 @@ import {
   Landmark
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
+import AppFooter from '@/components/layout/AppFooter.vue'
 import { useBookingStore } from '@/stores/bookingStore'
+import AddOnsSelection from '@/components/booking/AddOnsSelection.vue'
 
 const router = useRouter()
 const bookingStore = useBookingStore()
@@ -147,7 +149,7 @@ const paymentMethods = [
   }
 ]
 
-const totalSteps = 4
+const totalSteps = 5
 
 const progressPercentage = computed(() => {
   return (currentStep.value / totalSteps) * 100
@@ -156,6 +158,7 @@ const progressPercentage = computed(() => {
 const stepTitles = [
   'Flight Details',
   'Passenger Information', 
+  'Add-ons',
   'Contact & Billing',
   'Payment & Confirmation'
 ]
@@ -169,8 +172,10 @@ const isStepValid = computed(() => {
         p.firstName && p.lastName && p.email && p.phone && p.dateOfBirth
       )
     case 3:
-      return contactInfo.value.email && contactInfo.value.phone && contactInfo.value.address
+      return true // Add-ons are optional
     case 4:
+      return contactInfo.value.email && contactInfo.value.phone && contactInfo.value.address
+    case 5:
       return paymentInfo.value.method !== '' && (
         paymentInfo.value.method === 'Credit/Debit Cards' 
           ? paymentInfo.value.cardNumber && paymentInfo.value.expiryDate && 
@@ -453,8 +458,16 @@ onMounted(() => {
             </CardContent>
           </Card>
 
-          <!-- Step 3: Contact & Billing -->
+          <!-- Step 3: Add-ons -->
           <Card v-if="currentStep === 3" class="border-4 border-gray-900 rounded-none mb-6">
+            <CardContent class="p-6">
+              <CardTitle class="text-2xl font-black text-gray-900 mb-6">Add-ons</CardTitle>
+              <AddOnsSelection />
+            </CardContent>
+          </Card>
+
+          <!-- Step 4: Contact & Billing -->
+          <Card v-if="currentStep === 4" class="border-4 border-gray-900 rounded-none mb-6">
             <CardContent class="p-6">
               <CardTitle class="text-2xl font-black text-gray-900 mb-6">Contact & Billing Information</CardTitle>
               
@@ -514,8 +527,8 @@ onMounted(() => {
             </CardContent>
           </Card>
 
-          <!-- Step 4: Payment & Confirmation -->
-          <Card v-if="currentStep === 4" class="border-4 border-gray-900 rounded-none mb-6">
+          <!-- Step 5: Payment & Confirmation -->
+          <Card v-if="currentStep === 5" class="border-4 border-gray-900 rounded-none mb-6">
             <CardContent class="p-6">
               <CardTitle class="text-2xl font-black text-gray-900 mb-6">Payment Information</CardTitle>
               
