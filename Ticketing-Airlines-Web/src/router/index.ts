@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -80,7 +81,69 @@ const router = createRouter({
       name: 'InternationalDestinations',
       component: () => import('@/views/InternationalDestinationsView.vue')
     },
+    // Admin routes
+    {
+      path: '/admin',
+      component: () => import('@/components/layout/AdminLayout.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        {
+          path: '',
+          name: 'AdminDashboard',
+          component: () => import('@/admin/AdminDashboard.vue'),
+        },
+        {
+          path: 'flights',
+          name: 'AdminFlights',
+          component: () => import('@/admin/FlightsManager.vue'),
+        },
+        {
+          path: 'users',
+          name: 'AdminUsers',
+          component: () => import('@/admin/UsersManager.vue'),
+        },
+        {
+          path: 'bookings',
+          name: 'AdminBookings',
+          component: () => import('@/admin/BookingsManager.vue'),
+        },
+        {
+          path: 'inventory',
+          name: 'AdminInventory',
+          component: () => import('@/admin/InventoryManager.vue'),
+        },
+      ],
+    },
+    {
+      path: '/access-denied',
+      name: 'AccessDenied',
+      component: () => import('@/views/AccessDenied.vue'),
+    },
   ],
+})
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+
+  // Check if route requires authentication
+  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    // Redirect to login if not authenticated
+    next({ name: 'Login', query: { redirect: to.fullPath } })
+    return
+  }
+
+  // Check if route requires admin role
+  if (to.meta.requiresAdmin && authStore.isLoggedIn) {
+    const userRoles = authStore.currentUser?.roles || []
+    if (!userRoles.includes('Admin')) {
+      // Redirect to access denied if not admin
+      next({ name: 'AccessDenied' })
+      return
+    }
+  }
+
+  next()
 })
 
 export default router
