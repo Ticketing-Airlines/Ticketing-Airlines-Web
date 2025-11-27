@@ -35,6 +35,7 @@ import type {
 import { airports } from '@/data/mockData'
 import { useFlightStore } from '@/stores/flightStore'
 import { useBookingStore } from '@/stores/bookingStore'
+import { useValidation, rules } from '@/composables/useValidation'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,11 +64,20 @@ const today = computed(() => {
   return new Date().toISOString().split('T')[0]
 })
 
-const isFormValid = computed(() => {
-  return searchParams.value.from &&
-         searchParams.value.to &&
-         searchParams.value.departureDate &&
-         (searchParams.value.tripType === 'one-way' || searchParams.value.returnDate)
+// Validation
+const { isValid: isFormValid, errors } = useValidation(searchParams.value, {
+  from: [rules.required('Origin is required')],
+  to: [rules.required('Destination is required')],
+  departureDate: [rules.required('Departure date is required')],
+  // Conditional validation for return date
+  returnDate: [
+    (value: any) => {
+      if (searchParams.value.tripType === 'round-trip' && !value) {
+        return 'Return date is required'
+      }
+      return true
+    }
+  ]
 })
 
 // Computed properties to handle Date <-> String conversion for date inputs
@@ -238,7 +248,10 @@ const toggleSort = () => {
           <div>
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">From</Label>
             <Select v-model="searchParams.from">
-              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+              <SelectTrigger 
+                class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                :class="{ 'border-red-500': errors.from }"
+              >
                 <div class="flex items-center gap-2">
                   <MapPin class="w-4 h-4 text-gray-600" />
                   <SelectValue placeholder="Select departure city" />
@@ -252,13 +265,17 @@ const toggleSort = () => {
                 </ScrollArea>
               </SelectContent>
             </Select>
+            <span v-if="errors.from" class="text-red-500 text-xs font-bold mt-1">{{ errors.from }}</span>
           </div>
 
           <!-- To -->
           <div>
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">To</Label>
             <Select v-model="searchParams.to">
-              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+              <SelectTrigger 
+                class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                :class="{ 'border-red-500': errors.to }"
+              >
                 <div class="flex items-center gap-2">
                   <MapPin class="w-4 h-4 text-gray-600" />
                   <SelectValue placeholder="Select destination city" />
@@ -272,6 +289,7 @@ const toggleSort = () => {
                 </ScrollArea>
               </SelectContent>
             </Select>
+            <span v-if="errors.to" class="text-red-500 text-xs font-bold mt-1">{{ errors.to }}</span>
           </div>
 
           <!-- Departure Date -->
@@ -281,8 +299,10 @@ const toggleSort = () => {
               v-model="departureDateString"
               type="date"
               class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              :class="{ 'border-red-500': errors.departureDate }"
               :min="today"
             />
+            <span v-if="errors.departureDate" class="text-red-500 text-xs font-bold mt-1">{{ errors.departureDate }}</span>
           </div>
 
           <!-- Return Date -->
@@ -292,8 +312,10 @@ const toggleSort = () => {
               v-model="returnDateString"
               type="date"
               class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              :class="{ 'border-red-500': errors.returnDate }"
               :min="departureDateString"
             />
+            <span v-if="errors.returnDate" class="text-red-500 text-xs font-bold mt-1">{{ errors.returnDate }}</span>
           </div>
 
           <!-- Passengers -->
@@ -315,7 +337,7 @@ const toggleSort = () => {
         <!-- Search Button -->
         <Button
           @click="handleSearch"
-          :disabled="!isFormValid || isSearching"
+          :disabled="isSearching"
           class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-lg uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-3"
         >
           <Loader2 v-if="isSearching" class="w-5 h-5 animate-spin" />

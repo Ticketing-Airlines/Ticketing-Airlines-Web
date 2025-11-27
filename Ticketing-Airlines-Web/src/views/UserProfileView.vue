@@ -21,6 +21,8 @@ import { useUserStore } from '@/stores/userStore'
 import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 
+import { useValidation, rules } from '@/composables/useValidation'
+
 const userStore = useUserStore()
 const authStore = useAuthStore()
 const { profile, savedPassengers, paymentMethods } = storeToRefs(userStore)
@@ -37,6 +39,16 @@ const editForm = ref({
   nationality: ''
 })
 
+// Profile Validation
+const { validate: validateProfile, errors: profileErrors } = useValidation(editForm, {
+  name: [rules.required('Full name is required')],
+  phone: [rules.required('Phone number is required')],
+  address: [rules.required('Address is required')],
+  city: [rules.required('City is required')],
+  country: [rules.required('Country is required')],
+  nationality: [rules.required('Nationality is required')]
+})
+
 const newPassenger = ref({
   firstName: '',
   lastName: '',
@@ -46,6 +58,14 @@ const newPassenger = ref({
   passengerType: 'Adult' as 'Adult' | 'Child' | 'Infant'
 })
 const showAddPassenger = ref(false)
+
+// Passenger Validation
+const { validate: validatePassenger, errors: passengerErrors, clearErrors: clearPassengerErrors } = useValidation(newPassenger, {
+  firstName: [rules.required('First name is required')],
+  lastName: [rules.required('Last name is required')],
+  passportNumber: [rules.required('Passport number is required')],
+  dateOfBirth: [rules.required('Date of birth is required')]
+})
 
 onMounted(() => {
   if (authStore.user) {
@@ -69,6 +89,8 @@ const startEditing = () => {
 }
 
 const saveProfile = () => {
+  if (!validateProfile()) return
+  
   userStore.updateProfile(editForm.value)
   isEditing.value = false
 }
@@ -78,6 +100,8 @@ const cancelEdit = () => {
 }
 
 const addPassenger = () => {
+  if (!validatePassenger()) return
+
   userStore.addPassenger(newPassenger.value)
   newPassenger.value = {
     firstName: '',
@@ -87,6 +111,7 @@ const addPassenger = () => {
     dateOfBirth: '',
     passengerType: 'Adult'
   }
+  clearPassengerErrors()
   showAddPassenger.value = false
 }
 
@@ -242,27 +267,33 @@ const removePayment = (id: string) => {
                 <div class="grid md:grid-cols-2 gap-6">
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Full Name</Label>
-                    <Input v-model="editForm.name" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="editForm.name" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.name }" required />
+                    <span v-if="profileErrors.name" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.name }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Phone</Label>
-                    <Input v-model="editForm.phone" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="editForm.phone" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.phone }" required />
+                    <span v-if="profileErrors.phone" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.phone }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Address</Label>
-                    <Input v-model="editForm.address" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="editForm.address" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.address }" required />
+                    <span v-if="profileErrors.address" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.address }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">City</Label>
-                    <Input v-model="editForm.city" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="editForm.city" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.city }" required />
+                    <span v-if="profileErrors.city" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.city }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Country</Label>
-                    <Input v-model="editForm.country" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="editForm.country" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.country }" required />
+                    <span v-if="profileErrors.country" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.country }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Nationality</Label>
-                    <Input v-model="editForm.nationality" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="editForm.nationality" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.nationality }" required />
+                    <span v-if="profileErrors.nationality" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.nationality }}</span>
                   </div>
                 </div>
 
@@ -345,19 +376,23 @@ const removePayment = (id: string) => {
                 <div class="grid md:grid-cols-2 gap-6">
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">First Name</Label>
-                    <Input v-model="newPassenger.firstName" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="newPassenger.firstName" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': passengerErrors.firstName }" required />
+                    <span v-if="passengerErrors.firstName" class="text-red-600 text-xs font-bold mt-1 block">{{ passengerErrors.firstName }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Last Name</Label>
-                    <Input v-model="newPassenger.lastName" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="newPassenger.lastName" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': passengerErrors.lastName }" required />
+                    <span v-if="passengerErrors.lastName" class="text-red-600 text-xs font-bold mt-1 block">{{ passengerErrors.lastName }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Passport Number</Label>
-                    <Input v-model="newPassenger.passportNumber" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="newPassenger.passportNumber" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': passengerErrors.passportNumber }" required />
+                    <span v-if="passengerErrors.passportNumber" class="text-red-600 text-xs font-bold mt-1 block">{{ passengerErrors.passportNumber }}</span>
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Date of Birth</Label>
-                    <Input v-model="newPassenger.dateOfBirth" type="date" class="h-12 border-2 border-gray-900 font-bold" required />
+                    <Input v-model="newPassenger.dateOfBirth" type="date" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': passengerErrors.dateOfBirth }" required />
+                    <span v-if="passengerErrors.dateOfBirth" class="text-red-600 text-xs font-bold mt-1 block">{{ passengerErrors.dateOfBirth }}</span>
                   </div>
                 </div>
 

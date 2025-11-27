@@ -26,6 +26,8 @@ import { useBookingStore } from '@/stores/bookingStore'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
+import { useValidation, rules } from '@/composables/useValidation'
+
 // Store
 const bookingStore = useBookingStore()
 const { retrievedBooking, isSearchingBooking, bookingError } = storeToRefs(bookingStore)
@@ -37,11 +39,17 @@ const searchForm = reactive({
   lastName: ''
 })
 
+// Validation
+const { validate, errors, isValid } = useValidation(searchForm, {
+  bookingReference: [rules.required('Booking reference is required')],
+  lastName: [rules.required('Last name is required')]
+})
+
 // Methods
 const searchBooking = async () => {
-  if (searchForm.bookingReference && searchForm.lastName) {
-    await bookingStore.retrieveBooking(searchForm.bookingReference, searchForm.lastName)
-  }
+  if (!validate()) return
+  
+  await bookingStore.retrieveBooking(searchForm.bookingReference, searchForm.lastName)
 }
 
 const checkIn = () => {
@@ -151,8 +159,10 @@ const cancelBooking = () => {
                     v-model="searchForm.bookingReference"
                     placeholder="ABC123"
                     class="h-14 text-xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-blue-600 focus:ring-0 transition-all uppercase tracking-widest"
+                    :class="{ 'border-red-600': errors.bookingReference }"
                     required
                   />
+                  <span v-if="errors.bookingReference" class="text-red-600 text-xs font-bold mt-1 block">{{ errors.bookingReference }}</span>
                 </div>
 
                 <!-- Last Name -->
@@ -165,8 +175,10 @@ const cancelBooking = () => {
                     v-model="searchForm.lastName"
                     placeholder="SURNAME"
                     class="h-14 text-xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-blue-600 focus:ring-0 transition-all uppercase tracking-wide"
+                    :class="{ 'border-red-600': errors.lastName }"
                     required
                   />
+                  <span v-if="errors.lastName" class="text-red-600 text-xs font-bold mt-1 block">{{ errors.lastName }}</span>
                 </div>
               </div>
 

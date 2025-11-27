@@ -3,14 +3,36 @@ import { ref, computed } from 'vue'
 export type ValidationRule = (value: any) => string | boolean
 export type ValidationRules = Record<string, ValidationRule[]>
 
-export function useValidation<T extends Record<string, any>>(initialData: T, rules: ValidationRules) {
+// Common rules
+export const rules = {
+    required: (message = 'This field is required') => (value: any) => {
+        if (value === null || value === undefined || value === '') return message
+        if (Array.isArray(value) && value.length === 0) return message
+        return true
+    },
+    email: (message = 'Invalid email address') => (value: string) => {
+        if (!value) return true // Allow empty if not required
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return emailRegex.test(value) || message
+    },
+    minLength: (min: number, message?: string) => (value: string) => {
+        if (!value) return true
+        return value.length >= min || (message || `Must be at least ${min} characters`)
+    },
+    pattern: (regex: RegExp, message = 'Invalid format') => (value: string) => {
+        if (!value) return true
+        return regex.test(value) || message
+    }
+}
+
+export function useValidation<T extends Record<string, any>>(initialData: T, validationRules: ValidationRules) {
     const errors = ref<Record<string, string>>({})
     const isSubmitted = ref(false)
 
     const isValid = computed(() => {
-        for (const key in rules) {
+        for (const key in validationRules) {
             const value = initialData[key]
-            const fieldRules = rules[key]
+            const fieldRules = validationRules[key]
 
             for (const rule of fieldRules) {
                 const result = rule(value)
@@ -27,9 +49,9 @@ export function useValidation<T extends Record<string, any>>(initialData: T, rul
         errors.value = {}
         let valid = true
 
-        for (const key in rules) {
+        for (const key in validationRules) {
             const value = initialData[key]
-            const fieldRules = rules[key]
+            const fieldRules = validationRules[key]
 
             for (const rule of fieldRules) {
                 const result = rule(value)
@@ -49,40 +71,12 @@ export function useValidation<T extends Record<string, any>>(initialData: T, rul
         isSubmitted.value = false
     }
 
-    // Common rules
-    const required = (message = 'This field is required') => (value: any) => {
-        if (value === null || value === undefined || value === '') return message
-        if (Array.isArray(value) && value.length === 0) return message
-        return true
-    }
-
-    const email = (message = 'Invalid email address') => (value: string) => {
-        if (!value) return true // Allow empty if not required
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        return emailRegex.test(value) || message
-    }
-
-    const minLength = (min: number, message?: string) => (value: string) => {
-        if (!value) return true
-        return value.length >= min || (message || `Must be at least ${min} characters`)
-    }
-
-    const pattern = (regex: RegExp, message = 'Invalid format') => (value: string) => {
-        if (!value) return true
-        return regex.test(value) || message
-    }
-
     return {
         errors,
         isSubmitted,
         isValid,
         validate,
         clearErrors,
-        rules: {
-            required,
-            email,
-            minLength,
-            pattern
-        }
+        rules // Keep returning rules for backward compatibility if needed, or remove
     }
 }
