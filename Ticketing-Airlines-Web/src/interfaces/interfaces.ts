@@ -7,6 +7,7 @@ export type BookingStatus = 'Pending' | 'Paid' | 'Ticketed' | 'Cancelled' | 'Ref
 export type TicketStatus = 'Issued' | 'Void' | 'Refunded';
 export type PaymentStatus = 'Pending' | 'Authorized' | 'Captured' | 'Failed' | 'Refunded';
 export type PaxType = 'ADT' | 'CHD' | 'INF';
+export type FareBundleType = 'SKYLITE' | 'SKYPLUS' | 'SKYFLEX'
 
 export interface User {
   userId: string;
@@ -122,6 +123,7 @@ export interface Booking {
   contactName: string;
   contactEmail: string;
   contactPhone?: string;
+  bundle?: FareBundleType;
 }
 
 export interface BookingPassenger {
@@ -217,4 +219,25 @@ export interface FlightSearchResponse {
   results: FlightSearchResult[] | RoundTripResult[] | MultiCityResult[];
   totalResults: number;
   searchParams: FlightSearchParams;
+}
+
+// Fare Bundle interfaces
+export interface FareBundle {
+  type: FareBundleType
+  name: string
+  description: string
+  priceModifier: number // Multiplier (1.0, 1.2, 1.4)
+  features: {
+    handCarryBag: string // e.g., "7kg"
+    checkedBaggage: string | null // e.g., "20kg" or null
+    seatSelection: 'standard' | 'any' | 'none'
+    rebooking: boolean
+    travelFundsConversion: boolean
+    priorityBoarding: boolean
+  }
+}
+
+export interface FlightWithBundles extends FlightSearchResult {
+  bundles: FareBundle[]
+  selectedBundle?: FareBundleType
 }

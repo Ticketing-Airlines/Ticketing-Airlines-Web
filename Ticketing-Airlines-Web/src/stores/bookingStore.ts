@@ -3,9 +3,11 @@ import { ref, computed } from 'vue'
 import type {
     FlightSearchResult,
     RoundTripResult,
-    MultiCityResult
+    MultiCityResult,
+    FareBundleType
 } from '@/interfaces/interfaces'
 import { bookings as mockBookings } from '@/data/mockData'
+import { getBundleByType } from '@/data/fareBundles'
 
 export interface Passenger {
     id: number
@@ -58,6 +60,7 @@ export const useBookingStore = defineStore('booking', () => {
     })
     const bookingReference = ref<string>('')
     const isProcessing = ref(false)
+    const selectedBundle = ref<FareBundleType>('SKYPLUS') // Default to SkyPlus (recommended)
 
     // Add-ons State
     const addOns = ref({
@@ -75,12 +78,17 @@ export const useBookingStore = defineStore('booking', () => {
     // Getters
     const baseFare = computed(() => {
         if (!selectedFlight.value) return 0
+
+        let basePrice = 0
         if ('price' in selectedFlight.value) {
-            return selectedFlight.value.price
+            basePrice = selectedFlight.value.price
         } else if ('totalPrice' in selectedFlight.value) {
-            return selectedFlight.value.totalPrice
+            basePrice = selectedFlight.value.totalPrice
         }
-        return 0
+
+        // Apply bundle price modifier
+        const bundle = getBundleByType(selectedBundle.value)
+        return bundle ? Math.round(basePrice * bundle.priceModifier) : basePrice
     })
 
     const taxes = computed(() => Math.round(baseFare.value * 0.12))
@@ -96,9 +104,14 @@ export const useBookingStore = defineStore('booking', () => {
     })
 
     // Actions
-    function initBooking(flight: FlightSearchResult | RoundTripResult | MultiCityResult, passengerCount: number = 1) {
+    function initBooking(
+        flight: FlightSearchResult | RoundTripResult | MultiCityResult,
+        passengerCount: number = 1,
+        bundle: FareBundleType = 'SKYPLUS'
+    ) {
         resetBooking()
         selectedFlight.value = flight
+        selectedBundle.value = bundle
 
         // Initialize passengers
         passengers.value = Array.from({ length: passengerCount }, (_, index) => ({
@@ -126,6 +139,10 @@ export const useBookingStore = defineStore('booking', () => {
 
     function setPaymentInfo(data: Partial<PaymentInfo>) {
         paymentInfo.value = { ...paymentInfo.value, ...data }
+    }
+
+    function setBundle(bundle: FareBundleType) {
+        selectedBundle.value = bundle
     }
 
     function updateBaggage(passengerId: number, weight: number, price: number) {
@@ -211,6 +228,7 @@ export const useBookingStore = defineStore('booking', () => {
         }
         bookingReference.value = ''
         isProcessing.value = false
+        selectedBundle.value = 'SKYPLUS'
     }
 
     async function retrieveBooking(reference: string, lastName: string) {
@@ -391,6 +409,8 @@ export const useBookingStore = defineStore('booking', () => {
         addOns,
         updateBaggage,
         updateMeal,
-        selectSeat
+        selectSeat,
+        selectedBundle,
+        setBundle
     }
 })

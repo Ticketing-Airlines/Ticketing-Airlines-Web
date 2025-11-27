@@ -13,6 +13,7 @@ import {
   MapPin,  
   Search,
   ArrowLeft,
+  ArrowRight,
   Filter,
   SortAsc,
   SortDesc,
@@ -22,12 +23,14 @@ import {
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import FareBundleSelector from '@/components/booking/FareBundleSelector.vue'
 import type { 
   FlightSearchParams, 
   FlightSearchResult, 
   RoundTripResult, 
   MultiCityResult,
-  Airport 
+  Airport,
+  FareBundleType 
 } from '@/interfaces/interfaces'
 import { airports } from '@/data/mockData'
 import { useFlightStore } from '@/stores/flightStore'
@@ -44,6 +47,9 @@ const { searchParams, searchResults, totalResults, isSearching } = storeToRefs(f
 // Local UI state
 const showFilters = ref(false)
 const sortOrder = ref<'asc' | 'desc'>('asc')
+const showBundleModal = ref(false)
+const selectedFlightForBundle = ref<FlightSearchResult | RoundTripResult | MultiCityResult | null>(null)
+const selectedBundle = ref<FareBundleType>('SKYPLUS')
 
 // Filter state
 const filters = ref({
@@ -152,8 +158,21 @@ const handleSearch = async () => {
 }
 
 const selectFlight = (result: FlightSearchResult | RoundTripResult | MultiCityResult) => {
-  console.log('Selected flight:', result)
-  bookingStore.initBooking(result, searchParams.value.passengers)
+  selectedFlightForBundle.value = result
+  selectedBundle.value = 'SKYPLUS' // Reset to recommended
+  showBundleModal.value = true
+}
+
+const handleBundleSelection = (bundle: FareBundleType) => {
+  selectedBundle.value = bundle
+}
+
+const proceedWithBundle = () => {
+  if (!selectedFlightForBundle.value) return
+  
+  console.log('Selected flight with bundle:', selectedFlightForBundle.value, selectedBundle.value)
+  bookingStore.initBooking(selectedFlightForBundle.value, searchParams.value.passengers, selectedBundle.value)
+  showBundleModal.value = false
   router.push('/booking')
 }
 
@@ -450,7 +469,7 @@ const toggleSort = () => {
                       @click="selectFlight(flight)"
                       class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
                     >
-                      Select Flight
+                      Choose Fare
                     </Button>
                   </div>
                 </div>
@@ -634,5 +653,52 @@ const toggleSort = () => {
 
     <!-- Footer -->
     <AppFooter />
+
+    <!-- Bundle Selector Modal -->
+    <div
+      v-if="showBundleModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      @click.self="showBundleModal = false"
+    >
+      <div class="bg-white border-4 border-gray-900 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b-4 border-gray-900 p-6 flex justify-between items-start z-10">
+          <div>
+            <h2 class="text-3xl font-black text-gray-900">Choose Your Fare Bundle</h2>
+            <p class="text-gray-600 font-bold mt-1">Select the best option for your journey</p>
+          </div>
+          <button
+            @click="showBundleModal = false"
+            class="w-10 h-10 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
+          >
+            <X class="w-6 h-6" />
+          </button>
+        </div>
+
+        <div class="p-6">
+          <FareBundleSelector
+            :basePrice="selectedFlightForBundle && 'price' in selectedFlightForBundle ? selectedFlightForBundle.price : selectedFlightForBundle?.totalPrice || 0"
+            :selectedBundle="selectedBundle"
+            @select="handleBundleSelection"
+          />
+
+          <div class="mt-8 flex justify-end gap-4">
+            <Button
+              @click="showBundleModal = false"
+              variant="outline"
+              class="border-4 border-gray-900 rounded-none font-black px-8 py-3"
+            >
+              Cancel
+            </Button>
+            <Button
+              @click="proceedWithBundle"
+              class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+            >
+              Continue to Booking
+              <ArrowRight class="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

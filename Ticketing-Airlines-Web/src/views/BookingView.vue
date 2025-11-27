@@ -23,12 +23,14 @@ import {
   Smartphone,
   Globe,
   Banknote,
-  Landmark
+  Landmark,
+  X
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { useBookingStore } from '@/stores/bookingStore'
 import AddOnsSelection from '@/components/booking/AddOnsSelection.vue'
+import { getBundleByType } from '@/data/fareBundles'
 
 const router = useRouter()
 const bookingStore = useBookingStore()
@@ -44,10 +46,14 @@ const {
   totalPrice,
   baseFare,
   taxes,
-  fees
+  fees,
+  selectedBundle
 } = storeToRefs(bookingStore)
 
 const showPassword = computed(() => false) // Simplified for now, or add local state if needed
+
+// Get current bundle details
+const currentBundle = computed(() => getBundleByType(selectedBundle.value))
 
 // Payment methods data
 const paymentMethods = [
@@ -362,7 +368,7 @@ onMounted(() => {
                   <div class="grid grid-cols-2 gap-4">
                     <div>
                       <span class="text-sm text-gray-600 font-bold">Fare Type:</span>
-                      <span class="ml-2 font-black text-gray-900">{{ 'fareCode' in selectedFlight ? selectedFlight.fareCode : 'Y' }} Fare</span>
+                      <span class="ml-2 font-black text-gray-900">{{ currentBundle ? currentBundle.name : 'Standard' }}</span>
                     </div>
                     <div>
                       <span class="text-sm text-gray-600 font-bold">Price:</span>
@@ -728,6 +734,11 @@ onMounted(() => {
                 <div class="flex justify-between">
                   <span class="text-gray-600 font-bold">Passengers</span>
                   <span class="font-black text-gray-900">{{ passengers.length }} Passenger{{ passengers.length > 1 ? 's' : '' }}</span>
+                </div>
+
+                <div class="flex justify-between">
+                  <span class="text-gray-600 font-bold">Fare Bundle</span>
+                  <span class="font-black text-gray-900">{{ currentBundle ? currentBundle.name : 'Standard' }}</span>
                 </div>
                 
                 <div class="flex justify-between">
