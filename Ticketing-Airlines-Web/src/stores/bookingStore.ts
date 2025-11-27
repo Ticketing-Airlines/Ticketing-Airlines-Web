@@ -5,6 +5,7 @@ import type {
     RoundTripResult,
     MultiCityResult
 } from '@/interfaces/interfaces'
+import { bookings as mockBookings } from '@/data/mockData'
 
 export interface Passenger {
     id: number
@@ -67,6 +68,7 @@ export const useBookingStore = defineStore('booking', () => {
 
     // Manage Booking State
     const retrievedBooking = ref<any>(null)
+    const userBookings = ref<any[]>([])
     const isSearchingBooking = ref(false)
     const bookingError = ref('')
 
@@ -223,56 +225,139 @@ export const useBookingStore = defineStore('booking', () => {
                 throw new Error('Invalid booking reference or last name')
             }
 
-            // Mock booking data
-            retrievedBooking.value = {
-                reference: reference.toUpperCase(),
-                status: 'Confirmed',
-                bookingDate: 'January 15, 2024',
-                outbound: {
-                    from: 'Manila (MNL)',
-                    to: 'Cebu (CEB)',
-                    flightNumber: '5J 561',
-                    date: 'February 15, 2024',
-                    time: '06:00 - 07:25',
-                    duration: '1h 25m'
-                },
-                return: {
-                    from: 'Cebu (CEB)',
-                    to: 'Manila (MNL)',
-                    flightNumber: '5J 562',
-                    date: 'February 18, 2024',
-                    time: '08:00 - 09:25',
-                    duration: '1h 25m'
-                },
-                passengers: [
-                    {
-                        id: 1,
-                        name: 'John Doe',
-                        type: 'Adult',
-                        seat: '12A',
-                        meal: 'Standard'
+            // Check against mock data first
+            const foundMock = mockBookings.find(b => b.pnr === reference.toUpperCase())
+
+            if (foundMock) {
+                // Construct a full booking object from mock data parts if needed, 
+                // or just return a standard mock structure for now to ensure UI works
+                // For simplicity in this phase, we'll return a rich object similar to the previous mock
+                retrievedBooking.value = {
+                    reference: foundMock.pnr,
+                    status: foundMock.status,
+                    bookingDate: new Date(foundMock.bookingDate).toLocaleDateString(),
+                    outbound: {
+                        from: 'Manila (MNL)',
+                        to: 'Cebu (CEB)',
+                        flightNumber: 'SS 101',
+                        date: 'October 16, 2025',
+                        time: '08:00 - 09:15',
+                        duration: '1h 15m'
                     },
-                    {
-                        id: 2,
-                        name: 'Jane Doe',
-                        type: 'Adult',
-                        seat: '12B',
-                        meal: 'Vegetarian'
+                    passengers: [
+                        {
+                            id: 1,
+                            name: foundMock.contactName,
+                            type: 'Adult',
+                            seat: '1A',
+                            meal: 'Standard'
+                        }
+                    ],
+                    pricing: {
+                        baseFare: 2500,
+                        taxes: 500,
+                        addOns: 299,
+                        total: foundMock.totalAmount
                     }
-                ],
-                pricing: {
-                    baseFare: 8500,
-                    taxes: 1200,
-                    addOns: 500,
-                    total: 10200
                 }
+                return true
             }
-            return true
+
+            // Fallback for testing specific PNRs not in mockData but used in manual tests
+            if (reference.toUpperCase() === 'TEST01') {
+                retrievedBooking.value = {
+                    reference: 'TEST01',
+                    status: 'Confirmed',
+                    bookingDate: 'January 15, 2024',
+                    outbound: {
+                        from: 'Manila (MNL)',
+                        to: 'Cebu (CEB)',
+                        flightNumber: '5J 561',
+                        date: 'February 15, 2024',
+                        time: '06:00 - 07:25',
+                        duration: '1h 25m'
+                    },
+                    return: {
+                        from: 'Cebu (CEB)',
+                        to: 'Manila (MNL)',
+                        flightNumber: '5J 562',
+                        date: 'February 18, 2024',
+                        time: '08:00 - 09:25',
+                        duration: '1h 25m'
+                    },
+                    passengers: [
+                        {
+                            id: 1,
+                            name: 'John Doe',
+                            type: 'Adult',
+                            seat: '12A',
+                            meal: 'Standard'
+                        }
+                    ],
+                    pricing: {
+                        baseFare: 8500,
+                        taxes: 1200,
+                        addOns: 500,
+                        total: 10200
+                    }
+                }
+                return true
+            }
+
+            throw new Error('Booking not found. Please check your details and try again.')
+
         } catch (error: any) {
             console.error('Failed to retrieve booking:', error)
             bookingError.value = error.message || 'Booking not found'
             retrievedBooking.value = null
             return false
+        } finally {
+            isSearchingBooking.value = false
+        }
+    }
+
+    async function getUserBookings(email: string) {
+        isSearchingBooking.value = true
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+
+            // Filter mock bookings by email
+            const userMockBookings = mockBookings.filter(b => b.contactEmail === email)
+
+            // Transform to UI friendly format
+            userBookings.value = userMockBookings.map(b => ({
+                reference: b.pnr,
+                status: b.status,
+                bookingDate: new Date(b.bookingDate).toLocaleDateString(),
+                destination: 'Cebu (CEB)', // Mock destination for list view
+                date: 'Oct 16, 2025',
+                amount: b.totalAmount
+            }))
+
+            // Add some dummy data if empty for demo purposes
+            if (userBookings.value.length === 0) {
+                userBookings.value = [
+                    {
+                        reference: 'XYZ789',
+                        status: 'Confirmed',
+                        bookingDate: 'Oct 10, 2025',
+                        destination: 'Boracay (MPH)',
+                        date: 'Nov 20, 2025',
+                        amount: 5499
+                    },
+                    {
+                        reference: 'PQR456',
+                        status: 'Completed',
+                        bookingDate: 'Sep 01, 2025',
+                        destination: 'Davao (DVO)',
+                        date: 'Sep 15, 2025',
+                        amount: 4199
+                    }
+                ]
+            }
+
+        } catch (error) {
+            console.error('Failed to get user bookings:', error)
         } finally {
             isSearchingBooking.value = false
         }
@@ -291,6 +376,7 @@ export const useBookingStore = defineStore('booking', () => {
         fees,
         totalPrice,
         retrievedBooking,
+        userBookings,
         isSearchingBooking,
         bookingError,
         initBooking,
@@ -301,6 +387,7 @@ export const useBookingStore = defineStore('booking', () => {
         processPayment,
         resetBooking,
         retrieveBooking,
+        getUserBookings,
         addOns,
         updateBaggage,
         updateMeal,

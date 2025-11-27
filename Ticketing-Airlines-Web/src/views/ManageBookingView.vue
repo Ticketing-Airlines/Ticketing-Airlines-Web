@@ -24,10 +24,12 @@ import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { useBookingStore } from '@/stores/bookingStore'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
 // Store
 const bookingStore = useBookingStore()
 const { retrievedBooking, isSearchingBooking, bookingError } = storeToRefs(bookingStore)
+const router = useRouter()
 
 // Reactive state
 const searchForm = reactive({
@@ -43,8 +45,18 @@ const searchBooking = async () => {
 }
 
 const checkIn = () => {
-  // Navigate to check-in page
-  console.log('Navigating to check-in...')
+  // Navigate to check-in page with query params if booking is retrieved
+  if (retrievedBooking.value) {
+    router.push({ 
+      path: '/check-in', 
+      query: { 
+        ref: retrievedBooking.value.reference, 
+        lastName: searchForm.lastName 
+      } 
+    })
+  } else {
+    router.push('/check-in')
+  }
 }
 
 const selectSeats = () => {
