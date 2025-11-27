@@ -32,6 +32,10 @@ import { useBookingStore } from '@/stores/bookingStore'
 import AddOnsSelection from '@/components/booking/AddOnsSelection.vue'
 import { getBundleByType } from '@/data/fareBundles'
 
+import { useValidation } from '@/composables/useValidation'
+
+import { watch, ref } from 'vue'
+
 const router = useRouter()
 const bookingStore = useBookingStore()
 
@@ -54,6 +58,45 @@ const showPassword = computed(() => false) // Simplified for now, or add local s
 
 // Get current bundle details
 const currentBundle = computed(() => getBundleByType(selectedBundle.value))
+
+// Validation Rules
+const { rules } = useValidation({}, {})
+
+// Passenger Validation
+const passengerValidators = ref<any[]>([])
+
+const createPassengerValidator = (passenger: any) => {
+  return useValidation(passenger, {
+    firstName: [rules.required('First name is required')],
+    lastName: [rules.required('Last name is required')],
+    email: [rules.required('Email is required'), rules.email('Invalid email format')],
+    phone: [rules.required('Phone number is required')],
+    dateOfBirth: [rules.required('Date of birth is required')]
+  })
+}
+
+// Sync validators with passengers
+watch(passengers, (newPassengers) => {
+  passengerValidators.value = newPassengers.map(p => createPassengerValidator(p))
+}, { immediate: true })
+
+// Contact Info Validation
+const contactValidation = useValidation(contactInfo.value, {
+  email: [rules.required('Email is required'), rules.email('Invalid email format')],
+  phone: [rules.required('Phone number is required')],
+  address: [rules.required('Address is required')],
+  city: [rules.required('City is required')],
+  postalCode: [rules.required('Postal code is required')]
+})
+
+// Payment Validation
+const paymentValidation = useValidation(paymentInfo.value, {
+  method: [rules.required('Payment method is required')],
+  cardNumber: [rules.required('Card number is required'), rules.minLength(16, 'Invalid card number')],
+  expiryDate: [rules.required('Expiry date is required')],
+  cvv: [rules.required('CVV is required'), rules.minLength(3, 'Invalid CVV')],
+  cardholderName: [rules.required('Cardholder name is required')]
+})
 
 // Payment methods data
 const paymentMethods = [
@@ -169,30 +212,6 @@ const stepTitles = [
   'Payment & Confirmation'
 ]
 
-const isStepValid = computed(() => {
-  switch (currentStep.value) {
-    case 1:
-      return selectedFlight.value !== null
-    case 2:
-      return passengers.value.every(p => 
-        p.firstName && p.lastName && p.email && p.phone && p.dateOfBirth
-      )
-    case 3:
-      return true // Add-ons are optional
-    case 4:
-      return contactInfo.value.email && contactInfo.value.phone && contactInfo.value.address
-    case 5:
-      return paymentInfo.value.method !== '' && (
-        paymentInfo.value.method === 'Credit/Debit Cards' 
-          ? paymentInfo.value.cardNumber && paymentInfo.value.expiryDate && 
-            paymentInfo.value.cvv && paymentInfo.value.cardholderName
-          : true
-      )
-    default:
-      return false
-  }
-})
-
 const getIconComponent = (iconName: string) => {
   const iconMap: { [key: string]: any } = {
     'CreditCard': CreditCard,
@@ -210,8 +229,56 @@ const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
 }
 
+const isStepValid = computed(() => {
+  switch (currentStep.value) {
+    case 1:
+      return selectedFlight.value !== null
+    case 2:
+      return passengerValidators.value.every(v => v.isValid.value)
+    case 3:
+      return true
+    case 4:
+      return contactValidation.isValid.value
+    case 5:
+      if (paymentInfo.value.method === 'Credit/Debit Cards') {
+        return paymentValidation.isValid.value
+      } else {
+        return !!paymentInfo.value.method
+      }
+    default:
+      return false
+  }
+})
+
 const nextStep = () => {
-  if (isStepValid.value && currentStep.value < totalSteps) {
+  let isValid = false
+
+  switch (currentStep.value) {
+    case 1:
+      isValid = selectedFlight.value !== null
+      break
+    case 2:
+      // Validate all passengers
+      isValid = passengerValidators.value.every(v => v.validate())
+      break
+    case 3:
+      isValid = true // Add-ons are optional
+      break
+    case 4:
+      isValid = contactValidation.validate()
+      break
+    case 5:
+      if (paymentInfo.value.method === 'Credit/Debit Cards') {
+        isValid = paymentValidation.validate()
+      } else {
+        isValid = !!paymentInfo.value.method
+      }
+      break
+    default:
+      isValid = false
+  }
+
+  if (isValid && currentStep.value < totalSteps) {
     bookingStore.setStep(currentStep.value + 1)
   }
 }
@@ -223,6 +290,16 @@ const prevStep = () => {
 }
 
 const handlePayment = async () => {
+  // Final validation check before processing
+  let isValid = false
+  if (paymentInfo.value.method === 'Credit/Debit Cards') {
+    isValid = paymentValidation.validate()
+  } else {
+    isValid = !!paymentInfo.value.method
+  }
+
+  if (!isValid) return
+
   const success = await bookingStore.processPayment()
   if (success) {
     router.push('/booking-confirmation')
@@ -404,7 +481,9 @@ onMounted(() => {
                         v-model="passenger.firstName"
                         placeholder="Enter first name"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.firstName }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.firstName" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.firstName }}</span>
                     </div>
                     
                     <div>
@@ -413,7 +492,9 @@ onMounted(() => {
                         v-model="passenger.lastName"
                         placeholder="Enter last name"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.lastName }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.lastName" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.lastName }}</span>
                     </div>
                     
                     <div>
@@ -423,7 +504,9 @@ onMounted(() => {
                         type="email"
                         placeholder="Enter email address"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.email }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.email" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.email }}</span>
                     </div>
                     
                     <div>
@@ -432,7 +515,9 @@ onMounted(() => {
                         v-model="passenger.phone"
                         placeholder="Enter phone number"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.phone }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.phone" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.phone }}</span>
                     </div>
                     
                     <div>
@@ -441,7 +526,9 @@ onMounted(() => {
                         v-model="passenger.dateOfBirth"
                         type="date"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.dateOfBirth }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.dateOfBirth" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.dateOfBirth }}</span>
                     </div>
                     
                     <div>
@@ -489,7 +576,9 @@ onMounted(() => {
                         type="email"
                         placeholder="Enter email address"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.email }"
                       />
+                      <span v-if="contactValidation.errors.value.email" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.email }}</span>
                     </div>
                     
                     <div>
@@ -498,7 +587,9 @@ onMounted(() => {
                         v-model="contactInfo.phone"
                         placeholder="Enter phone number"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.phone }"
                       />
+                      <span v-if="contactValidation.errors.value.phone" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.phone }}</span>
                     </div>
                     
                     <div class="md:col-span-2">
@@ -507,7 +598,9 @@ onMounted(() => {
                         v-model="contactInfo.address"
                         placeholder="Enter complete address"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.address }"
                       />
+                      <span v-if="contactValidation.errors.value.address" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.address }}</span>
                     </div>
                     
                     <div>
@@ -516,7 +609,9 @@ onMounted(() => {
                         v-model="contactInfo.city"
                         placeholder="Enter city"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.city }"
                       />
+                      <span v-if="contactValidation.errors.value.city" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.city }}</span>
                     </div>
                     
                     <div>
@@ -525,7 +620,9 @@ onMounted(() => {
                         v-model="contactInfo.postalCode"
                         placeholder="Enter postal code"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.postalCode }"
                       />
+                      <span v-if="contactValidation.errors.value.postalCode" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.postalCode }}</span>
                     </div>
                   </div>
                 </div>
@@ -542,6 +639,7 @@ onMounted(() => {
                 <!-- Payment Method Selection -->
                 <div class="bg-gray-50 p-6 border-4 border-gray-200">
                   <h4 class="text-lg font-black text-gray-900 mb-4">Choose Payment Method</h4>
+                  <span v-if="paymentValidation.errors.value.method" class="text-red-500 text-xs font-bold block mb-2">{{ paymentValidation.errors.value.method }}</span>
                   
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div
@@ -616,8 +714,10 @@ onMounted(() => {
                           v-model="paymentInfo.cardNumber"
                           placeholder="1234 5678 9012 3456"
                           class="pl-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                          :class="{ 'border-red-500': paymentValidation.errors.value.cardNumber }"
                         />
                       </div>
+                      <span v-if="paymentValidation.errors.value.cardNumber" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.cardNumber }}</span>
                     </div>
                     
                     <div>
@@ -626,7 +726,9 @@ onMounted(() => {
                         v-model="paymentInfo.expiryDate"
                         placeholder="MM/YY"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': paymentValidation.errors.value.expiryDate }"
                       />
+                      <span v-if="paymentValidation.errors.value.expiryDate" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.expiryDate }}</span>
                     </div>
                     
                     <div>
@@ -637,6 +739,7 @@ onMounted(() => {
                           type="password"
                           placeholder="123"
                           class="pr-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                          :class="{ 'border-red-500': paymentValidation.errors.value.cvv }"
                         />
                         <button
                           @click="showPassword = !showPassword"
@@ -646,6 +749,7 @@ onMounted(() => {
                           <EyeOff v-else class="w-4 h-4 text-gray-400" />
                         </button>
                       </div>
+                      <span v-if="paymentValidation.errors.value.cvv" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.cvv }}</span>
                     </div>
                     
                     <div class="md:col-span-2">
@@ -654,7 +758,9 @@ onMounted(() => {
                         v-model="paymentInfo.cardholderName"
                         placeholder="Enter cardholder name"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': paymentValidation.errors.value.cardholderName }"
                       />
+                      <span v-if="paymentValidation.errors.value.cardholderName" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.cardholderName }}</span>
                     </div>
                   </div>
                 </div>
@@ -689,7 +795,6 @@ onMounted(() => {
             <Button
               v-if="currentStep < totalSteps"
               @click="nextStep"
-              :disabled="!isStepValid"
               class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
             >
               Continue
@@ -699,7 +804,7 @@ onMounted(() => {
             <Button
               v-else
               @click="handlePayment"
-              :disabled="!isStepValid || isProcessing"
+              :disabled="isProcessing"
               class="bg-green-600 hover:bg-green-700 text-white rounded-none font-black px-8 py-3"
             >
               <Loader2 v-if="isProcessing" class="w-4 h-4 mr-2 animate-spin" />
