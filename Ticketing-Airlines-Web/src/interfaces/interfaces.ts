@@ -183,3 +183,38 @@ export interface FlightSearchParams {
   passengers: number;
   tripType: string;
 }
+
+export interface FlightSearchResult {
+  flightInstanceId: string;
+  flightNumber: string;
+  originAirport: Airport;
+  destinationAirport: Airport;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  price: number;
+  currency: string;
+  fareCode: FareCode;
+  availableSeats: number;
+  aircraft: Aircraft;
+  airline: Airline;
+}
+
+export interface RoundTripResult {
+  outbound: FlightSearchResult;
+  return?: FlightSearchResult;
+  totalPrice: number;
+  currency: string;
+}
+
+export interface MultiCityResult {
+  segments: FlightSearchResult[];
+  totalPrice: number;
+  currency: string;
+}
+
+export interface FlightSearchResponse {
+  results: FlightSearchResult[] | RoundTripResult[] | MultiCityResult[];
+  totalResults: number;
+  searchParams: FlightSearchParams;
+}
