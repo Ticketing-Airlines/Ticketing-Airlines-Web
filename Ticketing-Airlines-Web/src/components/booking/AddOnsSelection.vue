@@ -7,12 +7,36 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Luggage, Utensils, Armchair, CheckCircle } from 'lucide-vue-next'
-import SeatMap from '@/components/SeatMap.vue'
+import SeatMap from '@/components/booking/SeatMap.vue'
+import SeatLegend from '@/components/booking/SeatLegend.vue'
+import { aircraftSeatConfigs } from '@/data/mockData'
+import type { AircraftSeatConfig } from '@/data/mockData'
 
 const bookingStore = useBookingStore()
-const { passengers, addOns } = storeToRefs(bookingStore)
+const { passengers, addOns, selectedFlight } = storeToRefs(bookingStore)
 
 const activeTab = ref('baggage')
+
+// Get aircraft config based on selected flight
+const aircraftConfig = computed<AircraftSeatConfig>(() => {
+  // Default to first aircraft (Airbus A320) if no flight selected
+  if (!selectedFlight.value) {
+    return aircraftSeatConfigs[0]
+  }
+
+  // Try to get aircraft ID from different flight result structures
+  let aircraftId = 1 // default
+  
+  if ('aircraft' in selectedFlight.value && selectedFlight.value.aircraft) {
+    aircraftId = selectedFlight.value.aircraft.aircraftId
+  } else if ('outbound' in selectedFlight.value && selectedFlight.value.outbound.aircraft) {
+    aircraftId = selectedFlight.value.outbound.aircraft.aircraftId
+  } else if ('segments' in selectedFlight.value && selectedFlight.value.segments[0]?.aircraft) {
+    aircraftId = selectedFlight.value.segments[0].aircraft.aircraftId
+  }
+  
+  return aircraftSeatConfigs.find(c => c.aircraftId === aircraftId) || aircraftSeatConfigs[0]
+})
 
 const baggageOptions = [
   { weight: 0, price: 0, label: 'No Baggage' },
@@ -59,33 +83,19 @@ const updateMeal = (passengerId: number, mealId: string) => {
   }
 }
 
-const handleSeatSelection = (seat: any, passengerId: number) => {
-  // Simple logic: assign seat to current passenger being edited or just first available
-  // For this demo, we'll assume we are selecting for a specific passenger.
-  // But SeatMap emits generic events.
-  // We need a way to know WHICH passenger we are selecting for.
-  // Let's add a selector for "Selecting for: Passenger Name" above the seat map.
-}
-
 const selectedPassengerForSeat = ref(passengers.value[0]?.id || 1)
 
-const onSeatSelected = (seat: any) => {
-  const passenger = passengers.value.find(p => p.id === selectedPassengerForSeat.value)
-  if (passenger) {
-    bookingStore.selectSeat(passenger.id, `${seat.row}${seat.col}`, seat.price || 0)
-  }
-}
+// Prepare selected seats in the format expected by SeatMap component
+const selectedSeatsMap = computed(() => {
+  const map: Record<number, string> = {}
+  addOns.value.seats.forEach(seat => {
+    map[seat.passengerId] = seat.seatNumber
+  })
+  return map
+})
 
-const onSeatDeselected = (seat: any) => {
-  const passenger = passengers.value.find(p => p.id === selectedPassengerForSeat.value)
-  if (passenger) {
-    // Logic to remove seat
-    // But store doesn't have removeSeat, just selectSeat (which updates/adds).
-    // We might need to handle removal or just overwrite.
-    // For now, let's assume selecting another seat overwrites.
-    // To remove, we might need a "Remove Seat" button or handle deselection in store.
-    // Since store logic is simple, let's just leave it for now.
-  }
+const handleSeatSelect = (passengerId: number, seatNumber: string, price: number) => {
+  bookingStore.selectSeat(passengerId, seatNumber, price)
 }
 
 const formatPrice = (price: number) => `₱${price.toLocaleString()}`
@@ -196,39 +206,53 @@ const formatPrice = (price: number) => `₱${price.toLocaleString()}`
     </div>
 
     <!-- Seats Tab -->
-    <div v-if="activeTab === 'seats'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div v-if="activeTab === 'seats'" class="space-y-6">
       <!-- Passenger Selector -->
-      <div class="lg:col-span-1 space-y-4">
-        <h4 class="font-black text-gray-900 text-lg mb-4">Select Passenger</h4>
-        <div 
-          v-for="passenger in passengers" 
-          :key="passenger.id"
-          @click="selectedPassengerForSeat = passenger.id"
-          :class="[
-            'p-4 border-4 cursor-pointer transition-all duration-300',
-            selectedPassengerForSeat === passenger.id
-              ? 'border-blue-600 bg-blue-50'
-              : 'border-gray-200 bg-white hover:border-gray-400'
-          ]"
-        >
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="font-black text-gray-900">{{ passenger.firstName }} {{ passenger.lastName }}</div>
-              <div class="text-sm text-gray-600 font-bold mt-1">
-                Seat: <span class="text-blue-600">{{ getSeatForPassenger(passenger.id) }}</span>
+      <div class="bg-white border-4 border-gray-900 p-6">
+        <h4 class="font-black text-gray-900 text-lg mb-4 uppercase tracking-widest">Select Passenger</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div 
+            v-for="passenger in passengers" 
+            :key="passenger.id"
+            @click="selectedPassengerForSeat = passenger.id"
+            :class="[
+              'p-4 border-4 cursor-pointer transition-all duration-300',
+              selectedPassengerForSeat === passenger.id
+                ? 'border-blue-600 bg-blue-50'
+                : 'border-gray-200 bg-white hover:border-gray-400'
+            ]"
+          >
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-black text-gray-900">{{ passenger.firstName }} {{ passenger.lastName }}</div>
+                <div class="text-sm text-gray-600 font-bold mt-1">
+                  Seat: <span :class="getSeatForPassenger(passenger.id) !== 'None' ? 'text-blue-600' : 'text-gray-400'">
+                    {{ getSeatForPassenger(passenger.id) }}
+                  </span>
+                </div>
               </div>
+              <CheckCircle v-if="selectedPassengerForSeat === passenger.id" class="w-5 h-5 text-blue-600" />
             </div>
-            <CheckCircle v-if="selectedPassengerForSeat === passenger.id" class="w-5 h-5 text-blue-600" />
           </div>
         </div>
       </div>
 
-      <!-- Seat Map -->
-      <div class="lg:col-span-2">
-        <SeatMap 
-          @seat-selected="onSeatSelected"
-          @seat-deselected="onSeatDeselected"
-        />
+      <!-- Seat Map and Legend Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Seat Map --  3 columns -->
+        <div class="lg:col-span-3">
+          <SeatMap 
+            :config="aircraftConfig"
+            :selectedSeats="selectedSeatsMap"
+            :currentPassengerId="selectedPassengerForSeat"
+            :onSeatSelect="handleSeatSelect"
+          />
+        </div>
+
+        <!-- Seat Legend - 1 column -->
+        <div class="lg:col-span-1">
+          <SeatLegend />
+        </div>
       </div>
     </div>
   </div>

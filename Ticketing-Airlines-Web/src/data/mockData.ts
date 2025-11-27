@@ -57,10 +57,127 @@ export const aircrafts: Aircraft[] = [
   { aircraftId: 2, model: 'Airbus A321-200', icaoType: 'A321', seatCapacity: 220, airlineId: 1 },
 ]
 
-/** SEAT BLUEPRINT sample (few rows for brevity) */
+/** AIRCRAFT SEAT CONFIGURATIONS - For Visual Seat Map */
+export interface AircraftSeatConfig {
+  aircraftId: number
+  aircraftType: string
+  totalRows: number
+  seatsPerRow: string[] // ['A', 'B', 'C', 'D', 'E', 'F']
+  aisleAfter: number[] // Aisle positions (e.g., [2, 5] means aisle after column 2 and 5)
+  exitRows: number[]
+  premiumRows: number[]
+  extraLegroomSeats: string[]
+  occupiedSeats: string[] // Mock occupied seats
+}
+
+export const aircraftSeatConfigs: AircraftSeatConfig[] = [
+  // Airbus A320-200 - 180 seats, 3-3 configuration
+  {
+    aircraftId: 1,
+    aircraftType: 'Airbus A320-200',
+    totalRows: 30,
+    seatsPerRow: ['A', 'B', 'C', 'D', 'E', 'F'],
+    aisleAfter: [2, 5], // Aisle after C and after F (3-3 config)
+    exitRows: [12, 13],
+    premiumRows: [1, 2, 3, 4, 5],
+    extraLegroomSeats: ['14A', '14B', '14C', '14D', '14E', '14F', '25A', '25F'],
+    occupiedSeats: [
+      '1A', '1B', '2C', '2D', '3A', '3F', '4B', '4E',
+      '5C', '5D', '7A', '7F', '8B', '8C', '8D', '8E',
+      '10A', '10F', '11B', '11C', '12D', '12E', '15A', '15B',
+      '16C', '16D', '17E', '17F', '18A', '18B', '20C', '20D',
+      '22A', '22F', '23B', '23E', '25C', '25D', '27A', '27F'
+    ]
+  },
+  // Airbus A321-200 - 220 seats, 3-3 configuration
+  {
+    aircraftId: 2,
+    aircraftType: 'Airbus A321-200',
+    totalRows: 37,
+    seatsPerRow: ['A', 'B', 'C', 'D', 'E', 'F'],
+    aisleAfter: [2, 5],
+    exitRows: [15, 16],
+    premiumRows: [1, 2, 3, 4, 5, 6],
+    extraLegroomSeats: ['17A', '17B', '17C', '17D', '17E', '17F', '30A', '30F'],
+    occupiedSeats: [
+      '1A', '1B', '1C', '2D', '2E', '2F', '3A', '3B', '4C', '4D',
+      '5E', '5F', '6A', '6B', '8C', '8D', '10A', '10F', '12B', '12E',
+      '15A', '15F', '16C', '16D', '18B', '18E', '20A', '20F', '22C', '22D'
+    ]
+  }
+]
+
+/** Seat pricing configuration */
+export interface SeatPricing {
+  standard: number
+  premium: number
+  exitRow: number
+  extraLegroom: number
+}
+
+export const seatPricing: SeatPricing = {
+  standard: 0,      // Free (included in base fare)
+  premium: 500,     // Front rows 1-5/6
+  exitRow: 800,     // Exit row seats
+  extraLegroom: 600 // Specific extra legroom seats
+}
+
+/** Helper function to get seat type */
+export function getSeatType(seatNumber: string, config: AircraftSeatConfig): 'window' | 'middle' | 'aisle' {
+  const column = seatNumber.replace(/\d+/, '')
+  const firstColumn = config.seatsPerRow[0]
+  const lastColumn = config.seatsPerRow[config.seatsPerRow.length - 1]
+
+  // Window seats (first and last columns)
+  if (column === firstColumn || column === lastColumn) {
+    return 'window'
+  }
+
+  // Aisle seats (columns adjacent to aisles)
+  const aisleColumns: string[] = []
+  config.aisleAfter.forEach(pos => {
+    if (pos < config.seatsPerRow.length) {
+      aisleColumns.push(config.seatsPerRow[pos])
+      if (pos + 1 < config.seatsPerRow.length) {
+        aisleColumns.push(config.seatsPerRow[pos + 1])
+      }
+    }
+  })
+
+  if (aisleColumns.includes(column)) {
+    return 'aisle'
+  }
+
+  return 'middle'
+}
+
+/** Helper function to get seat price */
+export function getSeatPrice(seatNumber: string, config: AircraftSeatConfig): number {
+  const row = parseInt(seatNumber.match(/\d+/)?.[0] || '0')
+
+  // Exit row seats
+  if (config.exitRows.includes(row)) {
+    return seatPricing.exitRow
+  }
+
+  // Extra legroom seats
+  if (config.extraLegroomSeats.includes(seatNumber)) {
+    return seatPricing.extraLegroom
+  }
+
+  // Premium seats (front rows)
+  if (config.premiumRows.includes(row)) {
+    return seatPricing.premium
+  }
+
+  // Standard seats
+  return seatPricing.standard
+}
+
+/** SEAT BLUEPRINT sample (keeping for compatibility, but using aircraftSeatConfigs for visual map) */
 export const seatBlueprints: SeatBlueprint[] = [
-  ...['1','2','3'].flatMap(row =>
-    ['A','B','C','D','E','F'].map(col => ({
+  ...['1', '2', '3'].flatMap(row =>
+    ['A', 'B', 'C', 'D', 'E', 'F'].map(col => ({
       seatBlueprintId: Number(row + (col.charCodeAt(0) - 60)),
       aircraftId: 1,
       seatNumber: `${row}${col}`,
@@ -76,35 +193,35 @@ export const seatBlueprints: SeatBlueprint[] = [
 export const flightSchedules: FlightSchedule[] = [
   // Manila to Cebu
   { flightScheduleId: 101, flightNumber: 'SS101', originAirportId: 1, destinationAirportId: 2, aircraftId: 1, operatingAirlineId: 1, stdLocal: '08:00', staLocal: '09:15', published: true },
-  
+
   // Manila to Davao
   { flightScheduleId: 201, flightNumber: 'SS201', originAirportId: 1, destinationAirportId: 3, aircraftId: 1, operatingAirlineId: 1, stdLocal: '10:30', staLocal: '11:50', published: true },
-  
+
   // Manila to Singapore
   { flightScheduleId: 301, flightNumber: 'SS301', originAirportId: 1, destinationAirportId: 21, aircraftId: 2, operatingAirlineId: 1, stdLocal: '18:10', staLocal: '21:55', published: true },
-  
+
   // Manila to Hong Kong
   { flightScheduleId: 401, flightNumber: 'SS401', originAirportId: 1, destinationAirportId: 22, aircraftId: 2, operatingAirlineId: 1, stdLocal: '22:20', staLocal: '01:45', published: true },
-  
+
   // Manila to Boracay
   { flightScheduleId: 501, flightNumber: 'SS501', originAirportId: 1, destinationAirportId: 4, aircraftId: 1, operatingAirlineId: 1, stdLocal: '14:30', staLocal: '15:45', published: true },
-  
+
   // Manila to Palawan
   { flightScheduleId: 601, flightNumber: 'SS601', originAirportId: 1, destinationAirportId: 5, aircraftId: 1, operatingAirlineId: 1, stdLocal: '16:45', staLocal: '18:00', published: true },
-  
+
   // Manila to Iloilo
   { flightScheduleId: 701, flightNumber: 'SS701', originAirportId: 1, destinationAirportId: 7, aircraftId: 1, operatingAirlineId: 1, stdLocal: '20:15', staLocal: '21:30', published: true },
-  
+
   // Return flights
   // Cebu to Manila
   { flightScheduleId: 801, flightNumber: 'SS801', originAirportId: 2, destinationAirportId: 1, aircraftId: 1, operatingAirlineId: 1, stdLocal: '02:00', staLocal: '03:15', published: true },
-  
+
   // Davao to Manila
   { flightScheduleId: 901, flightNumber: 'SS901', originAirportId: 3, destinationAirportId: 1, aircraftId: 1, operatingAirlineId: 1, stdLocal: '04:30', staLocal: '05:50', published: true },
-  
+
   // Singapore to Manila
   { flightScheduleId: 1001, flightNumber: 'SS1001', originAirportId: 21, destinationAirportId: 1, aircraftId: 2, operatingAirlineId: 1, stdLocal: '06:10', staLocal: '09:55', published: true },
-  
+
   // Hong Kong to Manila
   { flightScheduleId: 1101, flightNumber: 'SS1101', originAirportId: 22, destinationAirportId: 1, aircraftId: 2, operatingAirlineId: 1, stdLocal: '07:20', staLocal: '10:45', published: true }
 ]
@@ -117,70 +234,70 @@ export const flightInstances: FlightInstance[] = [
   { flightInstanceId: uuid('fi-103'), flightScheduleId: 101, flightDate: '2025-10-18', departureUtc: '2025-10-18T00:00:00Z', arrivalUtc: '2025-10-18T01:15:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-104'), flightScheduleId: 101, flightDate: '2025-10-19', departureUtc: '2025-10-19T00:00:00Z', arrivalUtc: '2025-10-19T01:15:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-105'), flightScheduleId: 101, flightDate: '2025-10-20', departureUtc: '2025-10-20T00:00:00Z', arrivalUtc: '2025-10-20T01:15:00Z', status: 'Scheduled' },
-  
+
   // Manila to Davao routes
   { flightInstanceId: uuid('fi-201'), flightScheduleId: 201, flightDate: '2025-10-16', departureUtc: '2025-10-16T02:30:00Z', arrivalUtc: '2025-10-16T03:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-202'), flightScheduleId: 201, flightDate: '2025-10-17', departureUtc: '2025-10-17T02:30:00Z', arrivalUtc: '2025-10-17T03:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-203'), flightScheduleId: 201, flightDate: '2025-10-18', departureUtc: '2025-10-18T02:30:00Z', arrivalUtc: '2025-10-18T03:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-204'), flightScheduleId: 201, flightDate: '2025-10-19', departureUtc: '2025-10-19T02:30:00Z', arrivalUtc: '2025-10-19T03:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-205'), flightScheduleId: 201, flightDate: '2025-10-20', departureUtc: '2025-10-20T02:30:00Z', arrivalUtc: '2025-10-20T03:50:00Z', status: 'Scheduled' },
-  
+
   // Manila to Singapore routes
   { flightInstanceId: uuid('fi-301'), flightScheduleId: 301, flightDate: '2025-10-16', departureUtc: '2025-10-16T10:10:00Z', arrivalUtc: '2025-10-16T13:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-302'), flightScheduleId: 301, flightDate: '2025-10-17', departureUtc: '2025-10-17T10:10:00Z', arrivalUtc: '2025-10-17T13:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-303'), flightScheduleId: 301, flightDate: '2025-10-18', departureUtc: '2025-10-18T10:10:00Z', arrivalUtc: '2025-10-18T13:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-304'), flightScheduleId: 301, flightDate: '2025-10-19', departureUtc: '2025-10-19T10:10:00Z', arrivalUtc: '2025-10-19T13:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-305'), flightScheduleId: 301, flightDate: '2025-10-20', departureUtc: '2025-10-20T10:10:00Z', arrivalUtc: '2025-10-20T13:55:00Z', status: 'Scheduled' },
-  
+
   // Manila to Hong Kong routes
   { flightInstanceId: uuid('fi-401'), flightScheduleId: 401, flightDate: '2025-10-16', departureUtc: '2025-10-16T14:20:00Z', arrivalUtc: '2025-10-16T17:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-402'), flightScheduleId: 401, flightDate: '2025-10-17', departureUtc: '2025-10-17T14:20:00Z', arrivalUtc: '2025-10-17T17:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-403'), flightScheduleId: 401, flightDate: '2025-10-18', departureUtc: '2025-10-18T14:20:00Z', arrivalUtc: '2025-10-18T17:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-404'), flightScheduleId: 401, flightDate: '2025-10-19', departureUtc: '2025-10-19T14:20:00Z', arrivalUtc: '2025-10-19T17:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-405'), flightScheduleId: 401, flightDate: '2025-10-20', departureUtc: '2025-10-20T14:20:00Z', arrivalUtc: '2025-10-20T17:45:00Z', status: 'Scheduled' },
-  
+
   // Manila to Boracay routes
   { flightInstanceId: uuid('fi-501'), flightScheduleId: 501, flightDate: '2025-10-16', departureUtc: '2025-10-16T06:30:00Z', arrivalUtc: '2025-10-16T07:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-502'), flightScheduleId: 501, flightDate: '2025-10-17', departureUtc: '2025-10-17T06:30:00Z', arrivalUtc: '2025-10-17T07:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-503'), flightScheduleId: 501, flightDate: '2025-10-18', departureUtc: '2025-10-18T06:30:00Z', arrivalUtc: '2025-10-18T07:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-504'), flightScheduleId: 501, flightDate: '2025-10-19', departureUtc: '2025-10-19T06:30:00Z', arrivalUtc: '2025-10-19T07:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-505'), flightScheduleId: 501, flightDate: '2025-10-20', departureUtc: '2025-10-20T06:30:00Z', arrivalUtc: '2025-10-20T07:45:00Z', status: 'Scheduled' },
-  
+
   // Manila to Palawan routes
   { flightInstanceId: uuid('fi-601'), flightScheduleId: 601, flightDate: '2025-10-16', departureUtc: '2025-10-16T08:45:00Z', arrivalUtc: '2025-10-16T10:00:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-602'), flightScheduleId: 601, flightDate: '2025-10-17', departureUtc: '2025-10-17T08:45:00Z', arrivalUtc: '2025-10-17T10:00:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-603'), flightScheduleId: 601, flightDate: '2025-10-18', departureUtc: '2025-10-18T08:45:00Z', arrivalUtc: '2025-10-18T10:00:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-604'), flightScheduleId: 601, flightDate: '2025-10-19', departureUtc: '2025-10-19T08:45:00Z', arrivalUtc: '2025-10-19T10:00:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-605'), flightScheduleId: 601, flightDate: '2025-10-20', departureUtc: '2025-10-20T08:45:00Z', arrivalUtc: '2025-10-20T10:00:00Z', status: 'Scheduled' },
-  
+
   // Manila to Iloilo routes
   { flightInstanceId: uuid('fi-701'), flightScheduleId: 701, flightDate: '2025-10-16', departureUtc: '2025-10-16T12:15:00Z', arrivalUtc: '2025-10-16T13:30:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-702'), flightScheduleId: 701, flightDate: '2025-10-17', departureUtc: '2025-10-17T12:15:00Z', arrivalUtc: '2025-10-17T13:30:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-703'), flightScheduleId: 701, flightDate: '2025-10-18', departureUtc: '2025-10-18T12:15:00Z', arrivalUtc: '2025-10-18T13:30:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-704'), flightScheduleId: 701, flightDate: '2025-10-19', departureUtc: '2025-10-19T12:15:00Z', arrivalUtc: '2025-10-19T13:30:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-705'), flightScheduleId: 701, flightDate: '2025-10-20', departureUtc: '2025-10-20T12:15:00Z', arrivalUtc: '2025-10-20T13:30:00Z', status: 'Scheduled' },
-  
+
   // Return flights (Cebu to Manila)
   { flightInstanceId: uuid('fi-801'), flightScheduleId: 801, flightDate: '2025-10-16', departureUtc: '2025-10-16T18:00:00Z', arrivalUtc: '2025-10-16T19:15:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-802'), flightScheduleId: 801, flightDate: '2025-10-17', departureUtc: '2025-10-17T18:00:00Z', arrivalUtc: '2025-10-17T19:15:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-803'), flightScheduleId: 801, flightDate: '2025-10-18', departureUtc: '2025-10-18T18:00:00Z', arrivalUtc: '2025-10-18T19:15:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-804'), flightScheduleId: 801, flightDate: '2025-10-19', departureUtc: '2025-10-19T18:00:00Z', arrivalUtc: '2025-10-19T19:15:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-805'), flightScheduleId: 801, flightDate: '2025-10-20', departureUtc: '2025-10-20T18:00:00Z', arrivalUtc: '2025-10-20T19:15:00Z', status: 'Scheduled' },
-  
+
   // Return flights (Davao to Manila)
   { flightInstanceId: uuid('fi-901'), flightScheduleId: 901, flightDate: '2025-10-16', departureUtc: '2025-10-16T20:30:00Z', arrivalUtc: '2025-10-16T21:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-902'), flightScheduleId: 901, flightDate: '2025-10-17', departureUtc: '2025-10-17T20:30:00Z', arrivalUtc: '2025-10-17T21:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-903'), flightScheduleId: 901, flightDate: '2025-10-18', departureUtc: '2025-10-18T20:30:00Z', arrivalUtc: '2025-10-18T21:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-904'), flightScheduleId: 901, flightDate: '2025-10-19', departureUtc: '2025-10-19T20:30:00Z', arrivalUtc: '2025-10-19T21:50:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-905'), flightScheduleId: 901, flightDate: '2025-10-20', departureUtc: '2025-10-20T20:30:00Z', arrivalUtc: '2025-10-20T21:50:00Z', status: 'Scheduled' },
-  
+
   // Return flights (Singapore to Manila)
   { flightInstanceId: uuid('fi-1001'), flightScheduleId: 1001, flightDate: '2025-10-16', departureUtc: '2025-10-16T22:10:00Z', arrivalUtc: '2025-10-17T01:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-1002'), flightScheduleId: 1001, flightDate: '2025-10-17', departureUtc: '2025-10-17T22:10:00Z', arrivalUtc: '2025-10-18T01:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-1003'), flightScheduleId: 1001, flightDate: '2025-10-18', departureUtc: '2025-10-18T22:10:00Z', arrivalUtc: '2025-10-19T01:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-1004'), flightScheduleId: 1001, flightDate: '2025-10-19', departureUtc: '2025-10-19T22:10:00Z', arrivalUtc: '2025-10-20T01:55:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-1005'), flightScheduleId: 1001, flightDate: '2025-10-20', departureUtc: '2025-10-20T22:10:00Z', arrivalUtc: '2025-10-21T01:55:00Z', status: 'Scheduled' },
-  
+
   // Return flights (Hong Kong to Manila)
   { flightInstanceId: uuid('fi-1101'), flightScheduleId: 1101, flightDate: '2025-10-16', departureUtc: '2025-10-16T23:20:00Z', arrivalUtc: '2025-10-17T02:45:00Z', status: 'Scheduled' },
   { flightInstanceId: uuid('fi-1102'), flightScheduleId: 1101, flightDate: '2025-10-17', departureUtc: '2025-10-17T23:20:00Z', arrivalUtc: '2025-10-18T02:45:00Z', status: 'Scheduled' },
@@ -268,17 +385,17 @@ export const payments: Payment[] = [
 
 /** Marketing cards + features (mapped to real airport codes) */
 export const destinationCards: DestinationCard[] = [
-  { id: 1, label: 'Boracay',   primaryAirportCode: 'MPH', description: 'White Beach Paradise', price: 3299, originalPrice: 4999, badge: 'HOT DEAL', savings: Math.round((1 - 3299/4999) * 100), image: boracayImg },
-  { id: 2, label: 'Cebu',      primaryAirportCode: 'CEB', description: 'Queen City of the South', price: 2899, originalPrice: 3799, badge: 'POPULAR', savings: Math.round((1 - 2899/3799) * 100), image: cebuImg },
-  { id: 3, label: 'Davao',     primaryAirportCode: 'DVO', description: 'City of Durian', price: 4199, originalPrice: 5499, badge: 'NEW ROUTE', savings: Math.round((1 - 4199/5499) * 100), image: davaoImg },
-  { id: 4, label: 'Singapore', primaryAirportCode: 'SIN', description: 'Lion City', price: 8999, originalPrice: 12999, badge: 'INTERNATIONAL', savings: Math.round((1 - 8999/12999) * 100), image: singaporeImg },
-  { id: 5, label: 'Palawan',   primaryAirportCode: 'PPS', description: 'Last Frontier', price: 5799, originalPrice: 7299, badge: 'TRENDING', savings: Math.round((1 - 5799/7299) * 100), image: palawanImg },
-  { id: 6, label: 'Hong Kong', primaryAirportCode: 'HKG', description: 'Pearl of the Orient', price: 11999, originalPrice: 15999, badge: 'INTERNATIONAL', savings: Math.round((1 - 11999/15999) * 100), image: hongkongImg },
+  { id: 1, label: 'Boracay', primaryAirportCode: 'MPH', description: 'White Beach Paradise', price: 3299, originalPrice: 4999, badge: 'HOT DEAL', savings: Math.round((1 - 3299 / 4999) * 100), image: boracayImg },
+  { id: 2, label: 'Cebu', primaryAirportCode: 'CEB', description: 'Queen City of the South', price: 2899, originalPrice: 3799, badge: 'POPULAR', savings: Math.round((1 - 2899 / 3799) * 100), image: cebuImg },
+  { id: 3, label: 'Davao', primaryAirportCode: 'DVO', description: 'City of Durian', price: 4199, originalPrice: 5499, badge: 'NEW ROUTE', savings: Math.round((1 - 4199 / 5499) * 100), image: davaoImg },
+  { id: 4, label: 'Singapore', primaryAirportCode: 'SIN', description: 'Lion City', price: 8999, originalPrice: 12999, badge: 'INTERNATIONAL', savings: Math.round((1 - 8999 / 12999) * 100), image: singaporeImg },
+  { id: 5, label: 'Palawan', primaryAirportCode: 'PPS', description: 'Last Frontier', price: 5799, originalPrice: 7299, badge: 'TRENDING', savings: Math.round((1 - 5799 / 7299) * 100), image: palawanImg },
+  { id: 6, label: 'Hong Kong', primaryAirportCode: 'HKG', description: 'Pearl of the Orient', price: 11999, originalPrice: 15999, badge: 'INTERNATIONAL', savings: Math.round((1 - 11999 / 15999) * 100), image: hongkongImg },
 ]
 
 export const features: Feature[] = [
-  { id: 1, title: 'Affordable Fares',     description: 'Competitive prices without compromising on quality and safety.', icon: 'DollarSign' },
-  { id: 2, title: 'On-Time Performance',  description: 'Reliable schedules and punctual departures for your peace of mind.', icon: 'Clock' },
-  { id: 3, title: 'Safety First',         description: 'Highest safety standards with modern aircraft and experienced crew.', icon: 'Shield' },
+  { id: 1, title: 'Affordable Fares', description: 'Competitive prices without compromising on quality and safety.', icon: 'DollarSign' },
+  { id: 2, title: 'On-Time Performance', description: 'Reliable schedules and punctual departures for your peace of mind.', icon: 'Clock' },
+  { id: 3, title: 'Safety First', description: 'Highest safety standards with modern aircraft and experienced crew.', icon: 'Shield' },
   { id: 4, title: 'Filipino Hospitality', description: 'Warm, friendly service that makes every passenger feel like family.', icon: 'Heart' },
 ]
