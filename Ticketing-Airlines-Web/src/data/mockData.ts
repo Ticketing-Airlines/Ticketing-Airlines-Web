@@ -399,3 +399,308 @@ export const features: Feature[] = [
   { id: 3, title: 'Safety First', description: 'Highest safety standards with modern aircraft and experienced crew.', icon: 'Shield' },
   { id: 4, title: 'Filipino Hospitality', description: 'Warm, friendly service that makes every passenger feel like family.', icon: 'Heart' },
 ]
+
+/** SUPPORT CENTER DATA */
+
+// FAQ Items
+export interface FAQItem {
+  id: number
+  category: string
+  question: string
+  answer: string
+}
+
+export const faqItems: FAQItem[] = [
+  // Booking & Ticketing
+  { id: 1, category: 'Booking & Ticketing', question: 'How do I book a flight?', answer: 'You can book a flight through our website by selecting your departure and arrival cities, choosing your travel dates, and completing the booking process. You can also book through our mobile app or by calling our customer service hotline.' },
+  { id: 2, category: 'Booking & Ticketing', question: 'Can I change my booking after confirmation?', answer: 'Yes, you can modify your booking up to 24 hours before departure. Changes may be subject to fare differences and change fees. Visit "Manage Booking" to make changes online.' },
+  { id: 3, category: 'Booking & Ticketing', question: 'How do I find my booking reference (PNR)?', answer: 'Your PNR (Passenger Name Record) is a 6-character code sent to your email after booking. You can also find it in "My Bookings" after logging in to your account.' },
+  { id: 4, category: 'Booking & Ticketing', question: 'What payment methods do you accept?', answer: 'We accept credit/debit cards (Visa, Mastercard, JCB, Amex), e-wallets (GCash, PayMaya, GrabPay), online banking, over-the-counter payments (7-Eleven, Bayad Center), and PayPal for international transactions.' },
+
+  // Flight Changes & Cancellations
+  { id: 5, category: 'Flight Changes & Cancellations', question: 'How do I cancel my booking?', answer: 'You can cancel your booking online through "Manage Booking" or by contacting customer service. Cancellation fees and refund eligibility depend on your fare type.' },
+  { id: 6, category: 'Flight Changes & Cancellations', question: 'What is your refund policy?', answer: 'Refunds depend on your ticket type. Fully refundable tickets receive 100% refund. Non-refundable tickets may only receive taxes and fees. Processing takes 7-14 business days.' },
+  { id: 7, category: 'Flight Changes & Cancellations', question: 'What happens if my flight is delayed or cancelled?', answer: 'If we cancel your flight, you can choose a full refund or free rebooking. For delays over 3 hours, we provide meal vouchers and, if necessary, accommodation.' },
+
+  // Baggage
+  { id: 8, category: 'Baggage', question: 'What is the baggage allowance?', answer: 'Economy class passengers get 7kg cabin baggage. Checked baggage starts at 20kg and can be purchased during booking or later. Business class passengers get 32kg checked baggage included.' },
+  { id: 9, category: 'Baggage', question: 'What items are prohibited in baggage?', answer: 'Prohibited items include explosives, flammable materials, weapons, and lithium batteries over 100Wh. Liquids in cabin baggage must not exceed 100ml per container.' },
+  { id: 10, category: 'Baggage', question: 'How do I add extra baggage?', answer: 'You can add baggage during booking or anytime before check-in through "Manage Booking". Pre-purchased baggage is cheaper than airport rates.' },
+
+  // Check-in
+  { id: 11, category: 'Check-in', question: 'When does online check-in open?', answer: 'Online check-in opens 48 hours before departure and closes 4 hours before for domestic flights, 6 hours for international flights.' },
+  { id: 12, category: 'Check-in', question: 'Do I need to print my boarding pass?', answer: 'Mobile boarding passes are accepted at all airports. However, we recommend having a printed copy as backup, especially for international flights.' },
+  { id: 13, category: 'Check-in', question: 'What documents do I need for check-in?', answer: 'For domestic flights, bring a valid government-issued ID. For international flights, you need your passport (valid for at least 6 months) and any required visas.' },
+
+  // Payment & Refunds
+  { id: 14, category: 'Payment & Refunds', question: 'My payment failed but money was deducted. What should I do?', answer: 'Failed transactions are automatically reversed within 7-14 business days. If you don\'t receive a booking confirmation, the payment wasn\'t successful. Contact your bank if the reversal is delayed.' },
+  { id: 15, category: 'Payment & Refunds', question: 'How long does a refund take?', answer: 'Refunds are processed within 7-14 business days for cards and e-wallets. Bank processing may take an additional 3-5 business days depending on your financial institution.' },
+
+  // Travel Documents
+  { id: 16, category: 'Travel Documents', question: 'Do I need a visa for international travel?', answer: 'Visa requirements vary by destination and nationality. Philippine passport holders can enter ASEAN countries visa-free for tourism. Check with the embassy of your destination country.' },
+  { id: 17, category: 'Travel Documents', question: 'Can I travel with an expiring passport?', answer: 'Your passport must be valid for at least 6 months from your date of travel. Airlines can deny boarding if your passport expires within this period.' },
+
+  // Special Assistance
+  { id: 18, category: 'Special Assistance', question: 'How do I request special assistance?', answer: 'Request special assistance (wheelchair, medical equipment, etc.) at least 48 hours before departure by calling customer service or adding it during booking.' },
+  { id: 19, category: 'Special Assistance', question: 'Can I travel with my pet?', answer: 'Small pets (max 7kg including carrier) can travel in cabin. Larger pets travel as checked baggage. Book pet travel at least 48 hours in advance and bring health certificates.' },
+  { id: 20, category: 'Special Assistance', question: 'Do you offer assistance for unaccompanied minors?', answer: 'Children aged 5-11 can travel alone with our Unaccompanied Minor service. Fee applies. Parents must complete required forms and stay until departure.' },
+]
+
+// Help Articles
+export interface HelpArticle {
+  id: number
+  title: string
+  category: string
+  content: string
+  lastUpdated: string
+  readTime: string
+  relatedArticles: number[]
+}
+
+export const helpArticles: HelpArticle[] = [
+  {
+    id: 1,
+    title: 'How to Book Your First Flight',
+    category: 'Getting Started',
+    content: `<h3>Step-by-Step Booking Guide</h3>
+    <p>Booking your first flight with SunSkies Air is easy! Follow these simple steps:</p>
+    <ol>
+      <li><strong>Search for Flights:</strong> Enter your departure city, destination, and travel dates on our homepage.</li>
+      <li><strong>Select Your Flight:</strong> Choose from available flights based on price, time, and convenience.</li>
+      <li><strong>Add Passengers:</strong> Enter details for all travelers. Make sure names match government IDs exactly.</li>
+      <li><strong>Choose Add-ons:</strong> Select baggage, meals, and seats if desired.</li>
+      <li><strong>Payment:</strong> Complete payment using your preferred method.</li>
+      <li><strong>Confirmation:</strong> You'll receive a booking confirmation email with your PNR.</li>
+    </ol>
+    <p><strong>Pro Tips:</strong></p>
+    <ul>
+      <li>Book early for better prices</li>
+      <li>Sign up for an account to save passenger details</li>
+      <li>Consider travel insurance for peace of mind</li>
+    </ul>`,
+    lastUpdated: '2025-11-15',
+    readTime: '3 min',
+    relatedArticles: [2, 3]
+  },
+  {
+    id: 2,
+    title: 'Understanding Fare Types',
+    category: 'Booking Guide',
+    content: `<h3>Choose the Right Fare for Your Journey</h3>
+    <p>SunSkies Air offers three fare types to suit different needs:</p>
+    <h4>Economy Lite (Y Fare)</h4>
+    <ul>
+      <li>Lowest price</li>
+      <li>Cabin baggage only (7kg)</li>
+      <li>No changes or refunds</li>
+      <li>Seat selection for a fee</li>
+    </ul>
+    <h4>Economy Flex (M Fare)</h4>
+    <ul>
+      <li>Mid-range pricing</li>
+      <li>20kg checked baggage included</li>
+      <li>One free change allowed</li>
+      <li>Standard seat selection included</li>
+    </ul>
+    <h4>Business Flex (B Fare)</h4>
+    <ul>
+      <li>Premium pricing</li>
+      <li>32kg baggage + priority boarding</li>
+      <li>Unlimited changes</li>
+      <li>Premium seat selection</li>
+      <li>Lounge access</li>
+    </ul>`,
+    lastUpdated: '2025-11-10',
+    readTime: '4 min',
+    relatedArticles: [1, 4]
+  },
+  {
+    id: 3,
+    title: 'Managing Your Booking Online',
+    category: 'Managing Your Booking',
+    content: `<h3>Make Changes to Your Booking</h3>
+    <p>Need to modify your booking? Here's how:</p>
+    <ol>
+      <li>Go to "Manage Booking" on our website</li>
+      <li>Enter your PNR and last name</li>
+      <li>Select what you want to change:
+        <ul>
+          <li>Flight dates or times</li>
+          <li>Passenger details (name corrections)</li>
+          <li>Add baggage or meals</li>
+          <li>Select or change seats</li>
+        </ul>
+      </li>
+      <li>Pay any applicable fees</li>
+      <li>Receive updated confirmation</li>
+    </ol>
+    <p><strong>Important Notes:</strong></p>
+    <ul>
+      <li>Changes must be made at least 24 hours before departure</li>
+      <li>Fare differences and change fees may apply</li>
+      <li>Some ticket types don't allow changes</li>
+    </ul>`,
+    lastUpdated: '2025-11-12',
+    readTime: '3 min',
+    relatedArticles: [1, 5]
+  },
+  {
+    id: 4,
+    title: 'Baggage Guidelines and Restrictions',
+    category: 'Baggage Guidelines',
+    content: `<h3>Everything You Need to Know About Baggage</h3>
+    <h4>Cabin Baggage</h4>
+    <ul>
+      <li>Maximum 7kg</li>
+      <li>Dimensions: 56cm x 36cm x 23cm</li>
+      <li>One personal item (laptop bag, purse)</li>
+    </ul>
+    <h4>Checked Baggage</h4>
+    <ul>
+      <li>Purchase 20kg, 32kg, or 40kg allowances</li>
+      <li>Maximum 32kg per bag</li>
+      <li>Larger amounts must be split into multiple bags</li>
+    </ul>
+    <h4>Prohibited Items</h4>
+    <ul>
+      <li>Explosives and flammable materials</li>
+      <li>Weapons and sharp objects</li>
+      <li>Liquids over 100ml in cabin (in checked bag is okay)</li>
+      <li>Power banks over 100Wh</li>
+    </ul>
+    <h4>Special Items</h4>
+    <ul>
+      <li>Sports equipment: Additional fees apply</li>
+      <li>Musical instruments: Can be carried in cabin if fits overhead bin</li>
+      <li>Medical equipment: Contact us 48 hours before travel</li>
+    </ul>`,
+    lastUpdated: '2025-11-08',
+    readTime: '5 min',
+    relatedArticles: [5, 6]
+  },
+  {
+    id: 5,
+    title: 'Airport Check-in and Boarding Process',
+    category: 'Airport & Check-in',
+    content: `<h3>What to Expect at the Airport</h3>
+    <h4>Before You Arrive</h4>
+    <ul>
+      <li>Complete online check-in 48 hours before departure</li>
+      <li>Download or print your boarding pass</li>
+      <li>Prepare travel documents</li>
+    </ul>
+    <h4>At the Airport</h4>
+    <ol>
+      <li><strong>Check-in Counter:</strong> If you have checked baggage, proceed to designated counters
+        <ul>
+          <li>Domestic: 2 hours before departure</li>
+          <li>International: 3 hours before departure</li>
+        </ul>
+      </li>
+      <li><strong>Security Screening:</strong> Remove electronics and liquids for screening</li>
+      <li><strong>Immigration (International):</strong> Present passport and boarding pass</li>
+      <li><strong>Boarding Gate:</strong> Arrive 45 minutes before departure</li>
+    </ol>
+    <h4>Boarding Process</h4>
+    <ul>
+      <li>Priority boarding: Business class, families with infants</li>
+      <li>General boarding: By zone or row number</li>
+      <li>Final call: 15 minutes before departure</li>
+    </ul>`,
+    lastUpdated: '2025-11-14',
+    readTime: '4 min',
+    relatedArticles: [3, 6]
+  },
+  {
+    id: 6,
+    title: 'Travel Document Requirements',
+    category: 'Travel Requirements',
+    content: `<h3>Required Documents for Travel</h3>
+    <h4>Domestic Flights (Within Philippines)</h4>
+    <ul>
+      <li>Valid government-issued ID with photo</li>
+      <li>Accepted IDs: Passport, Driver's License, UMID, Postal ID, PRC ID</li>
+      <li>Students: School ID with parent's valid ID</li>
+      <li>Minors: Birth certificate + parent's valid ID</li>
+    </ul>
+    <h4>International Flights</h4>
+    <ul>
+      <li><strong>Passport:</strong> Valid for at least 6 months</li>
+      <li><strong>Visa:</strong> Check requirements for destination country</li>
+      <li><strong>Return Ticket:</strong> Proof of onward travel</li>
+      <li><strong>Travel Authorization:</strong> For minors traveling alone or with one parent</li>
+    </ul>
+    <h4>COVID-19 Requirements</h4>
+    <p>Requirements vary by destination. Check latest travel advisories before booking.</p>`,
+    lastUpdated: '2025-11-16',
+    readTime: '3 min',
+    relatedArticles: [5, 7]
+  }
+]
+
+// Chat Bot Responses
+export interface ChatBotResponse {
+  keywords: string[]
+  response: string
+  quickReplies?: string[]
+}
+
+export const chatBotResponses: ChatBotResponse[] = [
+  {
+    keywords: ['hello', 'hi', 'hey', 'start'],
+    response: 'Hello! 👋 Welcome to SunSkies Air support. How can I help you today?',
+    quickReplies: ['Book a flight', 'Manage booking', 'Check flight status', 'Baggage info']
+  },
+  {
+    keywords: ['book', 'booking', 'reserve', 'ticket'],
+    response: 'To book a flight, simply go to our homepage and enter your travel details. Need help with a specific step?',
+    quickReplies: ['How to search flights?', 'Payment methods', 'I have a booking issue']
+  },
+  {
+    keywords: ['manage', 'change', 'modify', 'edit'],
+    response: 'You can manage your booking online! Go to "Manage Booking" and enter your PNR and last name. What would you like to change?',
+    quickReplies: ['Change flight date', 'Add baggage', 'Select seat', 'Cancel booking']
+  },
+  {
+    keywords: ['baggage', 'luggage', 'bag', 'weight'],
+    response: 'Cabin baggage allowance is 7kg. Checked baggage can be purchased (20kg, 32kg, or 40kg). Would you like more details?',
+    quickReplies: ['Prohibited items', 'Add baggage', 'Special items', 'Baggage fees']
+  },
+  {
+    keywords: ['check-in', 'checkin', 'boarding', 'pass'],
+    response: 'Online check-in opens 48 hours before departure. You can check-in on our website or mobile app. Need help?',
+    quickReplies: ['How to check-in?', 'Print boarding pass', 'Airport arrival time']
+  },
+  {
+    keywords: ['payment', 'pay', 'card', 'gcash', 'paymaya'],
+    response: 'We accept credit/debit cards, GCash, PayMaya, GrabPay, online banking, and over-the-counter payments. What payment method do you prefer?',
+    quickReplies: ['Payment failed', 'Refund status', 'Payment options']
+  },
+  {
+    keywords: ['refund', 'cancel', 'cancellation'],
+    response: 'Refund eligibility depends on your fare type. Refundable tickets get 100% refund, while non-refundable tickets may only receive taxes. Process takes 7-14 days.',
+    quickReplies: ['How to cancel?', 'Refund policy', 'Contact support']
+  },
+  {
+    keywords: ['flight', 'status', 'delayed', 'schedule'],
+    response: 'You can check real-time flight status on our "Flight Status" page. Enter your flight number or route to see updates.',
+    quickReplies: ['Check flight status', 'Delayed flight policy', 'Flight changes']
+  },
+  {
+    keywords: ['contact', 'support', 'help', 'agent'],
+    response: 'For urgent matters, call our 24/7 hotline: +63-2-8888-8888. Email: support@sunskiesair.com. Or use the contact form to send us a message!',
+    quickReplies: ['Contact form', 'Call hotline', 'Email support']
+  },
+  {
+    keywords: ['thanks', 'thank you', 'great', 'perfect'],
+    response: 'You\'re welcome! Is there anything else I can help you with today? 😊',
+    quickReplies: ['No, that\'s all', 'Yes, another question']
+  }
+]
+
+// Default fallback response
+export const defaultChatResponse: ChatBotResponse = {
+  keywords: [],
+  response: 'I\'m not sure I understand. Could you try rephrasing your question? Or choose from these common topics:',
+  quickReplies: ['Book a flight', 'Manage booking', 'Check-in help', 'Contact support']
+}

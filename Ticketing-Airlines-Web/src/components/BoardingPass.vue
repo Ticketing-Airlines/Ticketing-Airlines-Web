@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Plane, User, Calendar, Clock, MapPin, Barcode } from 'lucide-vue-next'
+import QRCode from 'qrcode'
 
 interface BoardingPassProps {
   bookingReference: string
@@ -17,7 +18,25 @@ interface BoardingPassProps {
 
 const props = defineProps<BoardingPassProps>()
 
-const qrCode = computed(() => `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="white"/><rect x="10" y="10" width="100" height="100" fill="black"/></svg>`)}`)
+// Generate real QR code
+const qrCodeDataUrl = ref('')
+
+onMounted(async () => {
+  try {
+    // QR code contains essential boarding information
+    const qrData = `${props.bookingReference}|${props.passengerName}|${props.flightNumber}|${props.seat}|${props.gate}`
+    qrCodeDataUrl.value = await QRCode.toDataURL(qrData, {
+      width: 150,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+  } catch (error) {
+    console.error('QR Code generation failed:', error)
+  }
+  })
 </script>
 
 <template>
@@ -91,7 +110,8 @@ const qrCode = computed(() => `data:image/svg+xml;base64,${btoa(`<svg xmlns="htt
         <!-- QR Code -->
         <div class="absolute bottom-8 right-8">
           <div class="bg-white p-2 border-4 border-gray-900">
-            <div class="w-24 h-24 bg-gray-200 flex items-center justify-center">
+            <img v-if="qrCodeDataUrl" :src="qrCodeDataUrl" alt="QR Code" class="w-28 h-28" />
+            <div v-else class="w-24 h-24 bg-gray-200 flex items-center justify-center">
               <Barcode class="w-16 h-16 text-gray-900" />
             </div>
           </div>

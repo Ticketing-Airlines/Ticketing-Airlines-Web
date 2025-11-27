@@ -114,6 +114,11 @@ const router = createRouter({
       component: () => import('@/views/MyBookingsView.vue')
     },
     {
+      path: '/boarding-pass/:pnr',
+      name: 'BoardingPass',
+      component: () => import('@/views/BoardingPassView.vue')
+    },
+    {
       path: '/support',
       name: 'Support',
       component: () => import('@/views/SupportView.vue')
