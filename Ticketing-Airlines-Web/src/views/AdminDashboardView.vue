@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import {
   BarChart3,
@@ -8,36 +9,39 @@ import {
   DollarSign,
   TrendingUp,
   Clock,
-  CheckCircle,
-  XCircle
+  Table2,
+  Download
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import AdminBookingsTable from '@/components/admin/AdminBookingsTable.vue'
+import AdminFlightsTable from '@/components/admin/AdminFlightsTable.vue'
 import { useAdminStore } from '@/stores/adminStore'
 import { storeToRefs } from 'pinia'
 
+const router = useRouter()
 const adminStore = useAdminStore()
-const { stats, recentBookings, flights } = storeToRefs(adminStore)
+const { stats, allBookings, allFlights } = storeToRefs(adminStore)
+
+const activeTab = ref<'bookings' | 'flights'>('bookings')
 
 onMounted(() => {
   adminStore.getDashboardStats()
-  adminStore.getRecentBookings()
-  adminStore.getFlights()
 })
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'On Time': return 'text-green-600 bg-green-50 border-green-600'
-    case 'Delayed': return 'text-yellow-600 bg-yellow-50 border-yellow-600'
-    case 'Cancelled': return 'text-red-600 bg-red-50 border-red-600'
-    default: return 'text-gray-600 bg-gray-50 border-gray-600'
+const handleCancelBooking = (bookingId: string) => {
+  const success = adminStore.cancelBooking(bookingId)
+  if (success) {
+    alert('Booking cancelled successfully')
   }
 }
 
-const getOccupancyColor = (percentage: number) => {
-  if (percentage >= 90) return 'bg-red-600'
-  if (percentage >= 70) return 'bg-yellow-600'
-  return 'bg-green-600'
+const handleViewBooking = (reference: string) => {
+  router.push(`/manage-booking?ref=${reference}`)
+}
+
+const handleUpdateFlightStatus = (flightId: string, status: 'On Time' | 'Delayed' | 'Cancelled') => {
+  adminStore.updateFlightStatus(flightId, status)
 }
 </script>
 
@@ -143,94 +147,49 @@ const getOccupancyColor = (percentage: number) => {
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-8">
-        <!-- Recent Bookings -->
-        <div class="bg-white shadow-xl border-4 border-gray-900">
-          <div class="bg-gray-900 px-6 py-4">
-            <h2 class="font-black text-white uppercase tracking-widest">Recent Bookings</h2>
-          </div>
-
-          <div class="p-6">
-            <div class="space-y-4">
-              <div
-                v-for="booking in recentBookings"
-                :key="booking.id"
-                class="bg-gray-50 p-4 border-l-4 border-gray-900"
-              >
-                <div class="flex justify-between items-start mb-2">
-                  <div>
-                    <div class="font-black text-lg text-gray-900">{{ booking.reference }}</div>
-                    <div class="text-sm font-semibold text-gray-600">{{ booking.passenger }}</div>
-                  </div>
-                  <div class="px-3 py-1 bg-green-600 text-white text-xs font-black uppercase">
-                    {{ booking.status }}
-                  </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase">Route</div>
-                    <div class="font-black text-gray-900">{{ booking.route }}</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-xs text-gray-500 font-bold uppercase">Amount</div>
-                    <div class="font-black text-gray-900">₱{{ booking.amount.toLocaleString() }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- Tabbed Management Interface -->
+      <div class="bg-white shadow-xl border-4 border-gray-900 overflow-hidden">
+        <!-- Tab Navigation -->
+        <div class="bg-gray-900 px-6 py-4 flex gap-2">
+          <Button
+            @click="activeTab = 'bookings'"
+            :class="[
+              'font-black uppercase text-xs tracking-widest',
+              activeTab === 'bookings' 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-white text-gray-900 hover:bg-gray-100'
+            ]"
+          >
+            <Table2 class="w-4 h-4 mr-2" />
+            Bookings Management
+          </Button>
+          <Button
+            @click="activeTab = 'flights'"
+            :class="[
+              'font-black uppercase text-xs tracking-widest',
+              activeTab === 'flights' 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-white text-gray-900 hover:bg-gray-100'
+            ]"
+          >
+            <Plane class="w-4 h-4 mr-2" />
+            Flights Management
+          </Button>
         </div>
 
-        <!-- Flight Management -->
-        <div class="bg-white shadow-xl border-4 border-gray-900">
-          <div class="bg-blue-600 px-6 py-4">
-            <h2 class="font-black text-white uppercase tracking-widest">Flight Status</h2>
-          </div>
-
-          <div class="p-6">
-            <div class="space-y-4">
-              <div
-                v-for="flight in flights"
-                :key="flight.id"
-                class="border-4 border-gray-900 p-4"
-              >
-                <div class="flex justify-between items-start mb-3">
-                  <div>
-                    <div class="font-black text-xl text-gray-900">{{ flight.flightNumber }}</div>
-                    <div class="text-sm font-semibold text-gray-600">{{ flight.from }} → {{ flight.to }}</div>
-                  </div>
-                  <div :class="['px-3 py-1 text-xs font-black uppercase border-2', getStatusColor(flight.status)]">
-                    {{ flight.status }}
-                  </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 text-sm mb-3">
-                  <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase">Departure</div>
-                    <div class="font-black text-gray-900">{{ flight.departure }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase">Arrival</div>
-                    <div class="font-black text-gray-900">{{ flight.arrival }}</div>
-                  </div>
-                </div>
-
-                <!-- Occupancy Bar -->
-                <div>
-                  <div class="flex justify-between text-xs font-bold uppercase mb-1">
-                    <span>Occupancy</span>
-                    <span>{{ flight.booked }}/{{ flight.capacity }} ({{ Math.round((flight.booked / flight.capacity) * 100) }}%)</span>
-                  </div>
-                  <div class="w-full h-3 bg-gray-200 border-2 border-gray-900">
-                    <div
-                      :class="['h-full', getOccupancyColor((flight.booked / flight.capacity) * 100)]"
-                      :style="{ width: `${(flight.booked / flight.capacity) * 100}%` }"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Tab Content -->
+        <div class="p-6">
+          <AdminBookingsTable
+            v-if="activeTab === 'bookings'"
+            :bookings="allBookings"
+            :on-cancel="handleCancelBooking"
+            :on-view="handleViewBooking"
+          />
+          <AdminFlightsTable
+            v-if="activeTab === 'flights'"
+            :flights="allFlights"
+            :on-status-update="handleUpdateFlightStatus"
+          />
         </div>
       </div>
     </div>
