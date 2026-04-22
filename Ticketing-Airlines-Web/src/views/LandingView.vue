@@ -501,7 +501,7 @@ onMounted(() => {
     </section>
 
     <!-- Features Section -->
-    <section class="py-12 bg-gray-50 relative overflow-hidden">
+    <section class="py-8 bg-gray-50 relative overflow-hidden">
       <!-- Background Pattern -->
       <div class="absolute inset-0 opacity-5">
         <div class="absolute top-0 left-0 w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, #000 20px, #000 21px);"></div>
@@ -509,86 +509,86 @@ onMounted(() => {
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <!-- Section Header -->
-        <div class="text-center mb-10">
-          <div class="flex items-center justify-center gap-2 mb-3">
-            <div class="w-2 h-2 bg-blue-600"></div>
-            <div class="w-2 h-2 bg-green-600"></div>
-            <div class="w-2 h-2 bg-purple-600"></div>
-            <div class="w-2 h-2 bg-orange-600"></div>
-          </div>
-          <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-6 uppercase tracking-tighter">Why Choose Us?</h2>
+        <div class="text-center mb-6">
           <div class="flex items-center justify-center gap-2 mb-2">
-            <div class="h-1 w-16 bg-gray-900"></div>
-            <p class="text-sm text-gray-600 font-bold uppercase tracking-wider">Experience Excellence</p>
-            <div class="h-1 w-16 bg-gray-900"></div>
+            <div class="w-1.5 h-1.5 bg-blue-600"></div>
+            <div class="w-1.5 h-1.5 bg-green-600"></div>
+            <div class="w-1.5 h-1.5 bg-purple-600"></div>
+            <div class="w-1.5 h-1.5 bg-orange-600"></div>
+          </div>
+          <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-3 uppercase tracking-tighter">Why Choose Us?</h2>
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <div class="h-0.5 w-12 bg-gray-900"></div>
+            <p class="text-xs text-gray-600 font-bold uppercase tracking-wider">Experience Excellence</p>
+            <div class="h-0.5 w-12 bg-gray-900"></div>
           </div>
         </div>
 
         <!-- Features Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Feature 1 -->
-          <div class="bg-white p-5 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-blue-600">
+          <div class="bg-white p-4 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-blue-600">
             <!-- Corner Accent -->
-            <div class="absolute top-0 right-0 w-0 h-0 border-t-[35px] border-t-blue-600 border-r-[35px] border-r-transparent"></div>
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[25px] border-t-blue-600 border-r-[25px] border-r-transparent"></div>
 
-            <div class="w-16 h-16 bg-blue-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
-              <DollarSign class="w-8 h-8 text-blue-600 group-hover:text-blue-600 transition-colors duration-300" />
+            <div class="w-12 h-12 bg-blue-100 flex items-center justify-center mb-3 group-hover:bg-white transition-colors duration-300">
+              <DollarSign class="w-6 h-6 text-blue-600 group-hover:text-blue-600 transition-colors duration-300" />
             </div>
 
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">Lowest Fares</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Unbeatable prices with no hidden fees. Save up to 50% on domestic flights!</p>
+            <h3 class="text-lg font-black text-gray-900 mb-2 uppercase tracking-tight group-hover:text-white transition-colors">Lowest Fares</h3>
+            <p class="text-sm text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Unbeatable prices with no hidden fees. Save up to 50% on domestic flights!</p>
 
             <!-- Shadow Block -->
-            <div class="absolute top-2 left-2 w-full h-full bg-blue-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
+            <div class="absolute top-1.5 left-1.5 w-full h-full bg-blue-600 -z-10 group-hover:top-2 group-hover:left-2 transition-all duration-300"></div>
           </div>
 
           <!-- Feature 2 -->
-          <div class="bg-white p-5 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-green-600">
-            <div class="absolute top-0 right-0 w-0 h-0 border-t-[35px] border-t-green-600 border-r-[35px] border-r-transparent"></div>
+          <div class="bg-white p-4 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-green-600">
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[25px] border-t-green-600 border-r-[25px] border-r-transparent"></div>
 
-            <div class="w-16 h-16 bg-green-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
-              <MapPin class="w-8 h-8 text-green-600 group-hover:text-green-600 transition-colors duration-300" />
+            <div class="w-12 h-12 bg-green-100 flex items-center justify-center mb-3 group-hover:bg-white transition-colors duration-300">
+              <MapPin class="w-6 h-6 text-green-600 group-hover:text-green-600 transition-colors duration-300" />
             </div>
 
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">7,641 Islands</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Extensive network covering all major Philippine destinations and beyond.</p>
+            <h3 class="text-lg font-black text-gray-900 mb-2 uppercase tracking-tight group-hover:text-white transition-colors">7,641 Islands</h3>
+            <p class="text-sm text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Extensive network covering all major Philippine destinations and beyond.</p>
 
-            <div class="absolute top-2 left-2 w-full h-full bg-green-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
+            <div class="absolute top-1.5 left-1.5 w-full h-full bg-green-600 -z-10 group-hover:top-2 group-hover:left-2 transition-all duration-300"></div>
           </div>
 
           <!-- Feature 3 -->
-          <div class="bg-white p-5 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-purple-600">
-            <div class="absolute top-0 right-0 w-0 h-0 border-t-[35px] border-t-purple-600 border-r-[35px] border-r-transparent"></div>
+          <div class="bg-white p-4 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-purple-600">
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[25px] border-t-purple-600 border-r-[25px] border-r-transparent"></div>
 
-            <div class="w-16 h-16 bg-purple-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
-              <Shield class="w-8 h-8 text-purple-600 group-hover:text-purple-600 transition-colors duration-300" />
+            <div class="w-12 h-12 bg-purple-100 flex items-center justify-center mb-3 group-hover:bg-white transition-colors duration-300">
+              <Shield class="w-6 h-6 text-purple-600 group-hover:text-purple-600 transition-colors duration-300" />
             </div>
 
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">Safety First</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">IATA certified with modern Airbus fleet and world-class safety standards.</p>
+            <h3 class="text-lg font-black text-gray-900 mb-2 uppercase tracking-tight group-hover:text-white transition-colors">Safety First</h3>
+            <p class="text-sm text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">IATA certified with modern Airbus fleet and world-class safety standards.</p>
 
-            <div class="absolute top-2 left-2 w-full h-full bg-purple-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
+            <div class="absolute top-1.5 left-1.5 w-full h-full bg-purple-600 -z-10 group-hover:top-2 group-hover:left-2 transition-all duration-300"></div>
           </div>
 
           <!-- Feature 4 -->
-          <div class="bg-white p-5 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-orange-600">
-            <div class="absolute top-0 right-0 w-0 h-0 border-t-[35px] border-t-orange-600 border-r-[35px] border-r-transparent"></div>
+          <div class="bg-white p-4 border-4 border-gray-900 relative group cursor-pointer transform hover:-translate-y-2 transition-all duration-300 group-hover:bg-orange-600">
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[25px] border-t-orange-600 border-r-[25px] border-r-transparent"></div>
 
-            <div class="w-16 h-16 bg-orange-100 flex items-center justify-center mb-6 group-hover:bg-white transition-colors duration-300">
-              <Heart class="w-8 h-8 text-orange-600 group-hover:text-orange-600 transition-colors duration-300" />
+            <div class="w-12 h-12 bg-orange-100 flex items-center justify-center mb-3 group-hover:bg-white transition-colors duration-300">
+              <Heart class="w-6 h-6 text-orange-600 group-hover:text-orange-600 transition-colors duration-300" />
             </div>
 
-            <h3 class="text-2xl font-black text-gray-900 mb-4 uppercase tracking-tight group-hover:text-white transition-colors">Filipino Hospitality</h3>
-            <p class="text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Warm, friendly service that makes every passenger feel like family.</p>
+            <h3 class="text-lg font-black text-gray-900 mb-2 uppercase tracking-tight group-hover:text-white transition-colors">Filipino Hospitality</h3>
+            <p class="text-sm text-gray-600 font-bold leading-relaxed group-hover:text-white transition-colors">Warm, friendly service that makes every passenger feel like family.</p>
 
-            <div class="absolute top-2 left-2 w-full h-full bg-orange-600 -z-10 group-hover:top-3 group-hover:left-3 transition-all duration-300"></div>
+            <div class="absolute top-1.5 left-1.5 w-full h-full bg-orange-600 -z-10 group-hover:top-2 group-hover:left-2 transition-all duration-300"></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Popular Destinations -->
-    <section class="py-12 bg-gradient-to-br from-gray-900 via-blue-900 to-black text-white overflow-hidden relative">
+    <section class="py-8 bg-gradient-to-br from-gray-900 via-blue-900 to-black text-white overflow-hidden relative">
       <!-- Background Pattern -->
       <div class="absolute inset-0 opacity-5">
         <div class="absolute top-0 left-0 w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, #fff 20px, #fff 21px);"></div>
@@ -596,28 +596,28 @@ onMounted(() => {
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <!-- Section Header -->
-        <div class="text-center mb-10">
-          <div class="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-none mb-8 border-4 border-white/20">
-            <MapPin class="w-5 h-5 text-blue-400" />
-            <span class="text-blue-300 font-black text-sm uppercase tracking-widest">Popular Destinations</span>
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-none mb-4 border-4 border-white/20">
+            <MapPin class="w-4 h-4 text-blue-400" />
+            <span class="text-blue-300 font-black text-xs uppercase tracking-widest">Popular Destinations</span>
           </div>
-          <h2 class="text-3xl md:text-4xl font-black text-white mb-6 leading-tight uppercase tracking-tighter">
+          <h2 class="text-2xl md:text-3xl font-black text-white mb-3 leading-tight uppercase tracking-tighter">
             Explore the Philippines
             <span class="block text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">& Beyond</span>
           </h2>
-          <p class="text-xl text-gray-300 max-w-4xl mx-auto font-bold leading-relaxed">
+          <p class="text-sm text-gray-300 max-w-4xl mx-auto font-bold leading-relaxed">
             From pristine beaches to bustling cities, discover the beauty of the Philippines and exciting international destinations with unbeatable prices
           </p>
         </div>
 
         <!-- Destinations Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <Card
             v-for="destination in destinationCards"
             :key="destination.id"
             class="group overflow-hidden bg-white border-4 border-gray-900 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-[1.02] rounded-none p-0 gap-0"
           >
-            <div class="relative h-64 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
+            <div class="relative h-48 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
               <!-- Background Image -->
               <img
                 :src="destination.image"
@@ -625,7 +625,7 @@ onMounted(() => {
                 class="absolute inset-0 w-full h-full object-cover opacity-60"
               />
               <!-- Badge -->
-              <div class="absolute top-6 right-6 z-10">
+              <div class="absolute top-3 right-3 z-10">
                 <span
                   :class="{
                     'bg-gradient-to-r from-red-500 to-pink-500 text-white': destination.badge === 'HOT DEAL',
@@ -634,7 +634,7 @@ onMounted(() => {
                     'bg-gradient-to-r from-blue-500 to-cyan-500 text-white': destination.badge === 'INTERNATIONAL',
                     'bg-gradient-to-r from-orange-500 to-yellow-500 text-white': destination.badge === 'TRENDING',
                   }"
-                  class="px-4 py-2 font-black text-xs uppercase tracking-wider shadow-lg backdrop-blur-sm border-2 border-white/30"
+                  class="px-3 py-1 font-black text-[10px] uppercase tracking-wider shadow-lg backdrop-blur-sm border-2 border-white/30"
                 >
                   {{ destination.badge }}
                 </span>
@@ -642,36 +642,36 @@ onMounted(() => {
 
               <!-- Decorative elements -->
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+              <div class="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
 
               <!-- Content -->
-              <div class="absolute bottom-6 left-6 right-6">
-                <CardTitle class="text-3xl font-black text-white mb-2 group-hover:text-blue-300 transition-colors duration-300">{{ destination.label }}</CardTitle>
-                <CardDescription class="text-gray-200 font-bold text-lg">{{ destination.description }}</CardDescription>
+              <div class="absolute bottom-3 left-3 right-3">
+                <CardTitle class="text-xl font-black text-white mb-1 group-hover:text-blue-300 transition-colors duration-300">{{ destination.label }}</CardTitle>
+                <CardDescription class="text-gray-200 font-bold text-sm">{{ destination.description }}</CardDescription>
               </div>
             </div>
 
-            <CardContent class="p-8 bg-white">
-              <div class="flex justify-between items-start mb-6">
-                <div class="space-y-1">
-                  <div class="flex items-baseline gap-3">
-                    <span class="text-4xl font-black text-gray-900">₱{{ destination.price.toLocaleString() }}</span>
-                    <span class="text-lg text-gray-400 line-through font-bold">₱{{ destination.originalPrice.toLocaleString() }}</span>
+            <CardContent class="p-4 bg-white">
+              <div class="flex justify-between items-start mb-4">
+                <div class="space-y-0.5">
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-black text-gray-900">₱{{ destination.price.toLocaleString() }}</span>
+                    <span class="text-sm text-gray-400 line-through font-bold">₱{{ destination.originalPrice.toLocaleString() }}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-600 font-bold">Round trip</span>
-                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 font-black uppercase tracking-wider">Save {{ destination.savings }}%</span>
+                    <span class="text-xs text-gray-600 font-bold">Round trip</span>
+                    <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 font-black uppercase tracking-wider">Save {{ destination.savings }}%</span>
                   </div>
                 </div>
               </div>
 
               <Button
                 @click="bookDestination(destination)"
-                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white h-14 font-black text-base transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group-hover:scale-105 rounded-none"
+                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white h-10 font-black text-xs transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group-hover:scale-105 rounded-none"
               >
-                <span class="flex items-center justify-center gap-2">
-                  <Plane class="w-5 h-5" />
+                <span class="flex items-center justify-center gap-1.5">
+                  <Plane class="w-3.5 h-3.5" />
                   Book Now - Save {{ destination.savings }}%
                 </span>
               </Button>
@@ -680,40 +680,40 @@ onMounted(() => {
         </div>
 
         <!-- CTA Button -->
-        <div class="text-center mt-16">
-          <Button class="inline-flex items-center justify-center gap-3 h-16 px-10 font-black text-lg bg-white/10 backdrop-blur-sm text-white border-4 border-white/20 hover:bg-white hover:text-gray-900 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 shadow-2xl hover:shadow-white/20 rounded-none">
+        <div class="text-center mt-8">
+          <Button class="inline-flex items-center justify-center gap-2 h-10 px-6 font-black text-sm bg-white/10 backdrop-blur-sm text-white border-4 border-white/20 hover:bg-white hover:text-gray-900 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 shadow-2xl hover:shadow-white/20 rounded-none">
             <span>View All Destinations</span>
-            <ArrowRight class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+            <ArrowRight class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Button>
         </div>
       </div>
     </section>
 
     <!-- Newsletter Section -->
-    <section class="py-12 bg-white relative overflow-hidden">
-      <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="mb-6">
-          <span class="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 font-black text-sm uppercase tracking-wider border-4 border-gray-900">
-            <Plane class="w-5 h-5" />
+    <section class="py-8 bg-white relative overflow-hidden">
+      <div class="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="mb-4">
+          <span class="inline-flex items-center gap-1.5 bg-gray-900 text-white px-4 py-2 font-black text-xs uppercase tracking-wider border-4 border-gray-900">
+            <Plane class="w-3.5 h-3.5" />
             Exclusive Deals
           </span>
         </div>
-        <h2 class="text-5xl md:text-6xl font-black text-gray-900 mb-6 uppercase tracking-tighter">Fly for Less, Dream for More!</h2>
-        <p class="text-sm text-gray-600 mb-12 max-w-2xl mx-auto font-bold leading-relaxed">
+        <h2 class="text-3xl md:text-4xl font-black text-gray-900 mb-3 uppercase tracking-tighter">Fly for Less, Dream for More!</h2>
+        <p class="text-xs text-gray-600 mb-6 max-w-2xl mx-auto font-bold leading-relaxed">
           Join over 2 million Filipinos who save up to 50% on flights. Get exclusive deals, seat sales alerts, and travel inspiration delivered to your inbox!
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+        <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
           <Input
             type="email"
             placeholder="Enter your email address"
-            class="flex-1 px-6 h-14 border-4 border-gray-900 focus:ring-0 focus:border-blue-600 focus:outline-none text-gray-900 font-bold rounded-none"
+            class="flex-1 px-4 h-10 border-4 border-gray-900 focus:ring-0 focus:border-blue-600 focus:outline-none text-gray-900 font-bold rounded-none text-sm"
           />
-          <Button class="bg-blue-600 text-white h-14 px-8 font-black hover:bg-blue-700 hover:text-white transition-all duration-300 shadow-lg transform hover:-translate-y-1 rounded-none">
-            <Heart class="w-5 h-5 mr-2" />
+          <Button class="bg-blue-600 text-white h-10 px-5 font-black hover:bg-blue-700 hover:text-white transition-all duration-300 shadow-lg transform hover:-translate-y-1 rounded-none text-xs">
+            <Heart class="w-3.5 h-3.5 mr-1.5" />
             Get Deals
           </Button>
         </div>
-        <p class="text-gray-500 text-sm mt-6 font-bold">
+        <p class="text-gray-500 text-xs mt-4 font-bold">
           No spam, just amazing flight deals. Unsubscribe anytime.
         </p>
       </div>
