@@ -5,12 +5,11 @@ import { storeToRefs } from 'pinia'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { 
-  Plane,  
-  MapPin,  
+import {
+  Plane,
+  MapPin,
   Search,
   ArrowLeft,
   ArrowRight,
@@ -21,16 +20,15 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-vue-next'
-import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import FareBundleSelector from '@/components/booking/FareBundleSelector.vue'
-import type { 
-  FlightSearchParams, 
-  FlightSearchResult, 
-  RoundTripResult, 
+import type {
+  FlightSearchParams,
+  FlightSearchResult,
+  RoundTripResult,
   MultiCityResult,
   Airport,
-  FareBundleType 
+  FareBundleType
 } from '@/interfaces/interfaces'
 import { airports } from '@/data/mockData'
 import { useFlightStore } from '@/stores/flightStore'
@@ -109,7 +107,7 @@ const returnDateString = computed({
 
 const filteredResults = computed(() => {
   let results = [...searchResults.value]
-  
+
   // Apply sorting
   if (Array.isArray(results) && results.length > 0) {
     results = results.sort((a, b) => {
@@ -118,14 +116,14 @@ const filteredResults = computed(() => {
       return sortOrder.value === 'asc' ? aVal - bVal : bVal - aVal
     })
   }
-  
+
   return results
 })
 
 // Initialize search from route params
 onMounted(() => {
   const { from, to, departure, return: returnDate, passengers, type } = route.query
-  
+
   if (from && to && departure) {
     const params: FlightSearchParams = {
       from: from as string,
@@ -135,9 +133,9 @@ onMounted(() => {
       passengers: parseInt(passengers as string || '1'),
       tripType: (type as 'one-way' | 'round-trip' | 'multi-city') || 'round-trip'
     }
-    
+
     flightStore.setSearchParams(params)
-    
+
     // Auto-search if we have the required params
     if (isFormValid.value) {
       flightStore.searchFlights()
@@ -147,23 +145,23 @@ onMounted(() => {
 
 const handleSearch = async () => {
   if (!isFormValid.value) return
-  
+
   await flightStore.searchFlights()
-  
+
   // Update URL with search params
   const query = {
     from: searchParams.value.from,
     to: searchParams.value.to,
-    departure: searchParams.value.departureDate instanceof Date 
-      ? searchParams.value.departureDate.toISOString().split('T')[0] 
+    departure: searchParams.value.departureDate instanceof Date
+      ? searchParams.value.departureDate.toISOString().split('T')[0]
       : searchParams.value.departureDate,
-    return: searchParams.value.returnDate instanceof Date 
-      ? searchParams.value.returnDate.toISOString().split('T')[0] 
+    return: searchParams.value.returnDate instanceof Date
+      ? searchParams.value.returnDate.toISOString().split('T')[0]
       : searchParams.value.returnDate,
     passengers: searchParams.value.passengers.toString(),
     type: searchParams.value.tripType
   }
-  
+
   router.push({ path: '/flights', query })
 }
 
@@ -179,7 +177,7 @@ const handleBundleSelection = (bundle: FareBundleType) => {
 
 const proceedWithBundle = () => {
   if (!selectedFlightForBundle.value) return
-  
+
   console.log('Selected flight with bundle:', selectedFlightForBundle.value, selectedBundle.value)
   bookingStore.initBooking(selectedFlightForBundle.value, searchParams.value.passengers, selectedBundle.value)
   showBundleModal.value = false
@@ -210,29 +208,26 @@ const toggleSort = () => {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Navigation Bar -->
-    <NavigationBar />
-
     <!-- Search Form Section -->
-    <section class="bg-white border-b-4 border-gray-900 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <section class="bg-white border-b-4 border-gray-900">
+      <div class="max-w-7xl mx-auto px-3 py-3">
         <!-- Back Button -->
         <Button
           @click="router.push('/')"
           variant="ghost"
-          class="mb-6 text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-bold"
+          class="mb-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-bold h-8 px-2 text-xs"
         >
-          <ArrowLeft class="w-4 h-4 mr-2" />
+          <ArrowLeft class="w-3.5 h-3.5 mr-1.5" />
           Back to Home
         </Button>
         <!-- Trip Type Selection -->
-        <div class="flex flex-wrap gap-3 mb-6">
+        <div class="flex flex-wrap gap-2 mb-3">
           <button
             v-for="type in ['round-trip', 'one-way', 'multi-city']"
             :key="type"
             @click="searchParams.tripType = type as any"
             :class="[
-              'px-6 py-3 font-black text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
+              'px-3 py-1.5 font-black text-xs uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
               searchParams.tripType === type
                 ? 'bg-gray-900 text-white border-gray-900'
                 : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
@@ -243,90 +238,90 @@ const toggleSort = () => {
         </div>
 
         <!-- Search Form -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div :class="`grid gap-2 mb-3 ${searchParams.tripType === 'round-trip' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`">
           <!-- From -->
-          <div>
-            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">From</Label>
+          <div class="relative">
+            <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">From</label>
             <Select v-model="searchParams.from">
-              <SelectTrigger 
-                class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              <SelectTrigger
+                class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs"
                 :class="{ 'border-red-500': errors.from }"
               >
-                <div class="flex items-center gap-2">
-                  <MapPin class="w-4 h-4 text-gray-600" />
+                <div class="flex items-center gap-1.5">
+                  <MapPin class="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
                   <SelectValue placeholder="Select departure city" />
                 </div>
               </SelectTrigger>
               <SelectContent class="border-4 border-gray-900 rounded-none">
                 <ScrollArea class="h-60">
-                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode" class="font-bold">
                     {{ airport.city }} ({{ airport.iataCode }})
                   </SelectItem>
                 </ScrollArea>
               </SelectContent>
             </Select>
-            <span v-if="errors.from" class="text-red-500 text-xs font-bold mt-1">{{ errors.from }}</span>
+            <span v-if="errors.from" class="text-red-500 text-xs font-bold mt-1 block">{{ errors.from }}</span>
           </div>
 
           <!-- To -->
-          <div>
-            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">To</Label>
+          <div class="relative">
+            <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">To</label>
             <Select v-model="searchParams.to">
-              <SelectTrigger 
-                class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              <SelectTrigger
+                class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs"
                 :class="{ 'border-red-500': errors.to }"
               >
-                <div class="flex items-center gap-2">
-                  <MapPin class="w-4 h-4 text-gray-600" />
+                <div class="flex items-center gap-1.5">
+                  <MapPin class="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
                   <SelectValue placeholder="Select destination city" />
                 </div>
               </SelectTrigger>
               <SelectContent class="border-4 border-gray-900 rounded-none">
                 <ScrollArea class="h-60">
-                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode">
+                  <SelectItem v-for="airport in airports" :key="airport.iataCode" :value="airport.iataCode" class="font-bold">
                     {{ airport.city }} ({{ airport.iataCode }})
                   </SelectItem>
                 </ScrollArea>
               </SelectContent>
             </Select>
-            <span v-if="errors.to" class="text-red-500 text-xs font-bold mt-1">{{ errors.to }}</span>
+            <span v-if="errors.to" class="text-red-500 text-xs font-bold mt-1 block">{{ errors.to }}</span>
           </div>
 
           <!-- Departure Date -->
           <div>
-            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure</Label>
+            <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Departure</label>
             <Input
               v-model="departureDateString"
               type="date"
-              class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs"
               :class="{ 'border-red-500': errors.departureDate }"
               :min="today"
             />
-            <span v-if="errors.departureDate" class="text-red-500 text-xs font-bold mt-1">{{ errors.departureDate }}</span>
+            <span v-if="errors.departureDate" class="text-red-500 text-xs font-bold mt-1 block">{{ errors.departureDate }}</span>
           </div>
 
           <!-- Return Date -->
           <div v-if="searchParams.tripType === 'round-trip'">
-            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Return</Label>
+            <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Return</label>
             <Input
               v-model="returnDateString"
               type="date"
-              class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs"
               :class="{ 'border-red-500': errors.returnDate }"
               :min="departureDateString"
             />
-            <span v-if="errors.returnDate" class="text-red-500 text-xs font-bold mt-1">{{ errors.returnDate }}</span>
+            <span v-if="errors.returnDate" class="text-red-500 text-xs font-bold mt-1 block">{{ errors.returnDate }}</span>
           </div>
 
           <!-- Passengers -->
           <div v-if="searchParams.tripType !== 'round-trip'">
-            <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Passengers</Label>
+            <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Passengers</label>
             <Select v-model="searchParams.passengers">
-              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+              <SelectTrigger class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent class="border-4 border-gray-900 rounded-none">
-                <SelectItem v-for="i in 9" :key="i" :value="i.toString()">
+                <SelectItem v-for="i in 9" :key="i" :value="i.toString()" class="font-bold">
                   {{ i }} {{ i === 1 ? 'Passenger' : 'Passengers' }}
                 </SelectItem>
               </SelectContent>
@@ -338,99 +333,100 @@ const toggleSort = () => {
         <Button
           @click="handleSearch"
           :disabled="isSearching"
-          class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-lg uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-3"
+          class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2"
         >
-          <Loader2 v-if="isSearching" class="w-5 h-5 animate-spin" />
-          <Search v-else class="w-5 h-5" />
+          <Loader2 v-if="isSearching" class="w-4 h-4 animate-spin" />
+          <Search v-else class="w-4 h-4" />
           <span>{{ isSearching ? 'Searching...' : 'Search Flights' }}</span>
+          <ArrowRight v-if="!isSearching" class="w-3.5 h-3.5" />
         </Button>
       </div>
     </section>
 
     <!-- Results Section -->
-    <section v-if="searchResults.length > 0" class="py-8">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section v-if="searchResults.length > 0" class="py-4">
+      <div class="max-w-7xl mx-auto px-3">
         <!-- Results Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
           <div>
-            <h2 class="text-3xl font-black text-gray-900 mb-2">
+            <h2 class="text-xl md:text-2xl font-black text-gray-900 mb-1">
               {{ totalResults }} Flight{{ totalResults !== 1 ? 's' : '' }} Found
             </h2>
-            <p class="text-gray-600 font-bold">
+            <p class="text-gray-600 font-bold text-xs">
               {{ getAirportByCode(searchParams.from)?.city }} → {{ getAirportByCode(searchParams.to)?.city }}
             </p>
           </div>
-          
-          <div class="flex gap-3 mt-4 sm:mt-0">
+
+          <div class="flex gap-2 mt-3 sm:mt-0">
             <Button
               @click="showFilters = !showFilters"
               variant="outline"
-              class="border-4 border-gray-900 rounded-none font-black"
+              class="border-4 border-gray-900 rounded-none font-black h-9 px-3 text-xs"
             >
-              <Filter class="w-4 h-4 mr-2" />
+              <Filter class="w-3.5 h-3.5 mr-1.5" />
               Filters
             </Button>
-            
+
             <Button
               @click="toggleSort"
               variant="outline"
-              class="border-4 border-gray-900 rounded-none font-black"
+              class="border-4 border-gray-900 rounded-none font-black h-9 px-3 text-xs"
             >
-              <SortAsc v-if="sortOrder === 'asc'" class="w-4 h-4 mr-2" />
-              <SortDesc v-else class="w-4 h-4 mr-2" />
-              Sort by Price
+              <SortAsc v-if="sortOrder === 'asc'" class="w-3.5 h-3.5 mr-1.5" />
+              <SortDesc v-else class="w-3.5 h-3.5 mr-1.5" />
+              Sort
             </Button>
           </div>
         </div>
 
         <!-- Filters Panel -->
-        <div v-if="showFilters" class="bg-white border-4 border-gray-900 p-6 mb-8">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-black text-gray-900">Filters</h3>
-            <Button @click="clearFilters" variant="ghost" class="text-gray-600 hover:text-gray-900">
-              <X class="w-4 h-4 mr-2" />
+        <div v-if="showFilters" class="bg-white border-4 border-gray-900 p-3 mb-4">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-base font-black text-gray-900 uppercase tracking-tight">Filters</h3>
+            <Button @click="clearFilters" variant="ghost" class="text-gray-600 hover:text-gray-900 h-8 px-2 text-xs">
+              <X class="w-3.5 h-3.5 mr-1.5" />
               Clear All
             </Button>
           </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <!-- Price Range -->
             <div>
-              <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Price Range</Label>
+              <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Price Range</label>
               <div class="flex gap-2">
                 <Input
                   v-model.number="filters.priceRange[0]"
                   type="number"
                   placeholder="Min"
-                  class="border-4 border-gray-900 rounded-none"
+                  class="h-9 px-2 border-4 border-gray-900 rounded-none text-xs font-bold"
                 />
                 <Input
                   v-model.number="filters.priceRange[1]"
                   type="number"
                   placeholder="Max"
-                  class="border-4 border-gray-900 rounded-none"
+                  class="h-9 px-2 border-4 border-gray-900 rounded-none text-xs font-bold"
                 />
               </div>
             </div>
-            
+
             <!-- Departure Time -->
             <div>
-              <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure Time</Label>
-              <div class="space-y-2">
+              <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Departure Time</label>
+              <div class="space-y-1.5">
                 <label v-for="time in ['Morning', 'Afternoon', 'Evening', 'Night']" :key="time" class="flex items-center">
                   <input type="checkbox" class="mr-2" />
-                  <span class="font-bold">{{ time }}</span>
+                  <span class="font-bold text-xs">{{ time }}</span>
                 </label>
               </div>
             </div>
-            
+
             <!-- Duration -->
             <div>
-              <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Duration</Label>
-              <div class="space-y-2">
+              <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Duration</label>
+              <div class="space-y-1.5">
                 <label v-for="duration in ['Under 2h', '2-4h', '4-6h', 'Over 6h']" :key="duration" class="flex items-center">
                   <input type="checkbox" class="mr-2" />
-                  <span class="font-bold">{{ duration }}</span>
+                  <span class="font-bold text-xs">{{ duration }}</span>
                 </label>
               </div>
             </div>
@@ -438,7 +434,7 @@ const toggleSort = () => {
         </div>
 
         <!-- Flight Results -->
-        <div class="space-y-4">
+        <div class="space-y-3">
           <!-- One-way Results -->
           <div v-if="searchParams.tripType === 'one-way'">
             <Card
@@ -446,50 +442,50 @@ const toggleSort = () => {
               :key="flight.flightInstanceId"
               class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
             >
-              <CardContent class="p-6">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <CardContent class="p-3">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                   <!-- Flight Info -->
-                  <div class="flex-1">
-                    <div class="flex items-center gap-4 mb-4">
-                      <div class="w-12 h-12 bg-blue-600 flex items-center justify-center">
-                        <Plane class="w-6 h-6 text-white" />
+                  <div class="flex-1 w-full">
+                    <div class="flex items-center gap-3 mb-3">
+                      <div class="w-10 h-10 bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <Plane class="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 class="text-xl font-black text-gray-900">{{ flight.flightNumber }}</h3>
-                        <p class="text-gray-600 font-bold">{{ flight.airline.name }}</p>
+                        <h3 class="text-base font-black text-gray-900">{{ flight.flightNumber }}</h3>
+                        <p class="text-gray-600 font-bold text-xs">{{ flight.airline.name }}</p>
                       </div>
                     </div>
-                    
-                    <div class="flex items-center gap-8">
+
+                    <div class="flex items-center gap-4">
                       <div class="text-center">
-                        <div class="text-2xl font-black text-gray-900">{{ flight.departureTime }}</div>
-                        <div class="text-sm text-gray-600 font-bold">{{ flight.originAirport.iataCode }}</div>
-                        <div class="text-xs text-gray-500">{{ flight.originAirport.city }}</div>
+                        <div class="text-lg font-black text-gray-900">{{ flight.departureTime }}</div>
+                        <div class="text-xs text-gray-600 font-bold">{{ flight.originAirport.iataCode }}</div>
+                        <div class="text-xs text-gray-500 hidden sm:block">{{ flight.originAirport.city }}</div>
                       </div>
-                      
+
                       <div class="flex-1 text-center">
-                        <div class="text-sm text-gray-600 font-bold mb-1">{{ flight.duration }}</div>
+                        <div class="text-xs text-gray-600 font-bold mb-1">{{ flight.duration }}</div>
                         <div class="h-px bg-gray-300 relative">
-                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-blue-600 rotate-45"></div>
+                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-600 rotate-45"></div>
                         </div>
-                        <div class="text-xs text-gray-500 mt-1">{{ flight.aircraft.model }}</div>
+                        <div class="text-xs text-gray-500 mt-1 hidden sm:block">{{ flight.aircraft.model }}</div>
                       </div>
-                      
+
                       <div class="text-center">
-                        <div class="text-2xl font-black text-gray-900">{{ flight.arrivalTime }}</div>
-                        <div class="text-sm text-gray-600 font-bold">{{ flight.destinationAirport.iataCode }}</div>
-                        <div class="text-xs text-gray-500">{{ flight.destinationAirport.city }}</div>
+                        <div class="text-lg font-black text-gray-900">{{ flight.arrivalTime }}</div>
+                        <div class="text-xs text-gray-600 font-bold">{{ flight.destinationAirport.iataCode }}</div>
+                        <div class="text-xs text-gray-500 hidden sm:block">{{ flight.destinationAirport.city }}</div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Price and Actions -->
-                  <div class="text-center lg:text-right">
-                    <div class="text-3xl font-black text-gray-900 mb-2">{{ formatPrice(flight.price) }}</div>
-                    <div class="text-sm text-gray-600 font-bold mb-4">{{ flight.fareCode }} Fare</div>
+                  <div class="text-center lg:text-right w-full lg:w-auto">
+                    <div class="text-2xl font-black text-gray-900 mb-1">{{ formatPrice(flight.price) }}</div>
+                    <div class="text-xs text-gray-600 font-bold mb-3">{{ flight.fareCode }} Fare</div>
                     <Button
                       @click="selectFlight(flight)"
-                      class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+                      class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-2 text-xs"
                     >
                       Choose Fare
                     </Button>
@@ -506,85 +502,83 @@ const toggleSort = () => {
               :key="`${trip.outbound.flightInstanceId}-${trip.return?.flightInstanceId}`"
               class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
             >
-              <CardContent class="p-6">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <CardContent class="p-3">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                   <!-- Outbound Flight -->
-                  <div class="flex-1">
-                    <div class="mb-4">
-                      <h4 class="text-lg font-black text-gray-900 mb-2">Outbound Flight</h4>
-                      <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-blue-600 flex items-center justify-center">
-                          <Plane class="w-5 h-5 text-white" />
+                  <div class="flex-1 w-full">
+                    <div class="mb-3">
+                      <h4 class="text-sm font-black text-gray-900 mb-2 uppercase tracking-tight">Outbound</h4>
+                      <div class="flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 bg-blue-600 flex items-center justify-center flex-shrink-0">
+                          <Plane class="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <div class="font-black text-gray-900">{{ trip.outbound.flightNumber }}</div>
-                          <div class="text-sm text-gray-600 font-bold">{{ trip.outbound.airline.name }}</div>
+                          <div class="font-black text-gray-900 text-sm">{{ trip.outbound.flightNumber }}</div>
+                          <div class="text-xs text-gray-600 font-bold">{{ trip.outbound.airline.name }}</div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div class="flex items-center gap-6">
+
+                    <div class="flex items-center gap-3 mb-4">
                       <div class="text-center">
-                        <div class="text-xl font-black text-gray-900">{{ trip.outbound.departureTime }}</div>
-                        <div class="text-sm text-gray-600 font-bold">{{ trip.outbound.originAirport.iataCode }}</div>
+                        <div class="text-base font-black text-gray-900">{{ trip.outbound.departureTime }}</div>
+                        <div class="text-xs text-gray-600 font-bold">{{ trip.outbound.originAirport.iataCode }}</div>
                       </div>
-                      
+
                       <div class="flex-1 text-center">
-                        <div class="text-sm text-gray-600 font-bold mb-1">{{ trip.outbound.duration }}</div>
+                        <div class="text-xs text-gray-600 font-bold mb-1">{{ trip.outbound.duration }}</div>
                         <div class="h-px bg-gray-300 relative">
-                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-blue-600 rotate-45"></div>
+                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-600 rotate-45"></div>
                         </div>
                       </div>
-                      
+
                       <div class="text-center">
-                        <div class="text-xl font-black text-gray-900">{{ trip.outbound.arrivalTime }}</div>
-                        <div class="text-sm text-gray-600 font-bold">{{ trip.outbound.destinationAirport.iataCode }}</div>
+                        <div class="text-base font-black text-gray-900">{{ trip.outbound.arrivalTime }}</div>
+                        <div class="text-xs text-gray-600 font-bold">{{ trip.outbound.destinationAirport.iataCode }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Return Flight -->
+                    <div v-if="trip.return">
+                      <h4 class="text-sm font-black text-gray-900 mb-2 uppercase tracking-tight">Return</h4>
+                      <div class="flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 bg-green-600 flex items-center justify-center flex-shrink-0">
+                          <ArrowLeft class="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <div class="font-black text-gray-900 text-sm">{{ trip.return.flightNumber }}</div>
+                          <div class="text-xs text-gray-600 font-bold">{{ trip.return.airline.name }}</div>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-3">
+                        <div class="text-center">
+                          <div class="text-base font-black text-gray-900">{{ trip.return.departureTime }}</div>
+                          <div class="text-xs text-gray-600 font-bold">{{ trip.return.originAirport.iataCode }}</div>
+                        </div>
+
+                        <div class="flex-1 text-center">
+                          <div class="text-xs text-gray-600 font-bold mb-1">{{ trip.return.duration }}</div>
+                          <div class="h-px bg-gray-300 relative">
+                            <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-green-600 rotate-45"></div>
+                          </div>
+                        </div>
+
+                        <div class="text-center">
+                          <div class="text-base font-black text-gray-900">{{ trip.return.arrivalTime }}</div>
+                          <div class="text-xs text-gray-600 font-bold">{{ trip.return.destinationAirport.iataCode }}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- Return Flight -->
-                  <div v-if="trip.return" class="flex-1">
-                    <div class="mb-4">
-                      <h4 class="text-lg font-black text-gray-900 mb-2">Return Flight</h4>
-                      <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-green-600 flex items-center justify-center">
-                          <ArrowLeft class="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <div class="font-black text-gray-900">{{ trip.return.flightNumber }}</div>
-                          <div class="text-sm text-gray-600 font-bold">{{ trip.return.airline.name }}</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-6">
-                      <div class="text-center">
-                        <div class="text-xl font-black text-gray-900">{{ trip.return.departureTime }}</div>
-                        <div class="text-sm text-gray-600 font-bold">{{ trip.return.originAirport.iataCode }}</div>
-                      </div>
-                      
-                      <div class="flex-1 text-center">
-                        <div class="text-sm text-gray-600 font-bold mb-1">{{ trip.return.duration }}</div>
-                        <div class="h-px bg-gray-300 relative">
-                          <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-green-600 rotate-45"></div>
-                        </div>
-                      </div>
-                      
-                      <div class="text-center">
-                        <div class="text-xl font-black text-gray-900">{{ trip.return.arrivalTime }}</div>
-                        <div class="text-sm text-gray-600 font-bold">{{ trip.return.destinationAirport.iataCode }}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
+
                   <!-- Price and Actions -->
-                  <div class="text-center lg:text-right">
-                    <div class="text-3xl font-black text-gray-900 mb-2">{{ formatPrice(trip.totalPrice) }}</div>
-                    <div class="text-sm text-gray-600 font-bold mb-4">Total Price</div>
+                  <div class="text-center lg:text-right w-full lg:w-auto">
+                    <div class="text-2xl font-black text-gray-900 mb-1">{{ formatPrice(trip.totalPrice) }}</div>
+                    <div class="text-xs text-gray-600 font-bold mb-3">Total Price</div>
                     <Button
                       @click="selectFlight(trip)"
-                      class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+                      class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-2 text-xs"
                     >
                       Select Trip
                     </Button>
@@ -601,36 +595,36 @@ const toggleSort = () => {
               :key="trip.segments.map(s => s.flightInstanceId).join('-')"
               class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
             >
-              <CardContent class="p-6">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+              <CardContent class="p-3">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                   <!-- Segments -->
-                  <div class="flex-1">
-                    <h4 class="text-lg font-black text-gray-900 mb-4">Multi-City Trip</h4>
-                    <div class="space-y-4">
+                  <div class="flex-1 w-full">
+                    <h4 class="text-sm font-black text-gray-900 mb-3 uppercase tracking-tight">Multi-City Trip</h4>
+                    <div class="space-y-3">
                       <div
                         v-for="(segment, index) in trip.segments"
                         :key="segment.flightInstanceId"
-                        class="flex items-center gap-4"
+                        class="flex items-center gap-3"
                       >
-                        <div class="w-8 h-8 bg-blue-600 flex items-center justify-center text-white font-black text-sm">
+                        <div class="w-7 h-7 bg-blue-600 flex items-center justify-center text-white font-black text-xs flex-shrink-0">
                           {{ index + 1 }}
                         </div>
                         <div class="flex-1">
-                          <div class="font-black text-gray-900">{{ segment.flightNumber }}</div>
-                          <div class="text-sm text-gray-600 font-bold">{{ segment.originAirport.iataCode }} → {{ segment.destinationAirport.iataCode }}</div>
+                          <div class="font-black text-gray-900 text-sm">{{ segment.flightNumber }}</div>
+                          <div class="text-xs text-gray-600 font-bold">{{ segment.originAirport.iataCode }} → {{ segment.destinationAirport.iataCode }}</div>
                           <div class="text-xs text-gray-500">{{ segment.departureTime }} - {{ segment.arrivalTime }} ({{ segment.duration }})</div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Price and Actions -->
-                  <div class="text-center lg:text-right">
-                    <div class="text-3xl font-black text-gray-900 mb-2">{{ formatPrice(trip.totalPrice) }}</div>
-                    <div class="text-sm text-gray-600 font-bold mb-4">Total Price</div>
+                  <div class="text-center lg:text-right w-full lg:w-auto">
+                    <div class="text-2xl font-black text-gray-900 mb-1">{{ formatPrice(trip.totalPrice) }}</div>
+                    <div class="text-xs text-gray-600 font-bold mb-3">Total Price</div>
                     <Button
                       @click="selectFlight(trip)"
-                      class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+                      class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-2 text-xs"
                     >
                       Select Trip
                     </Button>
@@ -644,27 +638,27 @@ const toggleSort = () => {
     </section>
 
     <!-- Empty State -->
-    <section v-else-if="!isSearching && searchResults.length === 0" class="py-20">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-8">
-          <AlertCircle class="w-12 h-12 text-gray-400" />
+    <section v-else-if="!isSearching && searchResults.length === 0" class="py-12">
+      <div class="max-w-4xl mx-auto px-3 text-center">
+        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+          <AlertCircle class="w-10 h-10 text-gray-400" />
         </div>
-        
-        <h2 class="text-4xl font-black text-gray-900 mb-4">No Flights Found</h2>
-        <p class="text-xl text-gray-600 font-bold mb-8">
+
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-3">No Flights Found</h2>
+        <p class="text-base text-gray-600 font-bold mb-6">
           We couldn't find any flights matching your search criteria. Try adjusting your search parameters.
         </p>
-        
-        <div class="space-y-4">
+
+        <div class="space-y-3">
           <Button
             @click="handleSearch"
-            class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+            class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-2 text-xs"
           >
-            <Search class="w-5 h-5 mr-2" />
+            <Search class="w-4 h-4 mr-2" />
             Try Different Dates
           </Button>
-          
-          <div class="text-sm text-gray-500 font-bold">
+
+          <div class="text-xs text-gray-500 font-bold space-y-1">
             <p>• Try searching for nearby airports</p>
             <p>• Check different departure dates</p>
             <p>• Consider flexible travel dates</p>
@@ -679,44 +673,44 @@ const toggleSort = () => {
     <!-- Bundle Selector Modal -->
     <div
       v-if="showBundleModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3"
       @click.self="showBundleModal = false"
     >
       <div class="bg-white border-4 border-gray-900 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b-4 border-gray-900 p-6 flex justify-between items-start z-10">
+        <div class="sticky top-0 bg-white border-b-4 border-gray-900 p-3 flex justify-between items-start z-10">
           <div>
-            <h2 class="text-3xl font-black text-gray-900">Choose Your Fare Bundle</h2>
-            <p class="text-gray-600 font-bold mt-1">Select the best option for your journey</p>
+            <h2 class="text-xl md:text-2xl font-black text-gray-900">Choose Your Fare Bundle</h2>
+            <p class="text-gray-600 font-bold mt-1 text-xs">Select the best option for your journey</p>
           </div>
           <button
             @click="showBundleModal = false"
-            class="w-10 h-10 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
+            class="w-9 h-9 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-colors flex-shrink-0"
           >
-            <X class="w-6 h-6" />
+            <X class="w-5 h-5" />
           </button>
         </div>
 
-        <div class="p-6">
+        <div class="p-3">
           <FareBundleSelector
             :basePrice="selectedFlightForBundle && 'price' in selectedFlightForBundle ? selectedFlightForBundle.price : selectedFlightForBundle?.totalPrice || 0"
             :selectedBundle="selectedBundle"
             @select="handleBundleSelection"
           />
 
-          <div class="mt-8 flex justify-end gap-4">
+          <div class="mt-6 flex justify-end gap-3">
             <Button
               @click="showBundleModal = false"
               variant="outline"
-              class="border-4 border-gray-900 rounded-none font-black px-8 py-3"
+              class="border-4 border-gray-900 rounded-none font-black h-10 px-6 text-xs"
             >
               Cancel
             </Button>
             <Button
               @click="proceedWithBundle"
-              class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+              class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black h-10 px-6 text-xs"
             >
               Continue to Booking
-              <ArrowRight class="w-4 h-4 ml-2" />
+              <ArrowRight class="w-3.5 h-3.5 ml-2" />
             </Button>
           </div>
         </div>
