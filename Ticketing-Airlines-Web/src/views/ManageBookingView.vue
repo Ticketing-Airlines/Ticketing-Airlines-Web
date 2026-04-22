@@ -22,69 +22,49 @@ import {
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import { useBookingStore } from '@/stores/bookingStore'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
+
+import { useValidation, rules } from '@/composables/useValidation'
+
+// Store
+const bookingStore = useBookingStore()
+const { retrievedBooking, isSearchingBooking, bookingError } = storeToRefs(bookingStore)
+const router = useRouter()
 
 // Reactive state
-const bookingFound = ref(false)
 const searchForm = reactive({
   bookingReference: '',
   lastName: ''
 })
 
-// Mock booking data
-const currentBooking = ref({
-  reference: 'ABC123',
-  status: 'Confirmed',
-  bookingDate: 'January 15, 2024',
-  outbound: {
-    from: 'Manila (MNL)',
-    to: 'Cebu (CEB)',
-    flightNumber: '5J 561',
-    date: 'February 15, 2024',
-    time: '06:00 - 07:25',
-    duration: '1h 25m'
-  },
-  return: {
-    from: 'Cebu (CEB)',
-    to: 'Manila (MNL)',
-    flightNumber: '5J 562',
-    date: 'February 18, 2024',
-    time: '08:00 - 09:25',
-    duration: '1h 25m'
-  },
-  passengers: [
-    {
-      id: 1,
-      name: 'John Doe',
-      type: 'Adult',
-      seat: '12A',
-      meal: 'Standard'
-    },
-    {
-      id: 2,
-      name: 'Jane Doe',
-      type: 'Adult',
-      seat: '12B',
-      meal: 'Vegetarian'
-    }
-  ],
-  pricing: {
-    baseFare: 8500,
-    taxes: 1200,
-    addOns: 500,
-    total: 10200
-  }
+// Validation
+const { validate, errors, isValid } = useValidation(searchForm, {
+  bookingReference: [rules.required('Booking reference is required')],
+  lastName: [rules.required('Last name is required')]
 })
 
 // Methods
-const searchBooking = () => {
-  if (searchForm.bookingReference && searchForm.lastName) {
-    bookingFound.value = true
-  }
+const searchBooking = async () => {
+  if (!validate()) return
+  
+  await bookingStore.retrieveBooking(searchForm.bookingReference, searchForm.lastName)
 }
 
 const checkIn = () => {
-  // Navigate to check-in page
-  console.log('Navigating to check-in...')
+  // Navigate to check-in page with query params if booking is retrieved
+  if (retrievedBooking.value) {
+    router.push({ 
+      path: '/check-in', 
+      query: { 
+        ref: retrievedBooking.value.reference, 
+        lastName: searchForm.lastName 
+      } 
+    })
+  } else {
+    router.push('/check-in')
+  }
 }
 
 const selectSeats = () => {
@@ -179,8 +159,10 @@ const cancelBooking = () => {
                     v-model="searchForm.bookingReference"
                     placeholder="ABC123"
                     class="h-14 text-xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-blue-600 focus:ring-0 transition-all uppercase tracking-widest"
+                    :class="{ 'border-red-600': errors.bookingReference }"
                     required
                   />
+                  <span v-if="errors.bookingReference" class="text-red-600 text-xs font-bold mt-1 block">{{ errors.bookingReference }}</span>
                 </div>
 
                 <!-- Last Name -->
@@ -193,20 +175,29 @@ const cancelBooking = () => {
                     v-model="searchForm.lastName"
                     placeholder="SURNAME"
                     class="h-14 text-xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-blue-600 focus:ring-0 transition-all uppercase tracking-wide"
+                    :class="{ 'border-red-600': errors.lastName }"
                     required
                   />
+                  <span v-if="errors.lastName" class="text-red-600 text-xs font-bold mt-1 block">{{ errors.lastName }}</span>
                 </div>
               </div>
 
               <!-- Search Button -->
-              <Button type="submit" class="w-full h-16 text-lg font-black bg-gray-900 text-white hover:bg-blue-600 transition-all duration-300 uppercase tracking-widest relative overflow-hidden group">
+              <Button type="submit" :disabled="isSearchingBooking" class="w-full h-16 text-lg font-black bg-gray-900 text-white hover:bg-blue-600 transition-all duration-300 uppercase tracking-widest relative overflow-hidden group">
                 <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                 <div class="flex items-center justify-center gap-3 relative z-10">
-                  <Search class="w-5 h-5" />
-                  <span>Retrieve Booking</span>
-                  <ArrowRight class="w-5 h-5" />
+                  <Search v-if="!isSearchingBooking" class="w-5 h-5" />
+                  <div v-else class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>{{ isSearchingBooking ? 'Searching...' : 'Retrieve Booking' }}</span>
+                  <ArrowRight v-if="!isSearchingBooking" class="w-5 h-5" />
                 </div>
               </Button>
+
+              <!-- Error Message -->
+              <div v-if="bookingError" class="p-4 bg-red-50 border-l-4 border-red-600 text-red-700 font-bold flex items-center gap-3">
+                <AlertCircle class="w-5 h-5" />
+                {{ bookingError }}
+              </div>
 
               <!-- Info Strip -->
               <div class="flex items-center justify-center gap-2 text-xs text-gray-500 pt-2">
@@ -219,7 +210,7 @@ const cancelBooking = () => {
       </div>
 
       <!-- Booking Details Section - Itinerary Style -->
-      <div v-if="bookingFound" class="max-w-6xl mx-auto space-y-8">
+      <div v-if="retrievedBooking" class="max-w-6xl mx-auto space-y-8">
         <!-- Header Strip -->
         <div class="bg-gradient-to-r from-gray-900 to-blue-900 p-6 relative overflow-hidden">
           <div class="absolute inset-0 opacity-10">
@@ -231,14 +222,14 @@ const cancelBooking = () => {
             <div>
               <div class="text-xs text-blue-300 font-black uppercase tracking-widest mb-1">Booking Confirmation</div>
               <div class="flex items-center gap-4">
-                <h2 class="text-3xl font-black text-white tracking-tight">{{ currentBooking.reference }}</h2>
+                <h2 class="text-3xl font-black text-white tracking-tight">{{ retrievedBooking.reference }}</h2>
                 <div class="h-8 w-px bg-white/30"></div>
-                <div class="text-white/80 text-sm font-semibold">{{ currentBooking.bookingDate }}</div>
+                <div class="text-white/80 text-sm font-semibold">{{ retrievedBooking.bookingDate }}</div>
               </div>
             </div>
             <div class="flex items-center gap-3">
               <div class="px-4 py-2 bg-green-500 font-black text-sm uppercase tracking-wide">
-                {{ currentBooking.status }}
+                {{ retrievedBooking.status }}
               </div>
               <CheckCircle class="w-6 h-6 text-green-500" />
             </div>
@@ -255,7 +246,7 @@ const cancelBooking = () => {
                 <Plane class="w-5 h-5 text-white" />
                 <span class="font-black text-white uppercase tracking-wide text-sm">Outbound</span>
               </div>
-              <div class="text-white font-bold text-sm">{{ currentBooking.outbound.flightNumber }}</div>
+              <div class="text-white font-bold text-sm">{{ retrievedBooking.outbound.flightNumber }}</div>
             </div>
 
             <!-- Flight Route -->
@@ -263,8 +254,8 @@ const cancelBooking = () => {
               <div class="flex items-center justify-between mb-6">
                 <div>
                   <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">From</div>
-                  <div class="text-3xl font-black text-gray-900">{{ currentBooking.outbound.from.split(' ')[1].replace(/[()]/g, '') }}</div>
-                  <div class="text-sm text-gray-600 font-semibold">{{ currentBooking.outbound.from.split(' ')[0] }}</div>
+                  <div class="text-3xl font-black text-gray-900">{{ retrievedBooking.outbound.from.split(' ')[1].replace(/[()]/g, '') }}</div>
+                  <div class="text-sm text-gray-600 font-semibold">{{ retrievedBooking.outbound.from.split(' ')[0] }}</div>
                 </div>
                 
                 <div class="flex-1 mx-4 flex flex-col items-center">
@@ -273,13 +264,13 @@ const cancelBooking = () => {
                       <ArrowRight class="w-6 h-6 text-gray-900 bg-white" />
                     </div>
                   </div>
-                  <div class="text-xs text-gray-500 font-bold mt-1">{{ currentBooking.outbound.duration }}</div>
+                  <div class="text-xs text-gray-500 font-bold mt-1">{{ retrievedBooking.outbound.duration }}</div>
                 </div>
 
                 <div class="text-right">
                   <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">To</div>
-                  <div class="text-3xl font-black text-gray-900">{{ currentBooking.outbound.to.split(' ')[1].replace(/[()]/g, '') }}</div>
-                  <div class="text-sm text-gray-600 font-semibold">{{ currentBooking.outbound.to.split(' ')[0] }}</div>
+                  <div class="text-3xl font-black text-gray-900">{{ retrievedBooking.outbound.to.split(' ')[1].replace(/[()]/g, '') }}</div>
+                  <div class="text-sm text-gray-600 font-semibold">{{ retrievedBooking.outbound.to.split(' ')[0] }}</div>
                 </div>
               </div>
 
@@ -288,11 +279,11 @@ const cancelBooking = () => {
                 <div class="flex justify-between items-center">
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest">Date</div>
-                    <div class="font-black text-gray-900">{{ currentBooking.outbound.date }}</div>
+                    <div class="font-black text-gray-900">{{ retrievedBooking.outbound.date }}</div>
                   </div>
                   <div class="text-right">
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest">Time</div>
-                    <div class="font-black text-gray-900">{{ currentBooking.outbound.time }}</div>
+                    <div class="font-black text-gray-900">{{ retrievedBooking.outbound.time }}</div>
                   </div>
                 </div>
               </div>
@@ -300,14 +291,14 @@ const cancelBooking = () => {
           </div>
 
           <!-- Return Flight (if exists) -->
-          <div v-if="currentBooking.return" class="bg-white shadow-2xl relative">
+          <div v-if="retrievedBooking.return" class="bg-white shadow-2xl relative">
             <!-- Top Bar -->
             <div class="bg-green-600 px-6 py-3 flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <Plane class="w-5 h-5 text-white transform rotate-180" />
                 <span class="font-black text-white uppercase tracking-wide text-sm">Return</span>
               </div>
-              <div class="text-white font-bold text-sm">{{ currentBooking.return.flightNumber }}</div>
+              <div class="text-white font-bold text-sm">{{ retrievedBooking.return.flightNumber }}</div>
             </div>
 
             <!-- Flight Route -->
@@ -315,8 +306,8 @@ const cancelBooking = () => {
               <div class="flex items-center justify-between mb-6">
                 <div>
                   <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">From</div>
-                  <div class="text-3xl font-black text-gray-900">{{ currentBooking.return.from.split(' ')[1].replace(/[()]/g, '') }}</div>
-                  <div class="text-sm text-gray-600 font-semibold">{{ currentBooking.return.from.split(' ')[0] }}</div>
+                  <div class="text-3xl font-black text-gray-900">{{ retrievedBooking.return.from.split(' ')[1].replace(/[()]/g, '') }}</div>
+                  <div class="text-sm text-gray-600 font-semibold">{{ retrievedBooking.return.from.split(' ')[0] }}</div>
                 </div>
                 
                 <div class="flex-1 mx-4 flex flex-col items-center">
@@ -325,13 +316,13 @@ const cancelBooking = () => {
                       <ArrowRight class="w-6 h-6 text-gray-900 bg-white" />
                     </div>
                   </div>
-                  <div class="text-xs text-gray-500 font-bold mt-1">{{ currentBooking.return.duration }}</div>
+                  <div class="text-xs text-gray-500 font-bold mt-1">{{ retrievedBooking.return.duration }}</div>
                 </div>
 
                 <div class="text-right">
                   <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">To</div>
-                  <div class="text-3xl font-black text-gray-900">{{ currentBooking.return.to.split(' ')[1].replace(/[()]/g, '') }}</div>
-                  <div class="text-sm text-gray-600 font-semibold">{{ currentBooking.return.to.split(' ')[0] }}</div>
+                  <div class="text-3xl font-black text-gray-900">{{ retrievedBooking.return.to.split(' ')[1].replace(/[()]/g, '') }}</div>
+                  <div class="text-sm text-gray-600 font-semibold">{{ retrievedBooking.return.to.split(' ')[0] }}</div>
                 </div>
               </div>
 
@@ -340,11 +331,11 @@ const cancelBooking = () => {
                 <div class="flex justify-between items-center">
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest">Date</div>
-                    <div class="font-black text-gray-900">{{ currentBooking.return.date }}</div>
+                    <div class="font-black text-gray-900">{{ retrievedBooking.return.date }}</div>
                   </div>
                   <div class="text-right">
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest">Time</div>
-                    <div class="font-black text-gray-900">{{ currentBooking.return.time }}</div>
+                    <div class="font-black text-gray-900">{{ retrievedBooking.return.time }}</div>
                   </div>
                 </div>
               </div>
@@ -364,7 +355,7 @@ const cancelBooking = () => {
             </div>
 
             <div class="space-y-4">
-              <div v-for="passenger in currentBooking.passengers" :key="passenger.id" 
+              <div v-for="passenger in retrievedBooking.passengers" :key="passenger.id" 
                    class="bg-gray-50 p-5 border-l-4 border-gray-900 relative">
                 <!-- Passenger Number Badge -->
                 <div class="absolute -left-2 top-5 w-6 h-6 bg-gray-900 flex items-center justify-center">
@@ -413,21 +404,21 @@ const cancelBooking = () => {
               <div class="space-y-4">
                 <div class="flex justify-between items-center pb-3 border-b border-white/20">
                   <span class="text-white/80 font-semibold uppercase text-xs tracking-widest">Base Fare</span>
-                  <span class="text-white font-bold">₱{{ currentBooking.pricing.baseFare.toLocaleString() }}</span>
+                  <span class="text-white font-bold">₱{{ retrievedBooking.pricing.baseFare.toLocaleString() }}</span>
                 </div>
                 <div class="flex justify-between items-center pb-3 border-b border-white/20">
                   <span class="text-white/80 font-semibold uppercase text-xs tracking-widest">Taxes & Fees</span>
-                  <span class="text-white font-bold">₱{{ currentBooking.pricing.taxes.toLocaleString() }}</span>
+                  <span class="text-white font-bold">₱{{ retrievedBooking.pricing.taxes.toLocaleString() }}</span>
                 </div>
-                <div v-if="currentBooking.pricing.addOns > 0" class="flex justify-between items-center pb-3 border-b border-white/20">
+                <div v-if="retrievedBooking.pricing.addOns > 0" class="flex justify-between items-center pb-3 border-b border-white/20">
                   <span class="text-white/80 font-semibold uppercase text-xs tracking-widest">Add-ons</span>
-                  <span class="text-white font-bold">₱{{ currentBooking.pricing.addOns.toLocaleString() }}</span>
+                  <span class="text-white font-bold">₱{{ retrievedBooking.pricing.addOns.toLocaleString() }}</span>
                 </div>
                 
                 <div class="bg-white/10 backdrop-blur-sm p-4 border-2 border-white/30 mt-6">
                   <div class="flex justify-between items-center">
                     <span class="text-white font-black uppercase text-sm tracking-widest">Total</span>
-                    <span class="text-3xl font-black text-white">₱{{ currentBooking.pricing.total.toLocaleString() }}</span>
+                    <span class="text-3xl font-black text-white">₱{{ retrievedBooking.pricing.total.toLocaleString() }}</span>
                   </div>
                 </div>
               </div>

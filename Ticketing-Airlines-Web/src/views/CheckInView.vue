@@ -145,6 +145,12 @@
               </div>
             </Button>
 
+              <!-- Error Message -->
+              <div v-if="error" class="p-4 bg-red-50 border-l-4 border-red-600 text-red-700 font-bold flex items-center gap-3 mt-4">
+                <AlertCircle class="w-5 h-5" />
+                {{ error }}
+              </div>
+
                 <!-- Info Strip -->
                 <div class="bg-gradient-to-r from-gray-50 via-blue-50 to-gray-50 -mx-8 px-8 py-4 border-t-2 border-dashed border-gray-200">
                   <div class="flex items-center justify-between text-xs text-gray-600">
@@ -185,7 +191,7 @@
           <h3 class="text-3xl font-bold text-black mb-3">Check-in Successful!</h3>
           <p class="text-gray-600 mb-8 text-lg">You're all set for your flight</p>
           
-          <div class="bg-gradient-to-br from-gray-900 to-blue-900 rounded-2xl p-6 mb-8 text-left">
+          <div v-if="retrievedBooking" class="bg-gradient-to-br from-gray-900 to-blue-900 rounded-2xl p-6 mb-8 text-left">
             <h4 class="font-bold mb-4 text-white text-lg flex items-center">
               <Plane class="w-5 h-5 mr-2" />
               Flight Details
@@ -193,19 +199,23 @@
             <div class="space-y-3 text-sm">
               <div class="flex justify-between items-center">
                 <span class="text-gray-300">Flight:</span>
-                <span class="font-bold text-white">{{ mockFlightData.flightNumber }}</span>
+                <span class="font-bold text-white">{{ retrievedBooking.outbound.flightNumber }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-gray-300">Route:</span>
-                <span class="font-bold text-white">{{ mockFlightData.route }}</span>
+                <span class="font-bold text-white">{{ retrievedBooking.outbound.from.split(' ')[0] }} → {{ retrievedBooking.outbound.to.split(' ')[0] }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-gray-300">Date:</span>
-                <span class="font-bold text-white">{{ mockFlightData.date }}</span>
+                <span class="font-bold text-white">{{ retrievedBooking.outbound.date }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-300">Passenger:</span>
+                <span class="font-bold text-white">{{ retrievedBooking.passengers[0].name }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-gray-300">Seat:</span>
-                <span class="font-bold text-blue-400 text-lg">{{ mockFlightData.seat }}</span>
+                <span class="font-bold text-blue-400 text-lg">{{ retrievedBooking.passengers[0].seat }}</span>
               </div>
             </div>
           </div>
@@ -479,8 +489,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import { ref, computed, onMounted } from 'vue'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -496,10 +506,18 @@ import {
   Phone,
   MessageCircle,
   Shield,
-  Zap
+  Zap,
+  AlertCircle
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import { useBookingStore } from '@/stores/bookingStore'
+import { useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
+
+const route = useRoute()
+const bookingStore = useBookingStore()
+const { retrievedBooking } = storeToRefs(bookingStore)
 
 const checkInForm = ref({
   bookingReference: '',
@@ -508,14 +526,7 @@ const checkInForm = ref({
 
 const isLoading = ref(false)
 const showSuccess = ref(false)
-
-// Mock flight data for successful check-in
-const mockFlightData = ref({
-  flightNumber: 'CP 123',
-  route: 'Manila (MNL) → Cebu (CEB)',
-  date: 'March 15, 2024',
-  seat: '12A'
-})
+const error = ref('')
 
 const isFormValid = computed(() => {
   return checkInForm.value.bookingReference.length === 6 && 
@@ -528,21 +539,58 @@ const formatBookingRef = (event: Event) => {
   checkInForm.value.bookingReference = target.value
 }
 
+onMounted(() => {
+  if (route.query.ref) {
+    checkInForm.value.bookingReference = route.query.ref as string
+  }
+  if (route.query.lastName) {
+    checkInForm.value.lastName = route.query.lastName as string
+  }
+})
+
 const checkIn = async () => {
   if (!isFormValid.value) return
   
   isLoading.value = true
+  error.value = ''
   
-  // Simulate API call
-  setTimeout(() => {
+  try {
+    const success = await bookingStore.retrieveBooking(
+      checkInForm.value.bookingReference, 
+      checkInForm.value.lastName
+    )
+    
+    if (success && retrievedBooking.value) {
+      showSuccess.value = true
+    } else {
+      error.value = bookingStore.bookingError || 'Booking not found. Please check your details.'
+    }
+  } catch (e) {
+    error.value = 'An error occurred. Please try again.'
+  } finally {
     isLoading.value = false
-    showSuccess.value = true
-  }, 2000)
+  }
 }
 
 const downloadBoardingPass = () => {
-  // In a real application, this would generate and download the boarding pass
-  alert('Boarding pass download started! Check your downloads folder.')
+  if (!retrievedBooking.value) return
+  
+  // Navigate to boarding pass view with booking data
+  const booking = retrievedBooking.value
+  const passenger = booking.passengers[0] // First passenger
+  
+  window.open(`/boarding-pass/${booking.bookingReference}?` + 
+    `name=${encodeURIComponent(passenger.name)}&` +
+    `from=${encodeURIComponent(booking.outbound.from.split(' ')[0])}&` +
+    `to=${encodeURIComponent(booking.outbound.to.split(' ')[0])}&` +
+    `flight=${booking.outbound.flightNumber}&` +
+    `date=${encodeURIComponent(booking.outbound.date)}&` +
+    `boarding=${encodeURIComponent(booking.outbound.time.split(' - ')[0])}&` +
+    `gate=${passenger.gate || 'G5'}&` +
+    `seat=${passenger.seat}&` +
+    `class=${booking.fareClass || 'Economy'}`,
+    '_blank'
+  )
 }
 
 const closeSuccess = () => {
@@ -552,5 +600,6 @@ const closeSuccess = () => {
     bookingReference: '',
     lastName: ''
   }
+  error.value = ''
 }
 </script>

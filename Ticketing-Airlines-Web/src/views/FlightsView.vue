@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,7 @@ import {
   MapPin,  
   Search,
   ArrowLeft,
+  ArrowRight,
   Filter,
   SortAsc,
   SortDesc,
@@ -21,36 +23,34 @@ import {
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import FareBundleSelector from '@/components/booking/FareBundleSelector.vue'
 import type { 
   FlightSearchParams, 
   FlightSearchResult, 
   RoundTripResult, 
   MultiCityResult,
-  Airport 
+  Airport,
+  FareBundleType 
 } from '@/interfaces/interfaces'
-import { flightSearchService } from '@/services/flightSearchService'
 import { airports } from '@/data/mockData'
+import { useFlightStore } from '@/stores/flightStore'
+import { useBookingStore } from '@/stores/bookingStore'
+import { useValidation, rules } from '@/composables/useValidation'
 
 const route = useRoute()
 const router = useRouter()
+const flightStore = useFlightStore()
+const bookingStore = useBookingStore()
 
-// Reactive state
-const isLoading = ref(false)
-const searchResults = ref<FlightSearchResult[] | RoundTripResult[] | MultiCityResult[]>([])
-const totalResults = ref(0)
+// Store state
+const { searchParams, searchResults, totalResults, isSearching } = storeToRefs(flightStore)
+
+// Local UI state
 const showFilters = ref(false)
 const sortOrder = ref<'asc' | 'desc'>('asc')
-
-// Search form state
-const tripType = ref<'one-way' | 'round-trip' | 'multi-city'>('round-trip')
-const searchForm = ref({
-  origin: '',
-  destination: '',
-  departureDate: '',
-  returnDate: '',
-  passengers: '1',
-  class: 'Economy'
-})
+const showBundleModal = ref(false)
+const selectedFlightForBundle = ref<FlightSearchResult | RoundTripResult | MultiCityResult | null>(null)
+const selectedBundle = ref<FareBundleType>('SKYPLUS')
 
 // Filter state
 const filters = ref({
@@ -64,11 +64,47 @@ const today = computed(() => {
   return new Date().toISOString().split('T')[0]
 })
 
-const isFormValid = computed(() => {
-  return searchForm.value.origin &&
-         searchForm.value.destination &&
-         searchForm.value.departureDate &&
-         (tripType.value === 'one-way' || searchForm.value.returnDate)
+// Validation
+const { isValid: isFormValid, errors } = useValidation(searchParams.value, {
+  from: [rules.required('Origin is required')],
+  to: [rules.required('Destination is required')],
+  departureDate: [rules.required('Departure date is required')],
+  // Conditional validation for return date
+  returnDate: [
+    (value: any) => {
+      if (searchParams.value.tripType === 'round-trip' && !value) {
+        return 'Return date is required'
+      }
+      return true
+    }
+  ]
+})
+
+// Computed properties to handle Date <-> String conversion for date inputs
+const departureDateString = computed({
+  get: () => {
+    if (!searchParams.value.departureDate) return ''
+    if (searchParams.value.departureDate instanceof Date) {
+      return searchParams.value.departureDate.toISOString().split('T')[0]
+    }
+    return searchParams.value.departureDate
+  },
+  set: (value: string) => {
+    searchParams.value.departureDate = value ? new Date(value) : null
+  }
+})
+
+const returnDateString = computed({
+  get: () => {
+    if (!searchParams.value.returnDate) return ''
+    if (searchParams.value.returnDate instanceof Date) {
+      return searchParams.value.returnDate.toISOString().split('T')[0]
+    }
+    return searchParams.value.returnDate
+  },
+  set: (value: string) => {
+    searchParams.value.returnDate = value ? new Date(value) : null
+  }
 })
 
 const filteredResults = computed(() => {
@@ -91,63 +127,62 @@ onMounted(() => {
   const { from, to, departure, return: returnDate, passengers, type } = route.query
   
   if (from && to && departure) {
-    searchForm.value.origin = from as string
-    searchForm.value.destination = to as string
-    searchForm.value.departureDate = departure as string
-    searchForm.value.returnDate = returnDate as string || ''
-    searchForm.value.passengers = passengers as string || '1'
-    tripType.value = (type as 'one-way' | 'round-trip' | 'multi-city') || 'round-trip'
+    const params: FlightSearchParams = {
+      from: from as string,
+      to: to as string,
+      departureDate: new Date(departure as string),
+      returnDate: returnDate ? new Date(returnDate as string) : null,
+      passengers: parseInt(passengers as string || '1'),
+      tripType: (type as 'one-way' | 'round-trip' | 'multi-city') || 'round-trip'
+    }
+    
+    flightStore.setSearchParams(params)
     
     // Auto-search if we have the required params
     if (isFormValid.value) {
-      searchFlights()
+      flightStore.searchFlights()
     }
   }
 })
 
-const searchFlights = async () => {
+const handleSearch = async () => {
   if (!isFormValid.value) return
   
-  isLoading.value = true
+  await flightStore.searchFlights()
   
-  try {
-    const searchParams: FlightSearchParams = {
-      from: searchForm.value.origin,
-      to: searchForm.value.destination,
-      departureDate: new Date(searchForm.value.departureDate),
-      returnDate: searchForm.value.returnDate ? new Date(searchForm.value.returnDate) : null,
-      passengers: parseInt(searchForm.value.passengers),
-      tripType: tripType.value
-    }
-    
-    const response = await flightSearchService.searchFlights(searchParams)
-    searchResults.value = response.results
-    totalResults.value = response.totalResults
-    
-    // Update URL with search params
-    const query = {
-      from: searchForm.value.origin,
-      to: searchForm.value.destination,
-      departure: searchForm.value.departureDate,
-      return: searchForm.value.returnDate,
-      passengers: searchForm.value.passengers,
-      type: tripType.value
-    }
-    
-    router.push({ path: '/flights', query })
-    
-  } catch (error) {
-    console.error('Flight search error:', error)
-    searchResults.value = []
-    totalResults.value = 0
-  } finally {
-    isLoading.value = false
+  // Update URL with search params
+  const query = {
+    from: searchParams.value.from,
+    to: searchParams.value.to,
+    departure: searchParams.value.departureDate instanceof Date 
+      ? searchParams.value.departureDate.toISOString().split('T')[0] 
+      : searchParams.value.departureDate,
+    return: searchParams.value.returnDate instanceof Date 
+      ? searchParams.value.returnDate.toISOString().split('T')[0] 
+      : searchParams.value.returnDate,
+    passengers: searchParams.value.passengers.toString(),
+    type: searchParams.value.tripType
   }
+  
+  router.push({ path: '/flights', query })
 }
 
 const selectFlight = (result: FlightSearchResult | RoundTripResult | MultiCityResult) => {
-  console.log('Selected flight:', result)
-  // Navigate to booking page
+  selectedFlightForBundle.value = result
+  selectedBundle.value = 'SKYPLUS' // Reset to recommended
+  showBundleModal.value = true
+}
+
+const handleBundleSelection = (bundle: FareBundleType) => {
+  selectedBundle.value = bundle
+}
+
+const proceedWithBundle = () => {
+  if (!selectedFlightForBundle.value) return
+  
+  console.log('Selected flight with bundle:', selectedFlightForBundle.value, selectedBundle.value)
+  bookingStore.initBooking(selectedFlightForBundle.value, searchParams.value.passengers, selectedBundle.value)
+  showBundleModal.value = false
   router.push('/booking')
 }
 
@@ -195,10 +230,10 @@ const toggleSort = () => {
           <button
             v-for="type in ['round-trip', 'one-way', 'multi-city']"
             :key="type"
-            @click="tripType = type as any"
+            @click="searchParams.tripType = type as any"
             :class="[
               'px-6 py-3 font-black text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
-              tripType === type
+              searchParams.tripType === type
                 ? 'bg-gray-900 text-white border-gray-900'
                 : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
             ]"
@@ -212,8 +247,11 @@ const toggleSort = () => {
           <!-- From -->
           <div>
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">From</Label>
-            <Select v-model="searchForm.origin">
-              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+            <Select v-model="searchParams.from">
+              <SelectTrigger 
+                class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                :class="{ 'border-red-500': errors.from }"
+              >
                 <div class="flex items-center gap-2">
                   <MapPin class="w-4 h-4 text-gray-600" />
                   <SelectValue placeholder="Select departure city" />
@@ -227,13 +265,17 @@ const toggleSort = () => {
                 </ScrollArea>
               </SelectContent>
             </Select>
+            <span v-if="errors.from" class="text-red-500 text-xs font-bold mt-1">{{ errors.from }}</span>
           </div>
 
           <!-- To -->
           <div>
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">To</Label>
-            <Select v-model="searchForm.destination">
-              <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
+            <Select v-model="searchParams.to">
+              <SelectTrigger 
+                class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                :class="{ 'border-red-500': errors.to }"
+              >
                 <div class="flex items-center gap-2">
                   <MapPin class="w-4 h-4 text-gray-600" />
                   <SelectValue placeholder="Select destination city" />
@@ -247,34 +289,39 @@ const toggleSort = () => {
                 </ScrollArea>
               </SelectContent>
             </Select>
+            <span v-if="errors.to" class="text-red-500 text-xs font-bold mt-1">{{ errors.to }}</span>
           </div>
 
           <!-- Departure Date -->
           <div>
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure</Label>
             <Input
-              v-model="searchForm.departureDate"
+              v-model="departureDateString"
               type="date"
               class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+              :class="{ 'border-red-500': errors.departureDate }"
               :min="today"
             />
+            <span v-if="errors.departureDate" class="text-red-500 text-xs font-bold mt-1">{{ errors.departureDate }}</span>
           </div>
 
           <!-- Return Date -->
-          <div v-if="tripType === 'round-trip'">
+          <div v-if="searchParams.tripType === 'round-trip'">
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Return</Label>
             <Input
-              v-model="searchForm.returnDate"
+              v-model="returnDateString"
               type="date"
               class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
-              :min="searchForm.departureDate"
+              :class="{ 'border-red-500': errors.returnDate }"
+              :min="departureDateString"
             />
+            <span v-if="errors.returnDate" class="text-red-500 text-xs font-bold mt-1">{{ errors.returnDate }}</span>
           </div>
 
           <!-- Passengers -->
-          <div v-if="tripType !== 'round-trip'">
+          <div v-if="searchParams.tripType !== 'round-trip'">
             <Label class="text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Passengers</Label>
-            <Select v-model="searchForm.passengers">
+            <Select v-model="searchParams.passengers">
               <SelectTrigger class="h-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600">
                 <SelectValue />
               </SelectTrigger>
@@ -289,13 +336,13 @@ const toggleSort = () => {
 
         <!-- Search Button -->
         <Button
-          @click="searchFlights"
-          :disabled="!isFormValid || isLoading"
+          @click="handleSearch"
+          :disabled="isSearching"
           class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-lg uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-3"
         >
-          <Loader2 v-if="isLoading" class="w-5 h-5 animate-spin" />
+          <Loader2 v-if="isSearching" class="w-5 h-5 animate-spin" />
           <Search v-else class="w-5 h-5" />
-          <span>{{ isLoading ? 'Searching...' : 'Search Flights' }}</span>
+          <span>{{ isSearching ? 'Searching...' : 'Search Flights' }}</span>
         </Button>
       </div>
     </section>
@@ -310,7 +357,7 @@ const toggleSort = () => {
               {{ totalResults }} Flight{{ totalResults !== 1 ? 's' : '' }} Found
             </h2>
             <p class="text-gray-600 font-bold">
-              {{ getAirportByCode(searchForm.origin)?.city }} → {{ getAirportByCode(searchForm.destination)?.city }}
+              {{ getAirportByCode(searchParams.from)?.city }} → {{ getAirportByCode(searchParams.to)?.city }}
             </p>
           </div>
           
@@ -393,7 +440,7 @@ const toggleSort = () => {
         <!-- Flight Results -->
         <div class="space-y-4">
           <!-- One-way Results -->
-          <div v-if="tripType === 'one-way'">
+          <div v-if="searchParams.tripType === 'one-way'">
             <Card
               v-for="flight in filteredResults as FlightSearchResult[]"
               :key="flight.flightInstanceId"
@@ -444,7 +491,7 @@ const toggleSort = () => {
                       @click="selectFlight(flight)"
                       class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
                     >
-                      Select Flight
+                      Choose Fare
                     </Button>
                   </div>
                 </div>
@@ -453,7 +500,7 @@ const toggleSort = () => {
           </div>
 
           <!-- Round-trip Results -->
-          <div v-else-if="tripType === 'round-trip'">
+          <div v-else-if="searchParams.tripType === 'round-trip'">
             <Card
               v-for="trip in filteredResults as RoundTripResult[]"
               :key="`${trip.outbound.flightInstanceId}-${trip.return?.flightInstanceId}`"
@@ -548,7 +595,7 @@ const toggleSort = () => {
           </div>
 
           <!-- Multi-city Results -->
-          <div v-else-if="tripType === 'multi-city'">
+          <div v-else-if="searchParams.tripType === 'multi-city'">
             <Card
               v-for="trip in filteredResults as MultiCityResult[]"
               :key="trip.segments.map(s => s.flightInstanceId).join('-')"
@@ -597,7 +644,7 @@ const toggleSort = () => {
     </section>
 
     <!-- Empty State -->
-    <section v-else-if="!isLoading && searchResults.length === 0" class="py-20">
+    <section v-else-if="!isSearching && searchResults.length === 0" class="py-20">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-8">
           <AlertCircle class="w-12 h-12 text-gray-400" />
@@ -610,7 +657,7 @@ const toggleSort = () => {
         
         <div class="space-y-4">
           <Button
-            @click="searchFlights"
+            @click="handleSearch"
             class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
           >
             <Search class="w-5 h-5 mr-2" />
@@ -628,5 +675,52 @@ const toggleSort = () => {
 
     <!-- Footer -->
     <AppFooter />
+
+    <!-- Bundle Selector Modal -->
+    <div
+      v-if="showBundleModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      @click.self="showBundleModal = false"
+    >
+      <div class="bg-white border-4 border-gray-900 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b-4 border-gray-900 p-6 flex justify-between items-start z-10">
+          <div>
+            <h2 class="text-3xl font-black text-gray-900">Choose Your Fare Bundle</h2>
+            <p class="text-gray-600 font-bold mt-1">Select the best option for your journey</p>
+          </div>
+          <button
+            @click="showBundleModal = false"
+            class="w-10 h-10 bg-gray-900 hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
+          >
+            <X class="w-6 h-6" />
+          </button>
+        </div>
+
+        <div class="p-6">
+          <FareBundleSelector
+            :basePrice="selectedFlightForBundle && 'price' in selectedFlightForBundle ? selectedFlightForBundle.price : selectedFlightForBundle?.totalPrice || 0"
+            :selectedBundle="selectedBundle"
+            @select="handleBundleSelection"
+          />
+
+          <div class="mt-8 flex justify-end gap-4">
+            <Button
+              @click="showBundleModal = false"
+              variant="outline"
+              class="border-4 border-gray-900 rounded-none font-black px-8 py-3"
+            >
+              Cancel
+            </Button>
+            <Button
+              @click="proceedWithBundle"
+              class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
+            >
+              Continue to Booking
+              <ArrowRight class="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

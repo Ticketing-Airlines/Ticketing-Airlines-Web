@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Calendar } from '@/components/ui/calendar'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
 import type { DateValue } from '@internationalized/date'
-import { getLocalTimeZone } from '@internationalized/date'
+import { getLocalTimeZone, parseDate } from '@internationalized/date'
 import { 
   Plane, 
   MapPin, 
@@ -23,12 +23,14 @@ import {
 } from 'lucide-vue-next'
 import Autoplay from 'embla-carousel-autoplay'
 
-import type { DestinationCard, Airport, FlightSearchParams } from '@/interfaces/interfaces'
+import type { DestinationCard, Airport } from '@/interfaces/interfaces'
 import { destinationCards, airports } from '@/data/mockData'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import LoadingScreen from '@/components/LoadingScreen.vue'
 import { useRouter } from 'vue-router'
+import { useFlightStore } from '@/stores/flightStore'
+import { storeToRefs } from 'pinia'
 
 // Import hero images
 import boracayImg from '@/assets/boracay.webp'
@@ -38,21 +40,16 @@ import singaporeImg from '@/assets/singapore.webp'
 import palawanImg from '@/assets/palawan.webp'
 import hongkongImg from '@/assets/hongkong.webp'
 
-// Router
+// Router & Store
 const router = useRouter()
+const flightStore = useFlightStore()
+const { searchParams } = storeToRefs(flightStore)
 
 // Loading state
 const isLoading = ref(true)
 
-// Reactive state
-const departureDate = ref<DateValue>()
-const returnDate = ref<DateValue>()
-const selectedFrom = ref<string>('MNL')
-const selectedTo = ref<string>('CEB')
-const tripType = ref<'round-trip' | 'one-way' | 'multi-city'>('round-trip')
-
 // Helper function to format DateValue
-const formatDate = (date: DateValue | undefined): string => {
+const formatDate = (date: DateValue | undefined | null): string => {
   if (!date) return ''
   return date.toDate(getLocalTimeZone()).toLocaleDateString('en-US', {
     month: 'short',
@@ -67,39 +64,61 @@ const getAirportByCode = (code: string): Airport | undefined => {
 }
 
 // Computed properties
-const fromAirport = computed(() => getAirportByCode(selectedFrom.value))
-const toAirport = computed(() => getAirportByCode(selectedTo.value))
+const fromAirport = computed(() => getAirportByCode(searchParams.value.from))
+const toAirport = computed(() => getAirportByCode(searchParams.value.to))
+
+// Helper to convert Date to string in YYYY-MM-DD format
+const dateToString = (date: Date | null): string => {
+  if (!date) return ''
+  return date.toISOString().split('T')[0]
+}
+
+// Date handling for Calendar component (needs DateValue)
+const departureDateValue = computed({
+  get: () => {
+    const dateStr = dateToString(searchParams.value.departureDate)
+    return dateStr ? parseDate(dateStr) : undefined
+  },
+  set: (val: DateValue | undefined) => {
+    if (val) {
+      searchParams.value.departureDate = new Date(val.toString())
+    }
+  }
+})
+
+const returnDateValue = computed({
+  get: () => {
+    const dateStr = dateToString(searchParams.value.returnDate)
+    return dateStr ? parseDate(dateStr) : undefined
+  },
+  set: (val: DateValue | undefined) => {
+    if (val) {
+      searchParams.value.returnDate = new Date(val.toString())
+    }
+  }
+})
 
 // Flight search functionality
 const searchFlights = () => {
-  const searchParams: FlightSearchParams = {
-    from: selectedFrom.value,
-    to: selectedTo.value,
-    departureDate: departureDate.value ? departureDate.value.toDate(getLocalTimeZone()) : null,
-    returnDate: returnDate.value ? returnDate.value.toDate(getLocalTimeZone()) : null,
-    passengers: 1,
-    tripType: tripType.value
-  }
-
-  console.log('Searching flights with params:', searchParams)
+  console.log('Searching flights with params:', searchParams.value)
   
   // Navigate to flights page with search parameters
   router.push({
     path: '/flights',
     query: {
-      from: searchParams.from,
-      to: searchParams.to,
-      departure: searchParams.departureDate?.toISOString().split('T')[0],
-      return: searchParams.returnDate?.toISOString().split('T')[0],
-      passengers: searchParams.passengers.toString(),
-      type: searchParams.tripType
+      from: searchParams.value.from,
+      to: searchParams.value.to,
+      departure: dateToString(searchParams.value.departureDate),
+      return: dateToString(searchParams.value.returnDate),
+      passengers: searchParams.value.passengers.toString(),
+      type: searchParams.value.tripType
     }
   })
 }
 
 // Trip type selection
 const selectTripType = (type: 'round-trip' | 'one-way' | 'multi-city') => {
-  tripType.value = type
+  searchParams.value.tripType = type
 }
 
 // Loading screen handlers
@@ -110,7 +129,14 @@ const handleLoadingFinished = () => {
 // Book destination function
 const bookDestination = (destination: DestinationCard) => {
   console.log('Booking destination:', destination)
-  alert(`Booking ${destination.label} for ₱${destination.price.toLocaleString()}`)
+  // Pre-fill search params based on destination
+  searchParams.value.to = 'MPH' // Example: Boracay (Caticlan)
+  if (destination.label.includes('Cebu')) searchParams.value.to = 'CEB'
+  if (destination.label.includes('Davao')) searchParams.value.to = 'DVO'
+  if (destination.label.includes('Palawan')) searchParams.value.to = 'PPS'
+  
+  // Navigate to search results
+  searchFlights()
 }
 
 // Initialize loading on component mount
@@ -331,10 +357,8 @@ onMounted(() => {
         </CarouselContent>
 
         <!-- Carousel Controls -->
-        <div class="absolute left-6 right-6 bottom-8 z-20 flex items-center justify-between">
-          <CarouselPrevious class="relative bg-white/20 hover:bg-white/40 border-4 border-white/40 text-white w-16 h-16 rounded-none" />
-          <CarouselNext class="relative bg-white/20 hover:bg-white/40 border-4 border-white/40 text-white w-16 h-16 rounded-none" />
-        </div>
+        <CarouselPrevious class="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-16 h-16" />
+        <CarouselNext class="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-16 h-16" />
       </Carousel>
 
       <!-- Search Form Overlay -->
@@ -349,7 +373,7 @@ onMounted(() => {
                   @click="selectTripType('round-trip')"
                   :class="[
                     'px-6 py-3 font-black text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
-                    tripType === 'round-trip'
+                    searchParams.tripType === 'round-trip'
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
                   ]"
@@ -360,7 +384,7 @@ onMounted(() => {
                   @click="selectTripType('one-way')"
                   :class="[
                     'px-6 py-3 font-black text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
-                    tripType === 'one-way'
+                    searchParams.tripType === 'one-way'
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
                   ]"
@@ -371,7 +395,7 @@ onMounted(() => {
                   @click="selectTripType('multi-city')"
                   :class="[
                     'px-6 py-3 font-black text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
-                    tripType === 'multi-city'
+                    searchParams.tripType === 'multi-city'
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
                   ]"
@@ -381,11 +405,11 @@ onMounted(() => {
               </div>
 
               <!-- Search Form Grid -->
-              <div :class="`grid gap-4 mb-8 ${tripType === 'round-trip' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`">
+              <div :class="`grid gap-4 mb-8 ${searchParams.tripType === 'round-trip' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`">
                 <!-- From -->
                 <div class="relative">
                   <label class="block text-sm font-black text-gray-900 mb-3 uppercase tracking-widest">From</label>
-                  <Select v-model="selectedFrom">
+                  <Select v-model="searchParams.from">
                     <SelectTrigger class="h-14 px-4 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold">
                       <div class="flex items-center gap-3">
                         <MapPin class="w-5 h-5 text-gray-600" />
@@ -405,7 +429,7 @@ onMounted(() => {
                 <!-- To -->
                 <div class="relative">
                   <label class="block text-sm font-black text-gray-900 mb-3 uppercase tracking-widest">To</label>
-                  <Select v-model="selectedTo">
+                  <Select v-model="searchParams.to">
                     <SelectTrigger class="h-14 px-4 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold">
                       <div class="flex items-center gap-3">
                         <MapPin class="w-5 h-5 text-gray-600" />
@@ -432,17 +456,17 @@ onMounted(() => {
                         class="w-full h-14 justify-start text-left border-4 border-gray-900 rounded-none hover:border-blue-600 focus:ring-0 focus:border-blue-600 text-gray-900 font-bold px-4"
                       >
                         <CalendarIcon class="mr-3 h-5 w-5 text-gray-600" />
-                        <span class="text-sm">{{ departureDate ? formatDate(departureDate) : "Departure date" }}</span>
+                        <span class="text-sm">{{ departureDateValue ? formatDate(departureDateValue) : "Departure date" }}</span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent class="w-auto p-0 border-4 border-gray-900 rounded-none">
-                      <Calendar v-model="departureDate" />
+                      <Calendar v-model="departureDateValue" />
                     </PopoverContent>
                   </Popover>
                 </div>
 
                 <!-- Return Date -->
-                <div v-if="tripType === 'round-trip'">
+                <div v-if="searchParams.tripType === 'round-trip'">
                   <label class="block text-sm font-black text-gray-900 mb-3 uppercase tracking-widest">Return</label>
                   <Popover>
                     <PopoverTrigger as-child>
@@ -451,11 +475,11 @@ onMounted(() => {
                         class="w-full h-14 justify-start text-left border-4 border-gray-900 rounded-none hover:border-blue-600 focus:ring-0 focus:border-blue-600 text-gray-900 font-bold px-4"
                       >
                         <CalendarIcon class="mr-3 h-5 w-5 text-gray-600" />
-                        <span class="text-sm">{{ returnDate ? formatDate(returnDate) : "Return date" }}</span>
+                        <span class="text-sm">{{ returnDateValue ? formatDate(returnDateValue) : "Return date" }}</span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent class="w-auto p-0 border-4 border-gray-900 rounded-none">
-                      <Calendar v-model="returnDate" />
+                      <Calendar v-model="returnDateValue" />
                     </PopoverContent>
                   </Popover>
                 </div>

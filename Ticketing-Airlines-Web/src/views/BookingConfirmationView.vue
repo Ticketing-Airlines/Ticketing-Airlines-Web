@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
@@ -15,21 +16,11 @@ import {
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import { useBookingStore } from '@/stores/bookingStore'
 
 const router = useRouter()
-
-const bookingDetails = ref({
-  bookingReference: 'SS123456789',
-  flightNumber: 'SS101',
-  departure: 'MNL',
-  arrival: 'CEB',
-  departureTime: '08:00',
-  arrivalTime: '09:15',
-  date: '2025-10-16',
-  passengers: 1,
-  totalAmount: 3249,
-  currency: 'PHP'
-})
+const bookingStore = useBookingStore()
+const { bookingReference, selectedFlight, passengers, totalPrice, baseFare, taxes, fees } = storeToRefs(bookingStore)
 
 const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
@@ -45,9 +36,32 @@ const sendEmail = () => {
   alert('Booking confirmation sent to your email!')
 }
 
+const goHome = () => {
+  bookingStore.resetBooking()
+  router.push('/')
+}
+
+const getFlightProperty = (property: string) => {
+  if (!selectedFlight.value) return ''
+  
+  if ('price' in selectedFlight.value) {
+    // Single flight result
+    return (selectedFlight.value as any)[property]
+  } else if ('outbound' in selectedFlight.value) {
+    // Round trip result
+    return (selectedFlight.value.outbound as any)[property]
+  } else if ('segments' in selectedFlight.value) {
+    // Multi-city result
+    return (selectedFlight.value.segments[0] as any)[property]
+  }
+  return ''
+}
+
 onMounted(() => {
-  // Generate random booking reference
-  bookingDetails.value.bookingReference = 'SS' + Math.random().toString(36).substr(2, 9).toUpperCase()
+  if (!bookingReference.value) {
+    // Redirect to home if no booking reference (page reload or direct access)
+    router.push('/')
+  }
 })
 </script>
 
@@ -73,7 +87,7 @@ onMounted(() => {
         <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-4 border-white/20">
           <h2 class="text-2xl font-black text-white mb-4">Booking Reference</h2>
           <div class="text-4xl font-black text-white tracking-wider">
-            {{ bookingDetails.bookingReference }}
+            {{ bookingReference }}
           </div>
           <p class="text-green-100 font-bold mt-2">Save this reference for your records</p>
         </div>
@@ -95,37 +109,37 @@ onMounted(() => {
                     <Plane class="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 class="text-xl font-black text-gray-900">{{ bookingDetails.flightNumber }}</h3>
-                    <p class="text-gray-600 font-bold">SunSkies Air</p>
+                    <h3 class="text-xl font-black text-gray-900">{{ getFlightProperty('flightNumber') }}</h3>
+                    <p class="text-gray-600 font-bold">{{ getFlightProperty('airline')?.name }}</p>
                   </div>
                 </div>
                 
                 <div class="flex items-center gap-8">
                   <div class="text-center">
-                    <div class="text-2xl font-black text-gray-900">{{ bookingDetails.departureTime }}</div>
-                    <div class="text-sm text-gray-600 font-bold">{{ bookingDetails.departure }}</div>
-                    <div class="text-xs text-gray-500">Manila</div>
+                    <div class="text-2xl font-black text-gray-900">{{ getFlightProperty('departureTime') }}</div>
+                    <div class="text-sm text-gray-600 font-bold">{{ getFlightProperty('originAirport')?.iataCode }}</div>
+                    <div class="text-xs text-gray-500">{{ getFlightProperty('originAirport')?.city }}</div>
                   </div>
                   
                   <div class="flex-1 text-center">
-                    <div class="text-sm text-gray-600 font-bold mb-1">1h 15m</div>
+                    <div class="text-sm text-gray-600 font-bold mb-1">{{ getFlightProperty('duration') }}</div>
                     <div class="h-px bg-gray-300 relative">
                       <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-blue-600 rotate-45"></div>
                     </div>
-                    <div class="text-xs text-gray-500 mt-1">Airbus A320-200</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ getFlightProperty('aircraft')?.model }}</div>
                   </div>
                   
                   <div class="text-center">
-                    <div class="text-2xl font-black text-gray-900">{{ bookingDetails.arrivalTime }}</div>
-                    <div class="text-sm text-gray-600 font-bold">{{ bookingDetails.arrival }}</div>
-                    <div class="text-xs text-gray-500">Cebu</div>
+                    <div class="text-2xl font-black text-gray-900">{{ getFlightProperty('arrivalTime') }}</div>
+                    <div class="text-sm text-gray-600 font-bold">{{ getFlightProperty('destinationAirport')?.iataCode }}</div>
+                    <div class="text-xs text-gray-500">{{ getFlightProperty('destinationAirport')?.city }}</div>
                   </div>
                 </div>
                 
                 <div class="bg-gray-50 p-4 border-4 border-gray-200">
                   <div class="flex items-center gap-3">
                     <Calendar class="w-5 h-5 text-blue-600" />
-                    <span class="font-black text-gray-900">Departure Date: {{ bookingDetails.date }}</span>
+                    <span class="font-black text-gray-900">Departure Date: {{ new Date().toLocaleDateString() }}</span>
                   </div>
                 </div>
               </div>
@@ -140,23 +154,23 @@ onMounted(() => {
               <div class="space-y-4">
                 <div class="flex justify-between">
                   <span class="text-gray-600 font-bold">Passengers</span>
-                  <span class="font-black text-gray-900">{{ bookingDetails.passengers }} Adult</span>
+                  <span class="font-black text-gray-900">{{ passengers.length }} Passenger{{ passengers.length > 1 ? 's' : '' }}</span>
                 </div>
                 
                 <div class="flex justify-between">
                   <span class="text-gray-600 font-bold">Base Fare</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(2899) }}</span>
+                  <span class="font-black text-gray-900">{{ formatPrice(baseFare * passengers.length) }}</span>
                 </div>
                 
                 <div class="flex justify-between">
                   <span class="text-gray-600 font-bold">Taxes & Fees</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(350) }}</span>
+                  <span class="font-black text-gray-900">{{ formatPrice((taxes + fees) * passengers.length) }}</span>
                 </div>
                 
                 <div class="border-t-2 border-gray-300 pt-4">
                   <div class="flex justify-between">
                     <span class="text-xl font-black text-gray-900">Total Paid</span>
-                    <span class="text-xl font-black text-gray-900">{{ formatPrice(bookingDetails.totalAmount) }}</span>
+                    <span class="text-xl font-black text-gray-900">{{ formatPrice(totalPrice) }}</span>
                   </div>
                 </div>
               </div>
@@ -199,7 +213,7 @@ onMounted(() => {
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4 mt-8">
           <Button
-            @click="router.push('/')"
+            @click="goHome"
             variant="outline"
             class="flex-1 border-4 border-gray-900 rounded-none font-black py-3"
           >

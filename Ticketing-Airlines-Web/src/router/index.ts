@@ -1,8 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAdminStore } from '@/stores/adminStore'
 import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    // Always scroll to top when navigating to a new route
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0, behavior: 'smooth' }
+    }
+  },
   routes: [
     {
       path: '/',
@@ -13,6 +22,19 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: () => import('@/views/LoginView.vue'),
+    },
+    // Admin routes
+    {
+      path: '/admin/login',
+      name: 'AdminLogin',
+      component: () => import('@/views/AdminLoginView.vue'),
+      meta: { isAdminAuth: true }
+    },
+    {
+      path: '/admin',
+      name: 'AdminDashboard',
+      component: () => import('@/views/AdminDashboardView.vue'),
+      meta: { requiresAdmin: true }
     },
     // Book routes
     {
@@ -81,6 +103,58 @@ const router = createRouter({
       name: 'InternationalDestinations',
       component: () => import('@/views/InternationalDestinationsView.vue')
     },
+    // New Routes
+    {
+      path: '/profile',
+      name: 'UserProfile',
+      component: () => import('@/views/UserProfileView.vue')
+    },
+    {
+      path: '/my-bookings',
+      name: 'MyBookings',
+      component: () => import('@/views/MyBookingsView.vue')
+    },
+    {
+      path: '/boarding-pass/:pnr',
+      name: 'BoardingPass',
+      component: () => import('@/views/BoardingPassView.vue')
+    },
+    {
+      path: '/support',
+      name: 'Support',
+      component: () => import('@/views/SupportView.vue')
+    },
+    // 404 - Must be last
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('@/views/NotFoundView.vue')
+    }
+  ],
+})
+
+// Navigation guard for admin routes
+router.beforeEach((to, from, next) => {
+  const adminStore = useAdminStore()
+
+  // Check if route requires admin authentication
+  if (to.meta.requiresAdmin) {
+    if (adminStore.isAuthenticated) {
+      next()
+    } else {
+      // Redirect to admin login if not authenticated
+      next('/admin/login')
+    }
+  }
+  // If admin is already authenticated and trying to access login page
+  else if (to.meta.isAdminAuth && adminStore.isAuthenticated) {
+    // Redirect to admin dashboard
+    next('/admin')
+  }
+  // Otherwise proceed normally
+  else {
+    next()
+  }
     // Admin routes
     {
       path: '/admin',

@@ -20,10 +20,14 @@ import {
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import { useFlightStore } from '@/stores/flightStore'
+import { storeToRefs } from 'pinia'
+
+// Store
+const flightStore = useFlightStore()
+const { flightStatus, isSearchingStatus, statusError } = storeToRefs(flightStore)
 
 // Reactive state
-const flightFound = ref(false)
-const isSearching = ref(false)
 const currentTime = ref(new Date())
 
 const searchForm = reactive({
@@ -44,42 +48,12 @@ onUnmounted(() => {
   clearInterval(timeInterval)
 })
 
-// Mock flight status data
-const flightStatus = ref({
-  flightNumber: '5J 561',
-  airline: 'Cebu Pacific',
-  date: 'February 15, 2024',
-  status: 'On Time',
-  departure: {
-    airport: 'Manila',
-    code: 'MNL',
-    terminal: 'Terminal 3',
-    gate: 'Gate 24',
-    scheduledTime: '06:00',
-    estimatedTime: '06:00',
-    actualTime: '06:05'
-  },
-  arrival: {
-    airport: 'Cebu',
-    code: 'CEB',
-    terminal: 'Terminal 1',
-    gate: 'Gate 8',
-    scheduledTime: '07:25',
-    estimatedTime: '07:30',
-    actualTime: null
-  },
-  aircraft: 'Airbus A320',
-  duration: '1h 25m',
-  weather: {
-    departure: { temp: '28°C', condition: 'Sunny' },
-    arrival: { temp: '26°C', condition: 'Cloudy' }
-  }
-})
-
 // Computed properties
 const statusColor = computed(() => {
+  if (!flightStatus.value) return 'gray'
   switch (flightStatus.value.status.toLowerCase()) {
     case 'on time':
+    case 'scheduled':
       return 'green'
     case 'delayed':
       return 'yellow'
@@ -95,8 +69,10 @@ const statusColor = computed(() => {
 })
 
 const statusIcon = computed(() => {
+  if (!flightStatus.value) return AlertCircle
   switch (flightStatus.value.status.toLowerCase()) {
     case 'on time':
+    case 'scheduled':
     case 'arrived':
       return CheckCircle
     case 'delayed':
@@ -119,22 +95,17 @@ const formattedCurrentTime = computed(() => {
 })
 
 // Methods
-const searchFlight = () => {
+const searchFlight = async () => {
   if (searchForm.flightNumber && searchForm.date) {
-    isSearching.value = true
-    // Simulate API call
-    setTimeout(() => {
-      flightFound.value = true
-      isSearching.value = false
-    }, 1000)
+    await flightStore.searchFlightStatus(searchForm.flightNumber, searchForm.date)
   }
 }
 
-// Recent searches mock data
+// Recent searches mock data (could be moved to store or local storage later)
 const recentSearches = ref([
-  { flightNumber: '5J 561', date: 'Feb 15, 2024', status: 'On Time' },
-  { flightNumber: '5J 562', date: 'Feb 15, 2024', status: 'Delayed' },
-  { flightNumber: '5J 325', date: 'Feb 14, 2024', status: 'Arrived' }
+  { flightNumber: 'SS 101', date: 'Oct 16, 2025', status: 'Scheduled' },
+  { flightNumber: 'SS 201', date: 'Oct 16, 2025', status: 'Delayed' },
+  { flightNumber: 'SS 301', date: 'Oct 15, 2025', status: 'Arrived' }
 ])
 </script>
 
@@ -222,7 +193,7 @@ const recentSearches = ref([
                   <Input
                     id="flightNumber"
                     v-model="searchForm.flightNumber"
-                    placeholder="5J 561"
+                    placeholder="SS 101"
                     class="h-14 text-xl font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-green-600 focus:ring-0 transition-all uppercase tracking-widest"
                     required
                   />
@@ -244,19 +215,25 @@ const recentSearches = ref([
               </div>
 
               <!-- Search Button -->
-              <Button type="submit" :disabled="isSearching" class="w-full h-16 text-lg font-black bg-gray-900 text-white hover:bg-green-600 transition-all duration-300 uppercase tracking-widest relative overflow-hidden group disabled:opacity-50">
+              <Button type="submit" :disabled="isSearchingStatus" class="w-full h-16 text-lg font-black bg-gray-900 text-white hover:bg-green-600 transition-all duration-300 uppercase tracking-widest relative overflow-hidden group disabled:opacity-50">
                 <div class="absolute inset-0 bg-gradient-to-r from-green-600 to-green-700 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                 <div class="flex items-center justify-center gap-3 relative z-10">
-                  <Search v-if="!isSearching" class="w-5 h-5" />
+                  <Search v-if="!isSearchingStatus" class="w-5 h-5" />
                   <div v-else class="flex gap-1">
                     <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0ms"></div>
                     <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 150ms"></div>
                     <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                   </div>
-                  <span>{{ isSearching ? 'Searching...' : 'Track Flight' }}</span>
-                  <ArrowRight v-if="!isSearching" class="w-5 h-5" />
+                  <span>{{ isSearchingStatus ? 'Searching...' : 'Track Flight' }}</span>
+                  <ArrowRight v-if="!isSearchingStatus" class="w-5 h-5" />
                 </div>
               </Button>
+
+              <!-- Error Message -->
+              <div v-if="statusError" class="p-4 bg-red-50 border-l-4 border-red-600 text-red-700 font-bold flex items-center gap-3">
+                <AlertCircle class="w-5 h-5" />
+                {{ statusError }}
+              </div>
 
               <!-- Info Strip -->
               <div class="flex items-center justify-center gap-2 text-xs text-gray-500 pt-2">
@@ -269,7 +246,7 @@ const recentSearches = ref([
       </div>
 
       <!-- Flight Status Results -->
-      <div v-if="flightFound" class="max-w-6xl mx-auto space-y-8">
+      <div v-if="flightStatus" class="max-w-6xl mx-auto space-y-8">
         <!-- Status Header -->
         <div class="bg-gradient-to-r from-gray-900 to-green-900 p-8 shadow-2xl relative overflow-hidden">
           <!-- Decorative Pattern -->
@@ -372,7 +349,7 @@ const recentSearches = ref([
                     </div>
                     <div class="bg-blue-600 p-4">
                       <div class="text-xs font-black text-blue-200 uppercase tracking-widest mb-2">Actual Departure</div>
-                      <div class="text-3xl font-black text-white">{{ flightStatus.departure.actualTime }}</div>
+                      <div class="text-3xl font-black text-white">{{ flightStatus.departure.actualTime || '--:--' }}</div>
                     </div>
                   </div>
 
@@ -481,7 +458,7 @@ const recentSearches = ref([
       </div>
 
       <!-- Recent Searches - Ticket Stub Style -->
-      <div v-if="!flightFound" class="max-w-6xl mx-auto">
+      <div v-if="!flightStatus" class="max-w-6xl mx-auto">
         <div class="mb-12">
           <div class="flex items-center gap-4 mb-3">
             <div class="flex gap-1">
@@ -509,7 +486,7 @@ const recentSearches = ref([
               <div 
                 class="p-6 relative"
                 :class="{
-                  'bg-gradient-to-br from-green-500 to-green-600': flight.status === 'On Time' || flight.status === 'Arrived',
+                  'bg-gradient-to-br from-green-500 to-green-600': flight.status === 'On Time' || flight.status === 'Arrived' || flight.status === 'Scheduled',
                   'bg-gradient-to-br from-yellow-500 to-yellow-600': flight.status === 'Delayed',
                   'bg-gradient-to-br from-blue-500 to-blue-600': flight.status === 'Departed'
                 }"
@@ -558,7 +535,7 @@ const recentSearches = ref([
                   <div 
                     class="inline-flex items-center gap-2 px-4 py-2 font-black text-xs uppercase tracking-widest transform -skew-x-6"
                     :class="{
-                      'bg-green-600 text-white': flight.status === 'On Time' || flight.status === 'Arrived',
+                      'bg-green-600 text-white': flight.status === 'On Time' || flight.status === 'Arrived' || flight.status === 'Scheduled',
                       'bg-yellow-600 text-white': flight.status === 'Delayed',
                       'bg-blue-600 text-white': flight.status === 'Departed'
                     }"
@@ -580,7 +557,7 @@ const recentSearches = ref([
             <div 
               class="absolute top-1 left-1 w-full h-full -z-10 transition-all duration-300 group-hover:top-2 group-hover:left-2"
               :class="{
-                'bg-green-600': flight.status === 'On Time' || flight.status === 'Arrived',
+                'bg-green-600': flight.status === 'On Time' || flight.status === 'Arrived' || flight.status === 'Scheduled',
                 'bg-yellow-600': flight.status === 'Delayed',
                 'bg-blue-600': flight.status === 'Departed'
               }"

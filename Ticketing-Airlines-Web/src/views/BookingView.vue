@@ -1,29 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
+import { onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { 
   Plane, 
-  MapPin, 
-  Calendar,
-  Clock,
   ArrowRight,
   ArrowLeft,
   CreditCard,
   Shield,
   CheckCircle,
-  AlertCircle,
   Loader2,
-  User,
-  Mail,
-  Phone,
   CreditCard as CardIcon,
-  Lock,
   Eye,
   EyeOff,
   Wallet,
@@ -31,70 +23,83 @@ import {
   Smartphone,
   Globe,
   Banknote,
-  Landmark
+  Landmark,
+  X
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import type { 
-  FlightSearchResult, 
-  RoundTripResult, 
-  MultiCityResult,
-  Airport 
-} from '@/interfaces/interfaces'
-import { airports } from '@/data/mockData'
+import { useBookingStore } from '@/stores/bookingStore'
+import AddOnsSelection from '@/components/booking/AddOnsSelection.vue'
+import { getBundleByType } from '@/data/fareBundles'
 
-const route = useRoute()
+import { useValidation } from '@/composables/useValidation'
+
+import { watch, ref } from 'vue'
+
 const router = useRouter()
+const bookingStore = useBookingStore()
 
-// Booking state
-const currentStep = ref(1)
-const isLoading = ref(false)
-const selectedFlight = ref<FlightSearchResult | RoundTripResult | MultiCityResult | null>(null)
-const showPassword = ref(false)
+// Store state
+const { 
+  currentStep, 
+  selectedFlight, 
+  passengers, 
+  contactInfo, 
+  paymentInfo, 
+  isProcessing,
+  totalPrice,
+  baseFare,
+  taxes,
+  fees,
+  selectedBundle
+} = storeToRefs(bookingStore)
 
-// Get passenger count from route params
-const passengerCount = parseInt(route.query.passengers as string) || 1
+const showPassword = computed(() => false) // Simplified for now, or add local state if needed
 
-// Passenger information
-const passengers = ref(
-  Array.from({ length: passengerCount }, (_, index) => ({
-    id: index + 1,
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    nationality: 'PH',
-    passportNumber: '',
-    dateOfBirth: '',
-    passengerType: 'Adult'
-  }))
-)
+// Get current bundle details
+const currentBundle = computed(() => getBundleByType(selectedBundle.value))
 
-// Contact information
-const contactInfo = ref({
-  email: '',
-  phone: '',
-  address: '',
-  city: '',
-  postalCode: '',
-  country: 'Philippines'
+// Validation Rules
+const { rules } = useValidation({}, {})
+
+// Passenger Validation
+const passengerValidators = ref<any[]>([])
+
+const createPassengerValidator = (passenger: any) => {
+  return useValidation(passenger, {
+    firstName: [rules.required('First name is required')],
+    lastName: [rules.required('Last name is required')],
+    email: [rules.required('Email is required'), rules.email('Invalid email format')],
+    phone: [rules.required('Phone number is required')],
+    dateOfBirth: [rules.required('Date of birth is required')]
+  })
+}
+
+// Sync validators with passengers
+watch(passengers, (newPassengers) => {
+  passengerValidators.value = newPassengers.map(p => createPassengerValidator(p))
+}, { immediate: true })
+
+// Contact Info Validation
+const contactValidation = useValidation(contactInfo.value, {
+  email: [rules.required('Email is required'), rules.email('Invalid email format')],
+  phone: [rules.required('Phone number is required')],
+  address: [rules.required('Address is required')],
+  city: [rules.required('City is required')],
+  postalCode: [rules.required('Postal code is required')]
 })
 
-// Payment information
-const selectedPaymentMethod = ref('')
-const paymentInfo = ref({
-  cardNumber: '',
-  expiryDate: '',
-  cvv: '',
-  cardholderName: '',
-  billingAddress: '',
-  city: '',
-  postalCode: '',
-  country: 'Philippines'
+// Payment Validation
+const paymentValidation = useValidation(paymentInfo.value, {
+  method: [rules.required('Payment method is required')],
+  cardNumber: [rules.required('Card number is required'), rules.minLength(16, 'Invalid card number')],
+  expiryDate: [rules.required('Expiry date is required')],
+  cvv: [rules.required('CVV is required'), rules.minLength(3, 'Invalid CVV')],
+  cardholderName: [rules.required('Cardholder name is required')]
 })
 
 // Payment methods data
-const paymentMethods = ref([
+const paymentMethods = [
   {
     id: 1,
     category: 'Cards',
@@ -191,19 +196,9 @@ const paymentMethods = ref([
     featured: false,
     providers: ['PayPal']
   }
-])
+]
 
-// Booking summary
-const bookingSummary = ref({
-  totalPassengers: 1,
-  baseFare: 0,
-  taxes: 0,
-  fees: 0,
-  total: 0,
-  currency: 'PHP'
-})
-
-const totalSteps = 4
+const totalSteps = 5
 
 const progressPercentage = computed(() => {
   return (currentStep.value / totalSteps) * 100
@@ -212,31 +207,10 @@ const progressPercentage = computed(() => {
 const stepTitles = [
   'Flight Details',
   'Passenger Information', 
+  'Add-ons',
   'Contact & Billing',
   'Payment & Confirmation'
 ]
-
-const isStepValid = computed(() => {
-  switch (currentStep.value) {
-    case 1:
-      return selectedFlight.value !== null
-    case 2:
-      return passengers.value.every(p => 
-        p.firstName && p.lastName && p.email && p.phone && p.dateOfBirth
-      )
-    case 3:
-      return contactInfo.value.email && contactInfo.value.phone && contactInfo.value.address
-    case 4:
-      return selectedPaymentMethod.value !== '' && (
-        selectedPaymentMethod.value === 'Credit/Debit Cards' 
-          ? paymentInfo.value.cardNumber && paymentInfo.value.expiryDate && 
-            paymentInfo.value.cvv && paymentInfo.value.cardholderName
-          : true
-      )
-    default:
-      return false
-  }
-})
 
 const getIconComponent = (iconName: string) => {
   const iconMap: { [key: string]: any } = {
@@ -255,40 +229,80 @@ const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
 }
 
-const formatTime = (time: string) => {
-  return time
-}
-
-const getAirportByCode = (code: string): Airport | undefined => {
-  return airports.find(airport => airport.iataCode === code)
-}
-
+const isStepValid = computed(() => {
+  switch (currentStep.value) {
+    case 1:
+      return selectedFlight.value !== null
+    case 2:
+      return passengerValidators.value.every(v => v.isValid.value)
+    case 3:
+      return true
+    case 4:
+      return contactValidation.isValid.value
+    case 5:
+      if (paymentInfo.value.method === 'Credit/Debit Cards') {
+        return paymentValidation.isValid.value
+      } else {
+        return !!paymentInfo.value.method
+      }
+    default:
+      return false
+  }
+})
 
 const nextStep = () => {
-  if (isStepValid.value && currentStep.value < totalSteps) {
-    currentStep.value++
+  let isValid = false
+
+  switch (currentStep.value) {
+    case 1:
+      isValid = selectedFlight.value !== null
+      break
+    case 2:
+      // Validate all passengers
+      isValid = passengerValidators.value.every(v => v.validate())
+      break
+    case 3:
+      isValid = true // Add-ons are optional
+      break
+    case 4:
+      isValid = contactValidation.validate()
+      break
+    case 5:
+      if (paymentInfo.value.method === 'Credit/Debit Cards') {
+        isValid = paymentValidation.validate()
+      } else {
+        isValid = !!paymentInfo.value.method
+      }
+      break
+    default:
+      isValid = false
+  }
+
+  if (isValid && currentStep.value < totalSteps) {
+    bookingStore.setStep(currentStep.value + 1)
   }
 }
 
 const prevStep = () => {
   if (currentStep.value > 1) {
-    currentStep.value--
+    bookingStore.setStep(currentStep.value - 1)
   }
 }
 
-const processPayment = async () => {
-  isLoading.value = true
-  
-  try {
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // Navigate to confirmation page
+const handlePayment = async () => {
+  // Final validation check before processing
+  let isValid = false
+  if (paymentInfo.value.method === 'Credit/Debit Cards') {
+    isValid = paymentValidation.validate()
+  } else {
+    isValid = !!paymentInfo.value.method
+  }
+
+  if (!isValid) return
+
+  const success = await bookingStore.processPayment()
+  if (success) {
     router.push('/booking-confirmation')
-  } catch (error) {
-    console.error('Payment error:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 
@@ -308,42 +322,10 @@ const getFlightProperty = (property: string) => {
   return ''
 }
 
-const calculateTotal = () => {
-  if (selectedFlight.value) {
-    const basePrice = 'price' in selectedFlight.value ? selectedFlight.value.price : selectedFlight.value.totalPrice
-    const taxes = Math.round(basePrice * 0.12) // 12% tax
-    const fees = 500 // Fixed fees
-    
-    bookingSummary.value = {
-      totalPassengers: passengers.value.length,
-      baseFare: basePrice,
-      taxes,
-      fees,
-      total: basePrice + taxes + fees,
-      currency: 'PHP'
-    }
-  }
-}
-
 onMounted(() => {
-  // Initialize with mock flight data for demo
-  selectedFlight.value = {
-    flightInstanceId: 'demo-flight',
-    flightNumber: 'SS101',
-    originAirport: getAirportByCode('MNL')!,
-    destinationAirport: getAirportByCode('CEB')!,
-    departureTime: '08:00',
-    arrivalTime: '09:15',
-    duration: '1h 15m',
-    price: 2899,
-    currency: 'PHP',
-    fareCode: 'Y',
-    availableSeats: 50,
-    aircraft: { aircraftId: 1, model: 'Airbus A320-200', icaoType: 'A320', seatCapacity: 180, airlineId: 1 },
-    airline: { airlineId: 1, name: 'SunSkies Air', iataCode: 'SS', icaoCode: 'SUN', countryIso2: 'PH' }
+  if (!selectedFlight.value) {
+    router.push('/flights')
   }
-  
-  calculateTotal()
 })
 </script>
 
@@ -463,7 +445,7 @@ onMounted(() => {
                   <div class="grid grid-cols-2 gap-4">
                     <div>
                       <span class="text-sm text-gray-600 font-bold">Fare Type:</span>
-                      <span class="ml-2 font-black text-gray-900">{{ 'fareCode' in selectedFlight ? selectedFlight.fareCode : 'Y' }} Fare</span>
+                      <span class="ml-2 font-black text-gray-900">{{ currentBundle ? currentBundle.name : 'Standard' }}</span>
                     </div>
                     <div>
                       <span class="text-sm text-gray-600 font-bold">Price:</span>
@@ -499,7 +481,9 @@ onMounted(() => {
                         v-model="passenger.firstName"
                         placeholder="Enter first name"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.firstName }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.firstName" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.firstName }}</span>
                     </div>
                     
                     <div>
@@ -508,7 +492,9 @@ onMounted(() => {
                         v-model="passenger.lastName"
                         placeholder="Enter last name"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.lastName }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.lastName" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.lastName }}</span>
                     </div>
                     
                     <div>
@@ -518,7 +504,9 @@ onMounted(() => {
                         type="email"
                         placeholder="Enter email address"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.email }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.email" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.email }}</span>
                     </div>
                     
                     <div>
@@ -527,7 +515,9 @@ onMounted(() => {
                         v-model="passenger.phone"
                         placeholder="Enter phone number"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.phone }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.phone" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.phone }}</span>
                     </div>
                     
                     <div>
@@ -536,7 +526,9 @@ onMounted(() => {
                         v-model="passenger.dateOfBirth"
                         type="date"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': passengerValidators[index]?.errors.value.dateOfBirth }"
                       />
+                      <span v-if="passengerValidators[index]?.errors.value.dateOfBirth" class="text-red-500 text-xs font-bold mt-1">{{ passengerValidators[index].errors.value.dateOfBirth }}</span>
                     </div>
                     
                     <div>
@@ -559,8 +551,16 @@ onMounted(() => {
             </CardContent>
           </Card>
 
-          <!-- Step 3: Contact & Billing -->
+          <!-- Step 3: Add-ons -->
           <Card v-if="currentStep === 3" class="border-4 border-gray-900 rounded-none mb-6">
+            <CardContent class="p-6">
+              <CardTitle class="text-2xl font-black text-gray-900 mb-6">Add-ons</CardTitle>
+              <AddOnsSelection />
+            </CardContent>
+          </Card>
+
+          <!-- Step 4: Contact & Billing -->
+          <Card v-if="currentStep === 4" class="border-4 border-gray-900 rounded-none mb-6">
             <CardContent class="p-6">
               <CardTitle class="text-2xl font-black text-gray-900 mb-6">Contact & Billing Information</CardTitle>
               
@@ -576,7 +576,9 @@ onMounted(() => {
                         type="email"
                         placeholder="Enter email address"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.email }"
                       />
+                      <span v-if="contactValidation.errors.value.email" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.email }}</span>
                     </div>
                     
                     <div>
@@ -585,7 +587,9 @@ onMounted(() => {
                         v-model="contactInfo.phone"
                         placeholder="Enter phone number"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.phone }"
                       />
+                      <span v-if="contactValidation.errors.value.phone" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.phone }}</span>
                     </div>
                     
                     <div class="md:col-span-2">
@@ -594,7 +598,9 @@ onMounted(() => {
                         v-model="contactInfo.address"
                         placeholder="Enter complete address"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.address }"
                       />
+                      <span v-if="contactValidation.errors.value.address" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.address }}</span>
                     </div>
                     
                     <div>
@@ -603,7 +609,9 @@ onMounted(() => {
                         v-model="contactInfo.city"
                         placeholder="Enter city"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.city }"
                       />
+                      <span v-if="contactValidation.errors.value.city" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.city }}</span>
                     </div>
                     
                     <div>
@@ -612,7 +620,9 @@ onMounted(() => {
                         v-model="contactInfo.postalCode"
                         placeholder="Enter postal code"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': contactValidation.errors.value.postalCode }"
                       />
+                      <span v-if="contactValidation.errors.value.postalCode" class="text-red-500 text-xs font-bold mt-1">{{ contactValidation.errors.value.postalCode }}</span>
                     </div>
                   </div>
                 </div>
@@ -620,8 +630,8 @@ onMounted(() => {
             </CardContent>
           </Card>
 
-          <!-- Step 4: Payment & Confirmation -->
-          <Card v-if="currentStep === 4" class="border-4 border-gray-900 rounded-none mb-6">
+          <!-- Step 5: Payment & Confirmation -->
+          <Card v-if="currentStep === 5" class="border-4 border-gray-900 rounded-none mb-6">
             <CardContent class="p-6">
               <CardTitle class="text-2xl font-black text-gray-900 mb-6">Payment Information</CardTitle>
               
@@ -629,15 +639,16 @@ onMounted(() => {
                 <!-- Payment Method Selection -->
                 <div class="bg-gray-50 p-6 border-4 border-gray-200">
                   <h4 class="text-lg font-black text-gray-900 mb-4">Choose Payment Method</h4>
+                  <span v-if="paymentValidation.errors.value.method" class="text-red-500 text-xs font-bold block mb-2">{{ paymentValidation.errors.value.method }}</span>
                   
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div
                       v-for="method in paymentMethods"
                       :key="method.id"
-                      @click="selectedPaymentMethod = method.name"
+                      @click="paymentInfo.method = method.name"
                       :class="[
                         'p-4 border-4 rounded-none cursor-pointer transition-all duration-300 transform hover:-translate-y-1',
-                        selectedPaymentMethod === method.name
+                        paymentInfo.method === method.name
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-gray-300 bg-white hover:border-gray-400'
                       ]"
@@ -681,7 +692,7 @@ onMounted(() => {
                         </div>
                         
                         <div 
-                          v-if="selectedPaymentMethod === method.name"
+                          v-if="paymentInfo.method === method.name"
                           class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
                         >
                           <CheckCircle class="w-4 h-4 text-white" />
@@ -692,7 +703,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Credit Card Form (only show if Credit/Debit Cards is selected) -->
-                <div v-if="selectedPaymentMethod === 'Credit/Debit Cards'" class="bg-gray-50 p-6 border-4 border-gray-200">
+                <div v-if="paymentInfo.method === 'Credit/Debit Cards'" class="bg-gray-50 p-6 border-4 border-gray-200">
                   <h4 class="text-lg font-black text-gray-900 mb-4">Card Details</h4>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
@@ -703,8 +714,10 @@ onMounted(() => {
                           v-model="paymentInfo.cardNumber"
                           placeholder="1234 5678 9012 3456"
                           class="pl-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                          :class="{ 'border-red-500': paymentValidation.errors.value.cardNumber }"
                         />
                       </div>
+                      <span v-if="paymentValidation.errors.value.cardNumber" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.cardNumber }}</span>
                     </div>
                     
                     <div>
@@ -713,7 +726,9 @@ onMounted(() => {
                         v-model="paymentInfo.expiryDate"
                         placeholder="MM/YY"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': paymentValidation.errors.value.expiryDate }"
                       />
+                      <span v-if="paymentValidation.errors.value.expiryDate" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.expiryDate }}</span>
                     </div>
                     
                     <div>
@@ -724,6 +739,7 @@ onMounted(() => {
                           type="password"
                           placeholder="123"
                           class="pr-12 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                          :class="{ 'border-red-500': paymentValidation.errors.value.cvv }"
                         />
                         <button
                           @click="showPassword = !showPassword"
@@ -733,6 +749,7 @@ onMounted(() => {
                           <EyeOff v-else class="w-4 h-4 text-gray-400" />
                         </button>
                       </div>
+                      <span v-if="paymentValidation.errors.value.cvv" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.cvv }}</span>
                     </div>
                     
                     <div class="md:col-span-2">
@@ -741,7 +758,9 @@ onMounted(() => {
                         v-model="paymentInfo.cardholderName"
                         placeholder="Enter cardholder name"
                         class="border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600"
+                        :class="{ 'border-red-500': paymentValidation.errors.value.cardholderName }"
                       />
+                      <span v-if="paymentValidation.errors.value.cardholderName" class="text-red-500 text-xs font-bold mt-1">{{ paymentValidation.errors.value.cardholderName }}</span>
                     </div>
                   </div>
                 </div>
@@ -776,7 +795,6 @@ onMounted(() => {
             <Button
               v-if="currentStep < totalSteps"
               @click="nextStep"
-              :disabled="!isStepValid"
               class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-8 py-3"
             >
               Continue
@@ -785,13 +803,13 @@ onMounted(() => {
             
             <Button
               v-else
-              @click="processPayment"
-              :disabled="!isStepValid || isLoading"
+              @click="handlePayment"
+              :disabled="isProcessing"
               class="bg-green-600 hover:bg-green-700 text-white rounded-none font-black px-8 py-3"
             >
-              <Loader2 v-if="isLoading" class="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 v-if="isProcessing" class="w-4 h-4 mr-2 animate-spin" />
               <CreditCard v-else class="w-4 h-4 mr-2" />
-              {{ isLoading ? 'Processing...' : 'Complete Booking' }}
+              {{ isProcessing ? 'Processing...' : 'Complete Booking' }}
             </Button>
           </div>
         </div>
@@ -819,21 +837,29 @@ onMounted(() => {
               <!-- Price Breakdown -->
               <div class="space-y-3 mb-6">
                 <div class="flex justify-between">
-                  <span class="text-sm text-gray-600 font-bold">Base Fare ({{ bookingSummary.totalPassengers }} pax)</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(bookingSummary.baseFare) }}</span>
+                  <span class="text-gray-600 font-bold">Passengers</span>
+                  <span class="font-black text-gray-900">{{ passengers.length }} Passenger{{ passengers.length > 1 ? 's' : '' }}</span>
                 </div>
+
                 <div class="flex justify-between">
-                  <span class="text-sm text-gray-600 font-bold">Taxes & Fees</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(bookingSummary.taxes) }}</span>
+                  <span class="text-gray-600 font-bold">Fare Bundle</span>
+                  <span class="font-black text-gray-900">{{ currentBundle ? currentBundle.name : 'Standard' }}</span>
                 </div>
+                
                 <div class="flex justify-between">
-                  <span class="text-sm text-gray-600 font-bold">Service Fee</span>
-                  <span class="font-black text-gray-900">{{ formatPrice(bookingSummary.fees) }}</span>
+                  <span class="text-gray-600 font-bold">Base Fare</span>
+                  <span class="font-black text-gray-900">{{ formatPrice(baseFare * passengers.length) }}</span>
                 </div>
-                <div class="border-t-2 border-gray-300 pt-3">
+                
+                <div class="flex justify-between">
+                  <span class="text-gray-600 font-bold">Taxes & Fees</span>
+                  <span class="font-black text-gray-900">{{ formatPrice((taxes + fees) * passengers.length) }}</span>
+                </div>
+                
+                <div class="border-t-2 border-gray-300 pt-4">
                   <div class="flex justify-between">
-                    <span class="text-lg font-black text-gray-900">Total</span>
-                    <span class="text-lg font-black text-gray-900">{{ formatPrice(bookingSummary.total) }}</span>
+                    <span class="text-xl font-black text-gray-900">Total</span>
+                    <span class="text-xl font-black text-gray-900">{{ formatPrice(totalPrice) }}</span>
                   </div>
                 </div>
               </div>

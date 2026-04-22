@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { 
   Plane, 
   MapPin, 
@@ -67,37 +68,37 @@ import {
           <div>
             <h4 class="text-lg font-black text-gray-900 mb-6 uppercase tracking-wider">Quick Links</h4>
             <div class="space-y-3">
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-blue-600 transition-all duration-300">
+              <RouterLink to="/flights" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-blue-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <Search class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Flight Search</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
               
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-green-600 transition-all duration-300">
+              <RouterLink to="/philippine-destinations" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-green-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <MapPin class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Destinations</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
               
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-purple-600 transition-all duration-300">
+              <RouterLink to="/manage-booking" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-purple-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <CalendarIcon class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Manage Booking</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
               
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-orange-600 transition-all duration-300">
+              <RouterLink to="/seat-sale" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-orange-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <DollarSign class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Seat Sale</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
             </div>
           </div>
 
@@ -105,37 +106,37 @@ import {
           <div>
             <h4 class="text-lg font-black text-gray-900 mb-6 uppercase tracking-wider">Customer Care</h4>
             <div class="space-y-3">
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-red-600 transition-all duration-300">
+              <RouterLink to="/support" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-red-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <Heart class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Help Center</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
               
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-blue-600 transition-all duration-300">
+              <RouterLink to="/support" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-blue-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <Phone class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Contact Us</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
               
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-purple-600 transition-all duration-300">
+              <RouterLink to="/baggage-information" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-purple-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <Shield class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Baggage Info</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
               
-              <a href="#" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-green-600 transition-all duration-300">
+              <RouterLink to="/travel-advisories" class="group flex items-center justify-between p-3 bg-white hover:bg-gray-900 border-2 border-gray-900 hover:border-green-600 transition-all duration-300">
                 <div class="flex items-center gap-3">
                   <Globe class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
                   <span class="font-bold text-gray-900 group-hover:text-white transition-colors">Travel Guidelines</span>
                 </div>
                 <ArrowRight class="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-              </a>
+              </RouterLink>
             </div>
           </div>
         </div>
