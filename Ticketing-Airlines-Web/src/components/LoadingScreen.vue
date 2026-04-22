@@ -86,54 +86,54 @@ onMounted(() => {
     <div v-if="isVisible" class="fixed inset-0 z-[9999] bg-white overflow-hidden">
       <!-- Background Pattern -->
       <div class="absolute inset-0 opacity-10" style="background: repeating-linear-gradient(45deg, transparent, transparent 20px, #1f2937 20px, #1f2937 21px);"></div>
-      
+
       <!-- Corner Accents -->
-      <div class="absolute top-0 right-0 w-0 h-0 border-t-[200px] border-t-blue-600 border-l-[200px] border-l-transparent"></div>
-      <div class="absolute bottom-0 left-0 w-0 h-0 border-b-[150px] border-b-green-600 border-r-[150px] border-r-transparent"></div>
+      <div class="absolute top-0 right-0 w-0 h-0 border-t-[120px] border-t-blue-600 border-l-[120px] border-l-transparent"></div>
+      <div class="absolute bottom-0 left-0 w-0 h-0 border-b-[100px] border-b-green-600 border-r-[100px] border-r-transparent"></div>
 
       <!-- Main Loading Content -->
-      <div class="relative flex items-center justify-center min-h-screen px-4">
-        <div class="text-center max-w-2xl mx-auto">
+      <div class="relative flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="text-center max-w-xl mx-auto">
           <!-- Logo Section -->
-          <div class="relative mb-12">
+          <div class="relative mb-6">
             <!-- Shadow Block -->
-            <div class="absolute top-4 left-4 w-32 h-32 bg-blue-600 -z-10"></div>
-            
+            <div class="absolute top-2 left-2 w-20 h-20 bg-blue-600 -z-10"></div>
+
             <!-- Main Logo -->
-            <div class="relative w-32 h-32 bg-gray-900 flex items-center justify-center mx-auto">
-              <Plane class="w-16 h-16 text-white" />
+            <div class="relative w-20 h-20 bg-gray-900 flex items-center justify-center mx-auto">
+              <Plane class="w-10 h-10 text-white" />
             </div>
-            
+
             <!-- Corner Accent -->
-            <div class="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-green-600 border-l-[40px] border-l-transparent"></div>
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[25px] border-t-green-600 border-l-[25px] border-l-transparent"></div>
           </div>
 
           <!-- Brand Name -->
-          <div class="mb-8">
-            <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4 uppercase tracking-tight">
+          <div class="mb-6">
+            <h1 class="text-3xl sm:text-4xl font-black text-gray-900 mb-2 uppercase tracking-tight">
               AIRLINES
             </h1>
-            <div class="flex items-center justify-center gap-4 mb-2">
-              <div class="h-1 w-16 bg-gray-900"></div>
-              <div class="w-2 h-2 bg-blue-600"></div>
-              <div class="h-1 w-16 bg-gray-900"></div>
+            <div class="flex items-center justify-center gap-3 mb-1.5">
+              <div class="h-0.5 w-12 bg-gray-900"></div>
+              <div class="w-1.5 h-1.5 bg-blue-600"></div>
+              <div class="h-0.5 w-12 bg-gray-900"></div>
             </div>
-            <h2 class="text-xl font-black text-gray-600 uppercase tracking-widest">
+            <h2 class="text-base font-black text-gray-600 uppercase tracking-widest">
               TICKETING
             </h2>
           </div>
 
           <!-- Progress Section -->
-          <div class="bg-white border-4 border-gray-900 p-8 mb-8 relative">
+          <div class="bg-white border-4 border-gray-900 p-4 mb-4 relative">
             <!-- Corner Accent -->
-            <div class="absolute top-0 right-0 w-0 h-0 border-t-[30px] border-t-purple-600 border-l-[30px] border-l-transparent"></div>
-            
+            <div class="absolute top-0 right-0 w-0 h-0 border-t-[20px] border-t-purple-600 border-l-[20px] border-l-transparent"></div>
+
             <!-- Progress Circle -->
-            <div class="relative mb-6">
-              <div class="w-24 h-24 mx-auto relative">
+            <div class="relative mb-4">
+              <div class="w-16 h-16 mx-auto relative">
                 <!-- Progress Circle -->
                 <svg
-                  class="w-24 h-24 -rotate-90"
+                  class="w-16 h-16 -rotate-90"
                   viewBox="0 0 100 100"
                 >
                   <circle
@@ -149,24 +149,24 @@ onMounted(() => {
                     class="transition-all duration-300 ease-out"
                   />
                 </svg>
-                
+
                 <!-- Progress Percentage -->
                 <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <span class="text-2xl font-black text-gray-900">{{ progress }}%</span>
+                  <span class="text-lg font-black text-gray-900">{{ progress }}%</span>
                 </div>
               </div>
             </div>
 
             <!-- Loading Text -->
-            <div class="mb-4">
-              <p class="text-lg font-black text-gray-900 uppercase tracking-wider">
+            <div class="mb-3">
+              <p class="text-sm font-black text-gray-900 uppercase tracking-wider">
                 {{ loadingText }}
               </p>
             </div>
 
             <!-- Progress Bar -->
-            <div class="w-full h-4 bg-gray-900 border-2 border-gray-900">
-              <div 
+            <div class="w-full h-3 bg-gray-900 border-2 border-gray-900">
+              <div
                 class="h-full bg-blue-600 transition-all duration-300 ease-out"
                 :style="{ width: `${progress}%` }"
               ></div>
@@ -174,39 +174,39 @@ onMounted(() => {
           </div>
 
           <!-- Status Cards -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="bg-white border-4 border-gray-900 p-4 text-center">
-              <div class="w-8 h-8 bg-blue-600 mx-auto mb-2 flex items-center justify-center">
-                <Zap class="w-4 h-4 text-white" />
+          <div class="grid grid-cols-4 gap-2">
+            <div class="bg-white border-4 border-gray-900 p-2 text-center">
+              <div class="w-6 h-6 bg-blue-600 mx-auto mb-1.5 flex items-center justify-center">
+                <Zap class="w-3 h-3 text-white" />
               </div>
-              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">SYSTEMS</p>
+              <p class="text-[10px] font-black text-gray-900 uppercase tracking-wider">SYSTEMS</p>
             </div>
-            
-            <div class="bg-white border-4 border-gray-900 p-4 text-center">
-              <div class="w-8 h-8 bg-green-600 mx-auto mb-2 flex items-center justify-center">
-                <Plane class="w-4 h-4 text-white" />
+
+            <div class="bg-white border-4 border-gray-900 p-2 text-center">
+              <div class="w-6 h-6 bg-green-600 mx-auto mb-1.5 flex items-center justify-center">
+                <Plane class="w-3 h-3 text-white" />
               </div>
-              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">FLIGHTS</p>
+              <p class="text-[10px] font-black text-gray-900 uppercase tracking-wider">FLIGHTS</p>
             </div>
-            
-            <div class="bg-white border-4 border-gray-900 p-4 text-center">
-              <div class="w-8 h-8 bg-purple-600 mx-auto mb-2 flex items-center justify-center">
-                <Globe class="w-4 h-4 text-white" />
+
+            <div class="bg-white border-4 border-gray-900 p-2 text-center">
+              <div class="w-6 h-6 bg-purple-600 mx-auto mb-1.5 flex items-center justify-center">
+                <Globe class="w-3 h-3 text-white" />
               </div>
-              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">ROUTES</p>
+              <p class="text-[10px] font-black text-gray-900 uppercase tracking-wider">ROUTES</p>
             </div>
-            
-            <div class="bg-white border-4 border-gray-900 p-4 text-center">
-              <div class="w-8 h-8 bg-orange-600 mx-auto mb-2 flex items-center justify-center">
-                <Shield class="w-4 h-4 text-white" />
+
+            <div class="bg-white border-4 border-gray-900 p-2 text-center">
+              <div class="w-6 h-6 bg-orange-600 mx-auto mb-1.5 flex items-center justify-center">
+                <Shield class="w-3 h-3 text-white" />
               </div>
-              <p class="text-xs font-black text-gray-900 uppercase tracking-wider">SECURITY</p>
+              <p class="text-[10px] font-black text-gray-900 uppercase tracking-wider">SECURITY</p>
             </div>
           </div>
 
           <!-- Tagline -->
-          <div class="mt-8">
-            <p class="text-sm font-black text-gray-600 uppercase tracking-widest">
+          <div class="mt-4">
+            <p class="text-xs font-black text-gray-600 uppercase tracking-widest">
               PHILIPPINES' FAVORITE AIRLINE
             </p>
           </div>

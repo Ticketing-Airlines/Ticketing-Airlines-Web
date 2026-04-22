@@ -39,38 +39,38 @@ const closeMobileMenu = () => {
     <!-- Main Navigation Bar -->
     <div class="bg-white/95 backdrop-blur-md border-b-4 border-gray-900 shadow-2xl">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
+        <div class="flex justify-between items-center h-14">
           <!-- Logo Section -->
-          <div class="flex items-center space-x-3 cursor-pointer group" @click="handleLogoClick">
+          <div class="flex items-center space-x-2 cursor-pointer group" @click="handleLogoClick">
             <!-- Logo Icon with Brutalist Design -->
             <div class="relative">
-              <div class="w-12 h-12 bg-gray-900 flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-300">
-                <Plane class="w-6 h-6 text-white" />
+              <div class="w-9 h-9 bg-gray-900 flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-300">
+                <Plane class="w-5 h-5 text-white" />
               </div>
               <!-- Shadow Block -->
-              <div class="absolute top-1 left-1 w-12 h-12 bg-blue-600 -z-10 group-hover:top-2 group-hover:left-2 transition-all duration-300"></div>
+              <div class="absolute top-0.5 left-0.5 w-9 h-9 bg-blue-600 -z-10 group-hover:top-1 group-hover:left-1 transition-all duration-300"></div>
             </div>
-            
+
             <!-- Brand Text -->
             <div class="hidden sm:block">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xl font-black text-gray-900 uppercase tracking-tight">AIRLINES</span>
-                <div class="w-1.5 h-1.5 bg-blue-600"></div>
+              <div class="flex items-center gap-1.5 mb-0.5">
+                <span class="text-base font-black text-gray-900 uppercase tracking-tight">AIRLINES</span>
+                <div class="w-1 h-1 bg-blue-600"></div>
               </div>
-              <div class="flex items-center gap-2">
-                <div class="h-0.5 w-6 bg-gray-900"></div>
-                <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">TICKETING</span>
+              <div class="flex items-center gap-1.5">
+                <div class="h-0.5 w-4 bg-gray-900"></div>
+                <span class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">TICKETING</span>
               </div>
             </div>
           </div>
 
           <!-- Desktop Navigation -->
-          <div class="hidden lg:flex items-center space-x-2">
+          <div class="hidden lg:flex items-center space-x-1.5">
             <NavigationMenu :viewport="false">
-              <NavigationMenuList class="flex space-x-2">
+              <NavigationMenuList class="flex space-x-1.5">
                 <!-- Book Menu -->
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger class="h-12 px-6 font-black text-sm uppercase tracking-wider bg-gray-900 text-white hover:bg-blue-600 data-[state=open]:bg-blue-600 border-0 rounded-none transition-all duration-300">
+                  <NavigationMenuTrigger class="h-9 px-4 font-black text-xs uppercase tracking-wider bg-gray-900 text-white hover:bg-blue-600 data-[state=open]:bg-blue-600 border-0 rounded-none transition-all duration-300">
                     Book
                   </NavigationMenuTrigger>
                   <NavigationMenuContent class="bg-white border-4 border-gray-900 shadow-2xl rounded-none p-6 min-w-[280px] z-50">
@@ -97,7 +97,7 @@ const closeMobileMenu = () => {
 
                 <!-- Manage Menu -->
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger class="h-12 px-6 font-black text-sm uppercase tracking-wider bg-gray-900 text-white hover:bg-green-600 data-[state=open]:bg-green-600 border-0 rounded-none transition-all duration-300">
+                  <NavigationMenuTrigger class="h-9 px-4 font-black text-xs uppercase tracking-wider bg-gray-900 text-white hover:bg-green-600 data-[state=open]:bg-green-600 border-0 rounded-none transition-all duration-300">
                     Manage
                   </NavigationMenuTrigger>
                   <NavigationMenuContent class="bg-white border-4 border-gray-900 shadow-2xl rounded-none p-6 min-w-[280px] z-50">
@@ -132,7 +132,7 @@ const closeMobileMenu = () => {
 
                 <!-- Travel Info Menu -->
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger class="h-12 px-6 font-black text-sm uppercase tracking-wider bg-gray-900 text-white hover:bg-purple-600 data-[state=open]:bg-purple-600 border-0 rounded-none transition-all duration-300">
+                  <NavigationMenuTrigger class="h-9 px-4 font-black text-xs uppercase tracking-wider bg-gray-900 text-white hover:bg-purple-600 data-[state=open]:bg-purple-600 border-0 rounded-none transition-all duration-300">
                     Travel Info
                   </NavigationMenuTrigger>
                   <NavigationMenuContent class="bg-white border-4 border-gray-900 shadow-2xl rounded-none p-6 min-w-[280px] z-50">
@@ -175,7 +175,7 @@ const closeMobileMenu = () => {
 
                 <!-- Explore Menu -->
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger class="h-12 px-6 font-black text-sm uppercase tracking-wider bg-gray-900 text-white hover:bg-orange-600 data-[state=open]:bg-orange-600 border-0 rounded-none transition-all duration-300">
+                  <NavigationMenuTrigger class="h-9 px-4 font-black text-xs uppercase tracking-wider bg-gray-900 text-white hover:bg-orange-600 data-[state=open]:bg-orange-600 border-0 rounded-none transition-all duration-300">
                     Explore
                   </NavigationMenuTrigger>
                   <NavigationMenuContent class="bg-white border-4 border-gray-900 shadow-2xl rounded-none p-6 min-w-[280px] z-50">
@@ -205,10 +205,10 @@ const closeMobileMenu = () => {
             <!-- Sign In Button -->
             <Button
               @click="handleSignIn"
-              class="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
+              class="h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 text-xs"
             >
-              <span class="flex items-center gap-2">
-                <Zap class="w-4 h-4" />
+              <span class="flex items-center gap-1.5">
+                <Zap class="w-3.5 h-3.5" />
                 Sign In
               </span>
             </Button>
@@ -216,12 +216,12 @@ const closeMobileMenu = () => {
 
           <!-- Mobile Menu Button -->
           <div class="lg:hidden">
-            <Button 
-              @click="toggleMobileMenu" 
-              class="w-12 h-12 bg-gray-900 hover:bg-blue-600 text-white border-0 rounded-none transition-all duration-300"
+            <Button
+              @click="toggleMobileMenu"
+              class="w-10 h-10 bg-gray-900 hover:bg-blue-600 text-white border-0 rounded-none transition-all duration-300"
             >
-              <Menu v-if="!isMobileMenuOpen" class="w-6 h-6" />
-              <X v-else class="w-6 h-6" />
+              <Menu v-if="!isMobileMenuOpen" class="w-5 h-5" />
+              <X v-else class="w-5 h-5" />
             </Button>
           </div>
         </div>
