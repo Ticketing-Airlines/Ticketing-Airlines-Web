@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { userService } from '@/services/userService'
 
 export interface SavedPassenger {
     id: string
@@ -25,11 +26,12 @@ export interface UserProfile {
     email: string
     name: string
     phone: string
-    address: string
-    city: string
-    country: string
+    address?: string
+    city?: string
+    country?: string
     dateOfBirth: string
-    nationality: string
+    nationality?: string
+    gender?: string
 }
 
 export interface BookingHistory {
@@ -53,75 +55,56 @@ export const useUserStore = defineStore('user', () => {
     const isLoading = ref(false)
 
     // Actions
-    function initializeUser(userId: string) {
-        // Mock user data
-        profile.value = {
-            userId,
-            email: 'john.doe@example.com',
-            name: 'John Doe',
-            phone: '+63 912 345 6789',
-            address: '123 Main Street',
-            city: 'Manila',
-            country: 'Philippines',
-            dateOfBirth: '1990-01-15',
-            nationality: 'PH'
+    async function initializeUser(userId: string) {
+        isLoading.value = true
+        try {
+            const userIdNum = parseInt(userId, 10)
+            const userData = await userService.getUserById(userIdNum)
+            
+            if (userData) {
+                profile.value = {
+                    userId: String(userData.id),
+                    email: userData.email,
+                    name: userData.fullName,
+                    phone: userData.phoneNumber ?? '',
+                    dateOfBirth: userData.dateOfBirth,
+                    gender: userData.gender ?? undefined,
+                }
+            }
+        } catch {
+            // Fail silently - profile remains null
+        } finally {
+            isLoading.value = false
         }
-
-        // Mock saved passengers
-        savedPassengers.value = [
-            {
-                id: '1',
-                firstName: 'Jane',
-                lastName: 'Doe',
-                nationality: 'PH',
-                passportNumber: 'P1234567',
-                dateOfBirth: '1992-05-20',
-                passengerType: 'Adult'
-            }
-        ]
-
-        // Mock payment methods
-        paymentMethods.value = [
-            {
-                id: '1',
-                type: 'Credit Card',
-                cardNumber: '**** **** **** 1234',
-                cardholderName: 'JOHN DOE',
-                expiryDate: '12/25',
-                isDefault: true
-            }
-        ]
-
-        // Mock booking history
-        bookingHistory.value = [
-            {
-                id: '1',
-                reference: 'ABC123',
-                status: 'Upcoming',
-                bookingDate: '2024-01-15',
-                from: 'Manila (MNL)',
-                to: 'Cebu (CEB)',
-                departureDate: '2024-02-15',
-                passengers: 2,
-                totalPrice: 10200
-            },
-            {
-                id: '2',
-                reference: 'XYZ789',
-                status: 'Completed',
-                bookingDate: '2023-12-01',
-                from: 'Manila (MNL)',
-                to: 'Davao (DVO)',
-                departureDate: '2023-12-25',
-                passengers: 1,
-                totalPrice: 5500
-            }
-        ]
     }
 
-    function updateProfile(data: Partial<UserProfile>) {
-        if (profile.value) {
-            profile.value = { ...profile.value, ...data }
+    async function updateProfile(data: Partial<UserProfile>) {
+        if (!profile.value) return
+
+        const userIdNum = parseInt(profile.value.userId, 10)
+        
+        const nameParts = data.name?.split(' ') || []
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+
+        const updateData = {
+            firstName,
+            lastName,
+            phoneNumber: data.phone,
+            dateOfBirth: data.dateOfBirth,
+            gender: data.gender,
+        }
+
+        const result = await userService.updateUser(userIdNum, updateData)
+        
+        if (result && profile.value) {
+            profile.value = {
+                ...profile.value,
+                name: result.fullName,
+                phone: result.phoneNumber ?? profile.value.phone,
+                dateOfBirth: result.dateOfBirth,
+                gender: result.gender ?? profile.value.gender,
+            }
         }
     }
 

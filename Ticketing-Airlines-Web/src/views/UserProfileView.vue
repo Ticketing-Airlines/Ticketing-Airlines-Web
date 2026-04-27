@@ -13,7 +13,8 @@ import {
   X,
   Plus,
   Trash2,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
@@ -25,7 +26,7 @@ import { useValidation, rules } from '@/composables/useValidation'
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
-const { profile, savedPassengers, paymentMethods } = storeToRefs(userStore)
+const { profile, savedPassengers, paymentMethods, isLoading } = storeToRefs(userStore)
 
 const activeSection = ref<'profile' | 'passengers' | 'payments' | 'settings'>('profile')
 const isEditing = ref(false)
@@ -39,14 +40,39 @@ const editForm = ref({
   nationality: ''
 })
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  } catch {
+    return dateStr
+  }
+}
+
+function formatDateForInput(dateStr: string): string {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toISOString().split('T')[0]
+  } catch {
+    return dateStr
+  }
+}
+
+const formattedDateOfBirth = computed(() => {
+  if (!profile.value?.dateOfBirth) return ''
+  return formatDate(profile.value.dateOfBirth)
+})
+
 // Profile Validation
 const { validate: validateProfile, errors: profileErrors } = useValidation(editForm, {
   name: [rules.required('Full name is required')],
   phone: [rules.required('Phone number is required')],
-  address: [rules.required('Address is required')],
-  city: [rules.required('City is required')],
-  country: [rules.required('Country is required')],
-  nationality: [rules.required('Nationality is required')]
 })
 
 const newPassenger = ref({
@@ -78,11 +104,11 @@ const startEditing = () => {
     editForm.value = {
       name: profile.value.name,
       phone: profile.value.phone,
-      address: profile.value.address,
-      city: profile.value.city,
-      country: profile.value.country,
-      dateOfBirth: profile.value.dateOfBirth,
-      nationality: profile.value.nationality
+      address: profile.value.address || '',
+      city: profile.value.city || '',
+      country: profile.value.country || '',
+      dateOfBirth: formatDateForInput(profile.value.dateOfBirth),
+      nationality: profile.value.nationality || ''
     }
     isEditing.value = true
   }
@@ -216,7 +242,7 @@ const removePayment = (id: string) => {
             <div class="bg-gray-900 px-6 py-4 flex justify-between items-center">
               <h2 class="font-black text-white uppercase tracking-widest">Personal Information</h2>
               <Button
-                v-if="!isEditing"
+                v-if="!isEditing && profile"
                 @click="startEditing"
                 class="bg-blue-600 hover:bg-blue-700 font-black uppercase text-xs"
               >
@@ -225,12 +251,23 @@ const removePayment = (id: string) => {
               </Button>
             </div>
 
-            <div class="p-6" v-if="profile">
-              <div v-if="!isEditing" class="space-y-4">
+            <div class="p-6">
+              <div v-if="isLoading" class="text-center py-12">
+                <div class="inline-block w-8 h-8 border-4 border-gray-900 border-t-blue-600 animate-spin rounded-full"></div>
+                <p class="mt-4 text-gray-500 font-bold">Loading profile...</p>
+              </div>
+
+              <div v-else-if="!profile" class="text-center py-12">
+                <AlertCircle class="w-16 h-16 mx-auto text-red-500 mb-4" />
+                <p class="text-gray-500 font-bold mb-4">Unable to load profile information</p>
+                <p class="text-gray-400 text-sm">Please try signing in again</p>
+              </div>
+
+              <div v-else-if="!isEditing" class="space-y-4">
                 <div class="grid md:grid-cols-2 gap-6">
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Full Name</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.name }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.name || 'Not provided' }}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Email</div>
@@ -238,27 +275,27 @@ const removePayment = (id: string) => {
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Phone</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.phone }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.phone || 'Not provided' }}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Date of Birth</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.dateOfBirth }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ formattedDateOfBirth || 'Not provided' }}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Address</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.address }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.address || 'Not provided' }}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">City</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.city }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.city || 'Not provided' }}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Country</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.country }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.country || 'Not provided' }}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Nationality</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.nationality }}</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.nationality || 'Not provided' }}</div>
                   </div>
                 </div>
               </div>
@@ -276,24 +313,24 @@ const removePayment = (id: string) => {
                     <span v-if="profileErrors.phone" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.phone }}</span>
                   </div>
                   <div>
+                    <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Date of Birth</Label>
+                    <Input v-model="editForm.dateOfBirth" type="date" class="h-12 border-2 border-gray-900 font-bold" />
+                  </div>
+                  <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Address</Label>
-                    <Input v-model="editForm.address" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.address }" required />
-                    <span v-if="profileErrors.address" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.address }}</span>
+                    <Input v-model="editForm.address" class="h-12 border-2 border-gray-900 font-bold" />
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">City</Label>
-                    <Input v-model="editForm.city" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.city }" required />
-                    <span v-if="profileErrors.city" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.city }}</span>
+                    <Input v-model="editForm.city" class="h-12 border-2 border-gray-900 font-bold" />
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Country</Label>
-                    <Input v-model="editForm.country" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.country }" required />
-                    <span v-if="profileErrors.country" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.country }}</span>
+                    <Input v-model="editForm.country" class="h-12 border-2 border-gray-900 font-bold" />
                   </div>
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Nationality</Label>
-                    <Input v-model="editForm.nationality" class="h-12 border-2 border-gray-900 font-bold" :class="{ 'border-red-600': profileErrors.nationality }" required />
-                    <span v-if="profileErrors.nationality" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.nationality }}</span>
+                    <Input v-model="editForm.nationality" class="h-12 border-2 border-gray-900 font-bold" />
                   </div>
                 </div>
 
