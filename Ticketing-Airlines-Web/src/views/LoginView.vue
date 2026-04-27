@@ -1,85 +1,143 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { FormControl, FormItem, FormLabel, FormMessage, FormField } from '@/components/ui/form'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Plane, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, CheckCircle, Shield } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import { useAuthStore } from '@/stores/authStore'
-import { useForm } from 'vee-validate'
-import { toTypedSchema } from '@vee-validate/zod'
-import * as z from 'zod'
 
 const isSignUp = ref(false)
-
+const router = useRouter()
 const authStore = useAuthStore()
 
-const loginSchema = toTypedSchema(z.object({
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
-}))
+// Login form fields
+const loginEmail = ref('')
+const loginPassword = ref('')
 
-const signUpSchema = toTypedSchema(z.object({
-  firstName: z.string().min(1, 'First name is required').min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(1, 'Last name is required').min(2, 'Last name must be at least 2 characters'),
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-  phone: z.string().min(1, 'Phone number is required').min(10, 'Phone number must be at least 10 digits'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(1, 'Please confirm your password')
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-}))
+// Signup form fields
+const signUpFirstName = ref('')
+const signUpLastName = ref('')
+const signUpEmail = ref('')
+const signUpPhone = ref('')
+const signUpPassword = ref('')
+const signUpConfirmPassword = ref('')
+const signUpDateOfBirth = ref('')
 
-const loginForm = useForm({
-  validationSchema: loginSchema,
-  initialValues: {
-    email: authStore.email,
-    password: authStore.password
-  }
-})
-
-const signUpForm = useForm({
-  validationSchema: signUpSchema,
-  initialValues: {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: ''
-  }
-})
-
-const handleSubmit = loginForm.handleSubmit(async (values) => {
-  authStore.email = values.email
-  authStore.password = values.password
-  authStore.clearErrors()
-  authStore.clearMessages()
-  await authStore.login()
-})
-
-const handleSignUp = signUpForm.handleSubmit(async (values) => {
-  authStore.clearErrors()
-  authStore.clearMessages()
-  authStore.email = values.email
-  authStore.password = values.password
-  await authStore.signUp({
-    firstName: values.firstName,
-    lastName: values.lastName,
-    email: values.email,
-    phone: values.phone,
-    password: values.password
-  })
-})
+// Validation errors
+const errors = ref<Record<string, string>>({})
 
 onMounted(() => {
-  authStore.loadRememberedEmail()
-  if (authStore.email) {
-    loginForm.setFieldValue('email', authStore.email)
+  const rememberedEmail = authStore.loadRememberedEmail()
+  if (rememberedEmail) {
+    loginEmail.value = rememberedEmail
   }
 })
+
+function validateLogin(): boolean {
+  errors.value = {}
+  let valid = true
+
+  if (!loginEmail.value) {
+    errors.value.email = 'Email is required'
+    valid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail.value)) {
+    errors.value.email = 'Please enter a valid email address'
+    valid = false
+  }
+
+  if (!loginPassword.value) {
+    errors.value.password = 'Password is required'
+    valid = false
+  } else if (loginPassword.value.length < 6) {
+    errors.value.password = 'Password must be at least 6 characters'
+    valid = false
+  }
+
+  return valid
+}
+
+function validateSignUp(): boolean {
+  errors.value = {}
+  let valid = true
+
+  if (!signUpFirstName.value || signUpFirstName.value.length < 2) {
+    errors.value.firstName = 'First name must be at least 2 characters'
+    valid = false
+  }
+
+  if (!signUpLastName.value || signUpLastName.value.length < 2) {
+    errors.value.lastName = 'Last name must be at least 2 characters'
+    valid = false
+  }
+
+  if (!signUpEmail.value) {
+    errors.value.signUpEmail = 'Email is required'
+    valid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signUpEmail.value)) {
+    errors.value.signUpEmail = 'Please enter a valid email address'
+    valid = false
+  }
+
+  if (!signUpPhone.value || signUpPhone.value.length < 10) {
+    errors.value.phone = 'Phone number must be at least 10 digits'
+    valid = false
+  }
+
+  if (!signUpPassword.value || signUpPassword.value.length < 6) {
+    errors.value.signUpPassword = 'Password must be at least 6 characters'
+    valid = false
+  }
+
+  if (signUpPassword.value !== signUpConfirmPassword.value) {
+    errors.value.confirmPassword = "Passwords don't match"
+    valid = false
+  }
+
+  if (!signUpDateOfBirth.value) {
+    errors.value.dateOfBirth = 'Date of birth is required'
+    valid = false
+  }
+
+  return valid
+}
+
+async function handleLoginSubmit() {
+  if (!validateLogin()) return
+  authStore.clearErrors()
+  authStore.clearMessages()
+  const success = await authStore.login(loginEmail.value, loginPassword.value)
+  if (success) {
+    router.push('/')
+  }
+}
+
+async function handleSignUpSubmit() {
+  if (!validateSignUp()) return
+  authStore.clearErrors()
+  authStore.clearMessages()
+  const success = await authStore.signUp({
+    firstName: signUpFirstName.value,
+    lastName: signUpLastName.value,
+    email: signUpEmail.value,
+    phone: signUpPhone.value,
+    password: signUpPassword.value,
+    dateOfBirth: signUpDateOfBirth.value,
+  })
+  if (success) {
+    router.push('/')
+  }
+}
+
+function handleForgotPassword() {
+  if (!loginEmail.value) {
+    errors.value.email = 'Please enter your email address first'
+    return
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail.value)) {
+    errors.value.email = 'Please enter a valid email address'
+    return
+  }
+  authStore.forgotPassword(loginEmail.value)
+}
 </script>
 
 <template>
@@ -125,7 +183,18 @@ onMounted(() => {
                 </div>
 
                 <!-- Card Body -->
-                <div class="p-5">
+                <div class="p-5 relative">
+                  <!-- Loading Overlay -->
+                  <div
+                    v-if="authStore.isLoading"
+                    class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-sm"
+                  >
+                    <div class="flex flex-col items-center gap-3">
+                      <div class="w-8 h-8 border-[3px] border-gray-900 border-t-blue-600 rounded-full animate-spin"></div>
+                      <span class="text-xs font-black uppercase tracking-widest text-gray-900">{{ isSignUp ? 'Creating Account...' : 'Signing In...' }}</span>
+                    </div>
+                  </div>
+
                   <!-- Success/Error Messages -->
                   <div v-if="authStore.successMessage" class="mb-4 p-3 bg-green-50 border-2 border-green-600">
                     <div class="flex items-center gap-2">
@@ -141,54 +210,46 @@ onMounted(() => {
                   </div>
 
                   <!-- Sign In Form -->
-                  <form v-if="!isSignUp" @submit="handleSubmit" class="space-y-4">
+                  <form v-if="!isSignUp" @submit.prevent="handleLoginSubmit" class="space-y-4">
                     <!-- Email -->
-                    <FormField v-slot="{ componentField, meta }" name="email">
-                      <FormItem>
-                        <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1.5 block">Email Address</FormLabel>
-                        <FormControl>
-                          <div class="relative">
-                            <Mail class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                            <Input
-                              type="text"
-                              placeholder="Enter your email"
-                              class="pl-9 h-10 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                              :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                              v-bind="componentField"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                      </FormItem>
-                    </FormField>
+                    <div>
+                      <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1.5 block">Email Address</label>
+                      <div class="relative">
+                        <Mail class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                        <input
+                          v-model="loginEmail"
+                          type="text"
+                          placeholder="Enter your email"
+                          class="w-full pl-9 h-10 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                          :class="{ 'border-red-600': errors.email }"
+                        />
+                      </div>
+                      <p v-if="errors.email" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.email }}</p>
+                    </div>
 
                     <!-- Password -->
-                    <FormField v-slot="{ componentField, meta }" name="password">
-                      <FormItem>
-                        <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1.5 block">Password</FormLabel>
-                        <FormControl>
-                          <div class="relative">
-                            <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                            <Input
-                              :type="authStore.showPassword ? 'text' : 'password'"
-                              placeholder="Enter your password"
-                              class="pl-9 pr-9 h-10 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                              :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                              v-bind="componentField"
-                            />
-                            <button
-                              type="button"
-                              @click="authStore.togglePasswordVisibility"
-                              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                            >
-                              <Eye v-if="!authStore.showPassword" class="w-3.5 h-3.5" />
-                              <EyeOff v-else class="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                      </FormItem>
-                    </FormField>
+                    <div>
+                      <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1.5 block">Password</label>
+                      <div class="relative">
+                        <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                        <input
+                          v-model="loginPassword"
+                          :type="authStore.showPassword ? 'text' : 'password'"
+                          placeholder="Enter your password"
+                          class="w-full pl-9 pr-9 h-10 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                          :class="{ 'border-red-600': errors.password }"
+                        />
+                        <button
+                          type="button"
+                          @click="authStore.togglePasswordVisibility"
+                          class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          <Eye v-if="!authStore.showPassword" class="w-3.5 h-3.5" />
+                          <EyeOff v-else class="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p v-if="errors.password" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.password }}</p>
+                    </div>
 
                     <!-- Remember Me & Forgot Password -->
                     <div class="flex items-center justify-between">
@@ -203,148 +264,131 @@ onMounted(() => {
                       <button
                         type="button"
                         class="text-xs text-blue-600 font-black uppercase tracking-wide hover:underline"
-                        @click="authStore.forgotPassword"
+                        @click="handleForgotPassword"
                       >
                         Forgot password?
                       </button>
                     </div>
 
                     <!-- Login Button -->
-                    <Button
+                    <button
                       type="submit"
                       :disabled="authStore.isLoading"
-                      class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 border-2 border-blue-600"
+                      class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 border-2 border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Zap v-if="!authStore.isLoading" class="w-4 h-4" />
                       <span v-if="!authStore.isLoading">Sign In</span>
                       <span v-else>Signing In...</span>
                       <ArrowRight v-if="!authStore.isLoading" class="w-4 h-4" />
                       <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </Button>
+                    </button>
                   </form>
 
                   <!-- Sign Up Form -->
-                  <form v-else @submit="handleSignUp" class="space-y-3">
+                  <form v-else @submit.prevent="handleSignUpSubmit" class="space-y-3">
                     <!-- Name Row -->
                     <div class="grid grid-cols-2 gap-3">
-                      <FormField v-slot="{ componentField, meta }" name="firstName">
-                        <FormItem>
-                          <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">First Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="First name"
-                              class="h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                              :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                              v-bind="componentField"
-                            />
-                          </FormControl>
-                          <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                        </FormItem>
-                      </FormField>
-
-                      <FormField v-slot="{ componentField, meta }" name="lastName">
-                        <FormItem>
-                          <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Last Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              placeholder="Last name"
-                              class="h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                              :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                              v-bind="componentField"
-                            />
-                          </FormControl>
-                          <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                        </FormItem>
-                      </FormField>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">First Name</label>
+                        <input
+                          v-model="signUpFirstName"
+                          type="text"
+                          placeholder="First name"
+                          class="w-full h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                          :class="{ 'border-red-600': errors.firstName }"
+                        />
+                        <p v-if="errors.firstName" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.firstName }}</p>
+                      </div>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Last Name</label>
+                        <input
+                          v-model="signUpLastName"
+                          type="text"
+                          placeholder="Last name"
+                          class="w-full h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                          :class="{ 'border-red-600': errors.lastName }"
+                        />
+                        <p v-if="errors.lastName" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.lastName }}</p>
+                      </div>
                     </div>
 
                     <!-- Email + Phone Row -->
                     <div class="grid grid-cols-2 gap-3">
-                      <FormField v-slot="{ componentField, meta }" name="email">
-                        <FormItem>
-                          <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Email Address</FormLabel>
-                          <FormControl>
-                            <div class="relative">
-                              <Mail class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                              <Input
-                                type="email"
-                                placeholder="Email"
-                                class="pl-9 h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                                :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                                v-bind="componentField"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                        </FormItem>
-                      </FormField>
-
-                      <FormField v-slot="{ componentField, meta }" name="phone">
-                        <FormItem>
-                          <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Phone</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="tel"
-                              placeholder="Phone number"
-                              class="h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                              :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                              v-bind="componentField"
-                            />
-                          </FormControl>
-                          <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                        </FormItem>
-                      </FormField>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Email Address</label>
+                        <div class="relative">
+                          <Mail class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                          <input
+                            v-model="signUpEmail"
+                            type="email"
+                            placeholder="Email"
+                            class="w-full pl-9 h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                            :class="{ 'border-red-600': errors.signUpEmail }"
+                          />
+                        </div>
+                        <p v-if="errors.signUpEmail" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.signUpEmail }}</p>
+                      </div>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Phone</label>
+                        <input
+                          v-model="signUpPhone"
+                          type="tel"
+                          placeholder="Phone number"
+                          class="w-full h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                          :class="{ 'border-red-600': errors.phone }"
+                        />
+                        <p v-if="errors.phone" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.phone }}</p>
+                      </div>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Date of Birth</label>
+                        <input
+                          v-model="signUpDateOfBirth"
+                          type="date"
+                          class="w-full h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                          :class="{ 'border-red-600': errors.dateOfBirth }"
+                        />
+                        <p v-if="errors.dateOfBirth" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.dateOfBirth }}</p>
+                      </div>
                     </div>
 
                     <!-- Password Row -->
                     <div class="grid grid-cols-2 gap-3">
-                      <FormField v-slot="{ componentField, meta }" name="password">
-                        <FormItem>
-                          <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Password</FormLabel>
-                          <FormControl>
-                            <div class="relative">
-                              <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                              <Input
-                                :type="authStore.showPassword ? 'text' : 'password'"
-                                placeholder="Password"
-                                class="pl-9 pr-9 h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                                :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                                v-bind="componentField"
-                              />
-                              <button
-                                type="button"
-                                @click="authStore.togglePasswordVisibility"
-                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                              >
-                                <Eye v-if="!authStore.showPassword" class="w-3.5 h-3.5" />
-                                <EyeOff v-else class="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </FormControl>
-                          <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                        </FormItem>
-                      </FormField>
-
-                      <FormField v-slot="{ componentField, meta }" name="confirmPassword">
-                        <FormItem>
-                          <FormLabel class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Confirm</FormLabel>
-                          <FormControl>
-                            <div class="relative">
-                              <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                              <Input
-                                :type="authStore.showPassword ? 'text' : 'password'"
-                                placeholder="Confirm"
-                                class="pl-9 h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
-                                :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                                v-bind="componentField"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5" />
-                        </FormItem>
-                      </FormField>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Password</label>
+                        <div class="relative">
+                          <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                          <input
+                            v-model="signUpPassword"
+                            :type="authStore.showPassword ? 'text' : 'password'"
+                            placeholder="Password"
+                            class="w-full pl-9 pr-9 h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                            :class="{ 'border-red-600': errors.signUpPassword }"
+                          />
+                          <button
+                            type="button"
+                            @click="authStore.togglePasswordVisibility"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                          >
+                            <Eye v-if="!authStore.showPassword" class="w-3.5 h-3.5" />
+                            <EyeOff v-else class="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p v-if="errors.signUpPassword" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.signUpPassword }}</p>
+                      </div>
+                      <div>
+                        <label class="text-xs font-black text-gray-900 uppercase tracking-wider mb-1 block">Confirm</label>
+                        <div class="relative">
+                          <Lock class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                          <input
+                            v-model="signUpConfirmPassword"
+                            :type="authStore.showPassword ? 'text' : 'password'"
+                            placeholder="Confirm"
+                            class="w-full pl-9 h-9 border-2 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 bg-white font-bold text-gray-900 text-sm"
+                            :class="{ 'border-red-600': errors.confirmPassword }"
+                          />
+                        </div>
+                        <p v-if="errors.confirmPassword" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.confirmPassword }}</p>
+                      </div>
                     </div>
 
                     <!-- Terms -->
@@ -362,17 +406,17 @@ onMounted(() => {
                     </div>
 
                     <!-- Sign Up Button -->
-                    <Button
+                    <button
                       type="submit"
                       :disabled="authStore.isLoading"
-                      class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 border-2 border-blue-600"
+                      class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 border-2 border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Zap v-if="!authStore.isLoading" class="w-4 h-4" />
                       <span v-if="!authStore.isLoading">Create Account</span>
                       <span v-else>Creating Account...</span>
                       <ArrowRight v-if="!authStore.isLoading" class="w-4 h-4" />
                       <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </Button>
+                    </button>
                   </form>
                 </div>
 
@@ -384,7 +428,7 @@ onMounted(() => {
                     <button
                       type="button"
                       class="text-blue-600 font-black uppercase tracking-wide ml-1 hover:underline"
-                      @click="isSignUp = !isSignUp"
+                      @click="isSignUp = !isSignUp; errors = {}"
                     >
                       {{ isSignUp ? 'Sign In' : 'Sign Up' }}
                     </button>

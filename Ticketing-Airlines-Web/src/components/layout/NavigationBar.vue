@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   NavigationMenu,
@@ -9,15 +9,52 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger
 } from '@/components/ui/navigation-menu'
-import { Plane, Menu, X, ArrowRight, Zap } from 'lucide-vue-next'
+import { Plane, Menu, X, ArrowRight, Zap, LogOut, User, ChevronDown } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const isMobileMenuOpen = ref(false)
+const isProfileDropdownOpen = ref(false)
+const profileDropdownRef = ref<HTMLElement | null>(null)
+
+const toggleProfileDropdown = () => {
+  isProfileDropdownOpen.value = !isProfileDropdownOpen.value
+}
+
+const closeProfileDropdown = () => {
+  isProfileDropdownOpen.value = false
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (profileDropdownRef.value && !profileDropdownRef.value.contains(event.target as Node)) {
+    closeProfileDropdown()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+const handleProfileClick = () => {
+  router.push('/profile')
+  closeProfileDropdown()
+}
 
 const handleSignIn = () => {
   router.push('/login')
   isMobileMenuOpen.value = false
+}
+
+const handleSignOut = async () => {
+  await authStore.logout()
+  isMobileMenuOpen.value = false
+  router.push('/')
 }
 
 const handleLogoClick = () => {
@@ -202,16 +239,57 @@ const closeMobileMenu = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <!-- Sign In Button -->
-            <Button
-              @click="handleSignIn"
-              class="h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 text-xs"
-            >
-              <span class="flex items-center gap-1.5">
-                <Zap class="w-3.5 h-3.5" />
-                Sign In
-              </span>
-            </Button>
+            <!-- Auth Button -->
+            <template v-if="authStore.isLoggedIn">
+              <div class="relative" ref="profileDropdownRef">
+                <button
+                  @click.stop="toggleProfileDropdown"
+                  class="flex items-center gap-2 h-9 px-3 bg-gray-900 hover:bg-gray-800 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 text-xs"
+                >
+                  <div class="w-6 h-6 bg-white flex items-center justify-center">
+                    <User class="w-4 h-4 text-gray-900" />
+                  </div>
+                  <span class="hidden sm:inline">{{ authStore.currentUser?.name }}</span>
+                  <ChevronDown class="w-3.5 h-3.5" :class="{ 'rotate-180': isProfileDropdownOpen }" />
+                </button>
+                <Transition
+                  enter-active-class="transition-all duration-200 ease-out"
+                  enter-from-class="opacity-0 transform -translate-y-2"
+                  enter-to-class="opacity-100 transform translate-y-0"
+                  leave-active-class="transition-all duration-150 ease-in"
+                  leave-from-class="opacity-100 transform translate-y-0"
+                  leave-to-class="opacity-0 transform -translate-y-2"
+                >
+                  <div v-if="isProfileDropdownOpen" class="absolute right-0 top-full mt-1 bg-white border-4 border-gray-900 shadow-2xl rounded-none min-w-[180px] z-50">
+                    <button
+                      @click="handleProfileClick"
+                      class="w-full flex items-center gap-3 px-4 py-3 text-gray-900 hover:bg-gray-900 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-blue-600"
+                    >
+                      <User class="w-4 h-4" />
+                      Profile
+                    </button>
+                    <button
+                      @click="handleSignOut"
+                      class="w-full flex items-center gap-3 px-4 py-3 text-gray-900 hover:bg-red-600 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-red-800"
+                    >
+                      <LogOut class="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </Transition>
+              </div>
+            </template>
+            <template v-else>
+              <Button
+                @click="handleSignIn"
+                class="h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 text-xs"
+              >
+                <span class="flex items-center gap-1.5">
+                  <Zap class="w-3.5 h-3.5" />
+                  Sign In
+                </span>
+              </Button>
+            </template>
           </div>
 
           <!-- Mobile Menu Button -->
@@ -333,17 +411,39 @@ const closeMobileMenu = () => {
             </div>
           </div>
 
-          <!-- Sign In Button -->
+          <!-- Auth Section -->
           <div class="pt-6 border-t-4 border-gray-900">
-            <Button
-              @click="handleSignIn"
-              class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <span class="flex items-center justify-center gap-3">
-                <Zap class="w-5 h-5" />
-                Sign In
-              </span>
-            </Button>
+            <template v-if="authStore.isLoggedIn">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-900 flex items-center justify-center">
+                  <User class="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p class="font-black text-gray-900 uppercase tracking-wide text-sm">{{ authStore.currentUser?.name }}</p>
+                  <p class="text-xs text-gray-500 font-bold">{{ authStore.currentUser?.email }}</p>
+                </div>
+              </div>
+              <Button
+                @click="handleSignOut"
+                class="w-full h-14 bg-gray-900 hover:bg-red-600 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300"
+              >
+                <span class="flex items-center justify-center gap-3">
+                  <LogOut class="w-5 h-5" />
+                  Sign Out
+                </span>
+              </Button>
+            </template>
+            <template v-else>
+              <Button
+                @click="handleSignIn"
+                class="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-wider border-0 rounded-none transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <span class="flex items-center justify-center gap-3">
+                  <Zap class="w-5 h-5" />
+                  Sign In
+                </span>
+              </Button>
+            </template>
           </div>
         </div>
       </div>

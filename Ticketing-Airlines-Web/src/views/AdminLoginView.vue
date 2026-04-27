@@ -1,44 +1,48 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { FormControl, FormItem, FormLabel, FormMessage, FormField } from '@/components/ui/form'
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Shield, AlertCircle } from 'lucide-vue-next'
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Shield } from 'lucide-vue-next'
 import { useAdminStore } from '@/stores/adminStore'
-import { useForm } from 'vee-validate'
-import { toTypedSchema } from '@vee-validate/zod'
-import * as z from 'zod'
 
 const router = useRouter()
 const adminStore = useAdminStore()
 
+const email = ref('')
+const password = ref('')
 const showPassword = ref(false)
+const errors = ref<Record<string, string>>({})
 
-// Define validation schema
-const loginSchema = toTypedSchema(z.object({
-  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
-}))
+function validate(): boolean {
+  errors.value = {}
+  let valid = true
 
-// Initialize form with vee-validate
-const form = useForm({
-  validationSchema: loginSchema,
-  initialValues: {
-    email: '',
-    password: ''
+  if (!email.value) {
+    errors.value.email = 'Email is required'
+    valid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    errors.value.email = 'Please enter a valid email address'
+    valid = false
   }
-})
 
-// Handle login form submission
-const handleSubmit = form.handleSubmit(async (values) => {
-  const success = await adminStore.adminLogin(values.email, values.password)
-  
+  if (!password.value) {
+    errors.value.password = 'Password is required'
+    valid = false
+  } else if (password.value.length < 6) {
+    errors.value.password = 'Password must be at least 6 characters'
+    valid = false
+  }
+
+  return valid
+}
+
+async function handleSubmit() {
+  if (!validate()) return
+  adminStore.clearError()
+  const success = await adminStore.adminLogin(email.value, password.value)
   if (success) {
     router.push('/admin')
   }
-})
+}
 </script>
 
 <template>
@@ -56,9 +60,9 @@ const handleSubmit = form.handleSubmit(async (values) => {
       <div class="absolute top-4 left-4 w-full h-full bg-red-600 -z-10"></div>
       
       <!-- Main Card -->
-      <Card class="bg-white border-4 border-gray-900 shadow-2xl rounded-none overflow-hidden">
+      <div class="bg-white border-4 border-gray-900 shadow-2xl rounded-none overflow-hidden">
         <!-- Header -->
-        <CardHeader class="bg-gray-900 text-white p-8 relative">
+        <div class="bg-gray-900 text-white p-8 relative">
           <!-- Corner Accent -->
           <div class="absolute top-0 right-0 w-0 h-0 border-t-[80px] border-t-red-600 border-l-[80px] border-l-transparent"></div>
           
@@ -71,20 +75,20 @@ const handleSubmit = form.handleSubmit(async (values) => {
               <div class="absolute top-2 left-2 w-24 h-24 bg-red-600 -z-10"></div>
             </div>
             
-            <CardTitle class="text-4xl font-black mb-3 uppercase tracking-tight">
+            <h2 class="text-4xl font-black mb-3 uppercase tracking-tight">
               Admin Access
-            </CardTitle>
-            <CardDescription class="text-gray-300 font-bold text-sm uppercase tracking-wider">
+            </h2>
+            <p class="text-gray-300 font-bold text-sm uppercase tracking-wider">
               Authorized Personnel Only
-            </CardDescription>
+            </p>
           </div>
-        </CardHeader>
+        </div>
         
-        <CardContent class="p-8">
+        <div class="p-8">
           <!-- Security Warning -->
           <div class="mb-6 p-4 bg-red-50 border-4 border-red-200 rounded-none">
             <div class="flex items-start gap-3">
-              <AlertCircle class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <Shield class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p class="text-red-700 text-xs font-black uppercase tracking-wide mb-1">Security Notice</p>
                 <p class="text-red-600 text-xs font-bold">This area is restricted to authorized administrators only. All access attempts are logged.</p>
@@ -101,67 +105,59 @@ const handleSubmit = form.handleSubmit(async (values) => {
           </div>
 
           <!-- Login Form -->
-          <form @submit="handleSubmit" class="space-y-6">
+          <form @submit.prevent="handleSubmit" class="space-y-6">
             <!-- Email Field -->
-            <FormField v-slot="{ componentField, meta }" name="email">
-              <FormItem>
-                <FormLabel class="text-sm font-black text-gray-900 uppercase tracking-wider mb-3 block">Admin Email</FormLabel>
-                <FormControl>
-                  <div class="relative">
-                    <Mail class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
-                    <Input
-                      type="email"
-                      placeholder="Enter admin email"
-                      class="pl-12 h-14 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-red-600 bg-white font-bold text-gray-900"
-                      :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                      v-bind="componentField"
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage class="text-gray-900 text-xs mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-1" />
-              </FormItem>
-            </FormField>
+            <div>
+              <label class="text-sm font-black text-gray-900 uppercase tracking-wider mb-3 block">Admin Email</label>
+              <div class="relative">
+                <Mail class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                <input
+                  v-model="email"
+                  type="email"
+                  placeholder="Enter admin email"
+                  class="w-full pl-12 h-14 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-red-600 bg-white font-bold text-gray-900"
+                  :class="{ 'border-red-600': errors.email }"
+                />
+              </div>
+              <p v-if="errors.email" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.email }}</p>
+            </div>
 
             <!-- Password Field -->
-            <FormField v-slot="{ componentField, meta }" name="password">
-              <FormItem>
-                <FormLabel class="text-sm font-black text-gray-900 uppercase tracking-wider mb-3 block">Password</FormLabel>
-                <FormControl>
-                  <div class="relative">
-                    <Lock class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
-                    <Input
-                      :type="showPassword ? 'text' : 'password'"
-                      placeholder="Enter password"
-                      class="pl-12 pr-12 h-14 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-red-600 bg-white font-bold text-gray-900"
-                      :class="{ 'border-red-600': !meta.valid && meta.touched }"
-                      v-bind="componentField"
-                    />
-                    <button
-                      type="button"
-                      @click="showPassword = !showPassword"
-                      class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600"
-                    >
-                      <Eye v-if="!showPassword" class="w-5 h-5" />
-                      <EyeOff v-else class="w-5 h-5" />
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage class="text-gray-900 text-xs mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-1" />
-              </FormItem>
-            </FormField>
+            <div>
+              <label class="text-sm font-black text-gray-900 uppercase tracking-wider mb-3 block">Password</label>
+              <div class="relative">
+                <Lock class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                <input
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Enter password"
+                  class="w-full pl-12 pr-12 h-14 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-red-600 bg-white font-bold text-gray-900"
+                  :class="{ 'border-red-600': errors.password }"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600"
+                >
+                  <Eye v-if="!showPassword" class="w-5 h-5" />
+                  <EyeOff v-else class="w-5 h-5" />
+                </button>
+              </div>
+              <p v-if="errors.password" class="text-gray-900 text-[10px] mt-1 font-black uppercase tracking-wider bg-red-100 border-2 border-red-600 px-2 py-0.5">{{ errors.password }}</p>
+            </div>
 
             <!-- Login Button -->
-            <Button
+            <button
               type="submit"
               :disabled="adminStore.isLoading"
-              class="w-full h-16 bg-red-600 hover:bg-red-700 text-white rounded-none font-black text-lg uppercase tracking-wider flex items-center justify-center gap-3 border-4 border-gray-900"
+              class="w-full h-16 bg-red-600 hover:bg-red-700 text-white rounded-none font-black text-lg uppercase tracking-wider flex items-center justify-center gap-3 border-4 border-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Shield v-if="!adminStore.isLoading" class="w-5 h-5" />
               <span v-if="!adminStore.isLoading">Admin Sign In</span>
               <span v-else>Authenticating...</span>
               <ArrowRight v-if="!adminStore.isLoading" class="w-5 h-5" />
               <div v-else class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </Button>
+            </button>
           </form>
 
           <!-- Back to Home -->
@@ -171,11 +167,11 @@ const handleSubmit = form.handleSubmit(async (values) => {
               class="text-sm text-gray-600 hover:text-gray-900 font-bold transition-colors"
               @click="router.push('/')"
             >
-              ← Back to Homepage
+              &larr; Back to Homepage
             </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -189,5 +185,10 @@ const handleSubmit = form.handleSubmit(async (values) => {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: none;
 }
 </style>

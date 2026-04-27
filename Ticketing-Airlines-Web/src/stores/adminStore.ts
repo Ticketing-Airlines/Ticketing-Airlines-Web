@@ -116,7 +116,7 @@ export const useAdminStore = defineStore('admin', () => {
                 localStorage.setItem('admin_authenticated', 'true')
                 localStorage.setItem('admin_email', email)
 
-                console.log('Admin login successful')
+                
                 return true
             } else {
                 errorMessage.value = 'Invalid admin credentials'
@@ -136,7 +136,7 @@ export const useAdminStore = defineStore('admin', () => {
         adminEmail.value = null
         localStorage.removeItem('admin_authenticated')
         localStorage.removeItem('admin_email')
-        console.log('Admin logged out')
+        
     }
 
     function clearError() {

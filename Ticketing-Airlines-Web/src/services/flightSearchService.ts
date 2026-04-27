@@ -9,11 +9,16 @@ import type {
 import { 
   flightInstances, 
   flightSchedules, 
-  airports, 
   aircrafts, 
   airlines, 
   fareBuckets 
 } from '@/data/mockData'
+import { airportService } from '@/services/airportService'
+
+function getAirports(): Airport[] {
+  const cached = airportService.getCachedAirports()
+  return cached ?? airportService.getFallbackAirports()
+}
 
 export class FlightSearchService {
   private static instance: FlightSearchService
@@ -40,6 +45,7 @@ export class FlightSearchService {
     const returnSearchDate = returnDate ? returnDate.toISOString().split('T')[0] : null
 
     // Find origin and destination airports
+    const airports = getAirports()
     const originAirport = airports.find(airport => airport.iataCode === from)
     const destinationAirport = airports.find(airport => airport.iataCode === to)
 

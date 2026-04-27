@@ -1,257 +1,263 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import type { User } from '@/interfaces/interfaces'
+import { authService } from '@/services/authService'
+import { isNetworkError, getApiErrorMessage } from '@/types/api'
 import { users } from '@/data/mockData'
 
-export interface AuthState {
-  user: User | null
-  isAuthenticated: boolean
-  email: string
-  password: string
-  showPassword: boolean
-  isLoading: boolean
-  rememberMe: boolean
-  isSignUp: boolean
-  acceptTerms: boolean
-  successMessage: string
-  errorMessage: string
-  emailError: string
-  passwordError: string
-}
+const ENABLE_MOCK_FALLBACK = import.meta.env.VITE_ENABLE_MOCK_FALLBACK === 'true'
 
-export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({
-    user: null,
-    isAuthenticated: false,
-    email: '',
-    password: '',
-    showPassword: false,
-    isLoading: false,
-    rememberMe: false,
-    isSignUp: false,
-    acceptTerms: false,
-    successMessage: '',
-    errorMessage: '',
-    emailError: '',
-    passwordError: ''
-  }),
+export const useAuthStore = defineStore('auth', () => {
+  // --- state ---
+  const user = ref<User | null>(null)
+  const isAuthenticated = ref(false)
+  const isLoading = ref(false)
+  const rememberMe = ref(false)
+  const showPassword = ref(false)
+  const successMessage = ref('')
+  const errorMessage = ref('')
+  const emailError = ref('')
+  const passwordError = ref('')
 
-  getters: {
-    isLoggedIn: (state) => state.isAuthenticated && state.user !== null,
-    currentUser: (state) => state.user,
-    hasErrors: (state) => state.emailError !== '' || state.passwordError !== '',
-    hasMessages: (state) => state.successMessage !== '' || state.errorMessage !== ''
-  },
+  // --- getters ---
+  const isLoggedIn = computed(() => isAuthenticated.value && user.value !== null)
+  const currentUser = computed(() => user.value)
+  const hasErrors = computed(() => emailError.value !== '' || passwordError.value !== '')
+  const hasMessages = computed(() => successMessage.value !== '' || errorMessage.value !== '')
 
-  actions: {
-    clearMessages() {
-      this.successMessage = ''
-      this.errorMessage = ''
-    },
+  // --- helpers ---
+  function clearMessages() {
+    successMessage.value = ''
+    errorMessage.value = ''
+  }
 
-    clearErrors() {
-      this.emailError = ''
-      this.passwordError = ''
-    },
+  function clearErrors() {
+    emailError.value = ''
+    passwordError.value = ''
+  }
 
-    clearForm() {
-      this.email = ''
-      this.password = ''
-      this.rememberMe = false
-      this.clearErrors()
-      this.clearMessages()
-    },
+  function clearForm() {
+    clearErrors()
+    clearMessages()
+  }
 
-    togglePasswordVisibility() {
-      this.showPassword = !this.showPassword
-    },
+  function togglePasswordVisibility() {
+    showPassword.value = !showPassword.value
+  }
 
-    validateEmail(emailValue: string): boolean {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailRegex.test(emailValue)
-    },
+  function validateEmail(emailValue: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(emailValue)
+  }
 
-    validateForm(): boolean {
-      this.clearErrors()
-      let isValid = true
+  // --- actions ---
+  async function login(email: string, password: string): Promise<boolean> {
+    clearMessages()
+    isLoading.value = true
 
-      if (!this.email) {
-        this.emailError = 'Email is required'
-        isValid = false
-      } else if (!this.validateEmail(this.email)) {
-        this.emailError = 'Please enter a valid email address'
-        isValid = false
+    try {
+      const result = await authService.login(email, password)
+      user.value = result.user
+      isAuthenticated.value = true
+      successMessage.value = `Login successful! Welcome back, ${result.user.name}.`
+
+      if (rememberMe.value) {
+        localStorage.setItem('rememberedEmail', email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
       }
 
-      if (!this.password) {
-        this.passwordError = 'Password is required'
-        isValid = false
-      } else if (this.password.length < 6) {
-        this.passwordError = 'Password must be at least 6 characters'
-        isValid = false
-      }
+      return true
+    } catch (error: unknown) {
+      const apiMessage = getApiErrorMessage(error)
 
-      return isValid
-    },
-
-    async login() {
-      this.clearMessages()
-      
-      if (!this.validateForm()) {
-        return false
-      }
-
-      this.isLoading = true
-      
-      try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        // Find user in mock data
-        const foundUser = users.find(user => user.email === this.email)
-        
-        if (!foundUser) {
-          this.errorMessage = 'Invalid email or password. Please try again.'
-          return false
-        }
-        
-        // For demo purposes, accept any password for existing users
-        // In real app, you would verify password hash
-        
-        this.user = {
-          userId: foundUser.userId,
-          email: foundUser.email,
-          name: foundUser.name,
-          createdAt: foundUser.createdAt || new Date().toISOString()
-        }
-        this.isAuthenticated = true
-        
-        console.log('Login successful:', { 
-          email: this.email, 
-          rememberMe: this.rememberMe,
-          user: this.user
-        })
-        
-        this.successMessage = `Login successful! Welcome back, ${foundUser.name}.`
-        
-        // Store in localStorage if remember me is checked
-        if (this.rememberMe) {
-          localStorage.setItem('rememberedEmail', this.email)
-          localStorage.setItem('authToken', `token-${foundUser.userId}`)
-        } else {
-          localStorage.removeItem('rememberedEmail')
-          localStorage.setItem('authToken', `token-${foundUser.userId}`)
-        }
-        
-        return true
-      } catch (error) {
-        console.error('Login failed:', error)
-        this.errorMessage = 'Login failed. Please try again.'
-        return false
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    logout() {
-      this.user = null
-      this.isAuthenticated = false
-      this.clearForm()
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('rememberedEmail')
-      this.successMessage = 'You have been logged out successfully.'
-    },
-
-    socialLogin(provider: string) {
-      console.log(`Login with ${provider}`)
-      this.successMessage = `${provider} login - Feature coming soon!`
-    },
-
-    forgotPassword() {
-      if (!this.email) {
-        this.emailError = 'Please enter your email address first'
-        return
-      }
-      
-      if (!this.validateEmail(this.email)) {
-        this.emailError = 'Please enter a valid email address'
-        return
-      }
-      this.successMessage = 'Password reset instructions will be sent to your email.'
-    },
-
-    async signUp(userData: { firstName: string; lastName: string; email: string; phone: string; password: string }) {
-      this.clearMessages()
-      this.isLoading = true
-      
-      try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        // Check if user already exists
-        const existingUser = users.find(user => user.email === userData.email)
-        
-        if (existingUser) {
-          this.errorMessage = 'An account with this email already exists. Please sign in instead.'
-          return false
-        }
-        
-        // Create new user (in real app, this would be sent to backend)
-        const newUser = {
-          userId: `user-${Date.now()}`,
-          email: userData.email,
-          name: `${userData.firstName} ${userData.lastName}`,
-          createdAt: new Date().toISOString()
-        }
-        
-        this.user = newUser
-        this.isAuthenticated = true
-        
-        console.log('Sign up successful:', { 
-          userData,
-          user: this.user
-        })
-        
-        this.successMessage = `Account created successfully! Welcome, ${userData.firstName}!`
-        
-        // Store auth token
-        localStorage.setItem('authToken', `token-${newUser.userId}`)
-        
-        return true
-      } catch (error) {
-        console.error('Sign up failed:', error)
-        this.errorMessage = 'Sign up failed. Please try again.'
-        return false
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    loadRememberedEmail() {
-      const rememberedEmail = localStorage.getItem('rememberedEmail')
-      if (rememberedEmail) {
-        this.email = rememberedEmail
-        this.rememberMe = true
-      }
-    },
-
-    checkAuthStatus() {
-      const token = localStorage.getItem('authToken')
-      if (token) {
-        // Extract user ID from token and find user
-        const userId = token.replace('token-', '')
-        const foundUser = users.find(user => user.userId === userId)
-        
+      if (ENABLE_MOCK_FALLBACK && isNetworkError(error)) {
+        const foundUser = users.find(u => u.email === email)
         if (foundUser) {
-          this.user = {
+          user.value = {
             userId: foundUser.userId,
             email: foundUser.email,
             name: foundUser.name,
-            createdAt: foundUser.createdAt || new Date().toISOString()
+            createdAt: foundUser.createdAt ?? new Date().toISOString(),
           }
-          this.isAuthenticated = true
-        } else {
-          // Invalid token, clear it
-          localStorage.removeItem('authToken')
+          isAuthenticated.value = true
+          localStorage.setItem('authToken', `mock-token-${foundUser.userId}`)
+          successMessage.value = `Login successful! Welcome back, ${foundUser.name}.`
+          if (rememberMe.value) {
+            localStorage.setItem('rememberedEmail', email)
+          }
+          return true
         }
       }
+
+      errorMessage.value = apiMessage
+      return false
+    } finally {
+      isLoading.value = false
     }
+  }
+
+  async function signUp(data: {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    password: string
+    dateOfBirth: string
+  }): Promise<boolean> {
+    clearMessages()
+    isLoading.value = true
+
+    try {
+      await authService.register({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        dateOfBirth: data.dateOfBirth,
+      })
+
+      successMessage.value = 'Account created successfully! Please sign in.'
+      return true
+    } catch (error: unknown) {
+      const apiMessage = getApiErrorMessage(error)
+
+      if (ENABLE_MOCK_FALLBACK && isNetworkError(error)) {
+        const existingUser = users.find(u => u.email === data.email)
+        if (existingUser) {
+          errorMessage.value = 'An account with this email already exists.'
+          return false
+        }
+        const newUser: User = {
+          userId: `user-${Date.now()}`,
+          email: data.email,
+          name: `${data.firstName} ${data.lastName}`,
+          createdAt: new Date().toISOString(),
+        }
+        user.value = newUser
+        isAuthenticated.value = true
+        localStorage.setItem('authToken', `mock-token-${newUser.userId}`)
+        successMessage.value = `Account created successfully! Welcome, ${data.firstName}!`
+        return true
+      }
+
+      errorMessage.value = apiMessage
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function logout() {
+    try {
+      await authService.logout()
+    } catch {
+      // Swallow — local state is cleared regardless
+    }
+    user.value = null
+    isAuthenticated.value = false
+    clearForm()
+    successMessage.value = 'You have been logged out successfully.'
+  }
+
+  function forgotPassword(email: string) {
+    clearMessages()
+    if (!email) {
+      emailError.value = 'Please enter your email address first'
+      return
+    }
+    if (!validateEmail(email)) {
+      emailError.value = 'Please enter a valid email address'
+      return
+    }
+
+    if (ENABLE_MOCK_FALLBACK) {
+      successMessage.value = 'Password reset instructions will be sent to your email. (Demo mode)'
+      return
+    }
+
+    authService.forgotPassword(email).then((sent) => {
+      if (sent) {
+        successMessage.value = 'Password reset instructions will be sent to your email.'
+      } else {
+        errorMessage.value = 'No account found with that email address.'
+      }
+    })
+  }
+
+  async function checkAuthStatus() {
+    const token = localStorage.getItem('authToken')
+    if (!token) return
+
+    const userId = localStorage.getItem('userId')
+    if (userId && !token.startsWith('mock-token-')) {
+      try {
+        const result = await authService.getCurrentUser(userId)
+        if (result) {
+          user.value = result.user
+          isAuthenticated.value = true
+          return
+        }
+      } catch {
+        // Fall through to token parsing
+      }
+    }
+
+    // Fallback: parse mock tokens
+    if (token.startsWith('mock-token-')) {
+      const mockUserId = token.replace('mock-token-', '')
+      const foundUser = users.find(u => u.userId === mockUserId)
+      if (foundUser) {
+        user.value = {
+          userId: foundUser.userId,
+          email: foundUser.email,
+          name: foundUser.name,
+          createdAt: foundUser.createdAt ?? new Date().toISOString(),
+        }
+        isAuthenticated.value = true
+        return
+      }
+    }
+
+    // Invalid token
+    localStorage.removeItem('authToken')
+  }
+
+  function loadRememberedEmail() {
+    const rememberedEmail = localStorage.getItem('rememberedEmail')
+    if (rememberedEmail) {
+      return rememberedEmail
+    }
+    return ''
+  }
+
+  return {
+    // state
+    user,
+    isAuthenticated,
+    isLoading,
+    rememberMe,
+    showPassword,
+    successMessage,
+    errorMessage,
+    emailError,
+    passwordError,
+    // getters
+    isLoggedIn,
+    currentUser,
+    hasErrors,
+    hasMessages,
+    // actions
+    clearMessages,
+    clearErrors,
+    clearForm,
+    togglePasswordVisibility,
+    login,
+    signUp,
+    logout,
+    forgotPassword,
+    checkAuthStatus,
+    loadRememberedEmail,
   }
 })

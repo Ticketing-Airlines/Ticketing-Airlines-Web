@@ -7,7 +7,8 @@ import type {
     MultiCityResult
 } from '@/interfaces/interfaces'
 import { flightSearchService } from '@/services/flightSearchService'
-import { flightInstances, flightSchedules, airports } from '@/data/mockData'
+import { flightInstances, flightSchedules } from '@/data/mockData'
+import { airportService } from '@/services/airportService'
 
 export const useFlightStore = defineStore('flight', () => {
     // State
@@ -96,6 +97,7 @@ export const useFlightStore = defineStore('flight', () => {
             )
 
             // Get airports
+            const airports = airportService.getFallbackAirports()
             const origin = airports.find(a => a.airportId === schedule.originAirportId)
             const dest = airports.find(a => a.airportId === schedule.destinationAirportId)
 
