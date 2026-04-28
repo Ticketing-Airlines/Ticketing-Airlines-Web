@@ -12,7 +12,7 @@ export interface AuthLoginRequest {
 
 // Response from AuthController login
 export interface AuthLoginResponse {
-  userId: number
+  userId: string
   email: string
   firstName: string | null
   middleName: string | null
@@ -20,7 +20,7 @@ export interface AuthLoginResponse {
   role: string | null
   sessionToken: string | null
   sessionExpiry: string | null
-  fullName: string
+  name: string
 }
 
 // POST /api/users/register
@@ -54,10 +54,10 @@ export interface ResetPasswordRequest {
 
 // GET /api/users/{id}
 export interface UserResponse {
-  id: number
+  id: string
   fullName: string
   email: string
-  phoneNumber: string | null
+  phoneNumber: string
   role: string
   dateOfBirth: string
   gender: string | null
@@ -76,16 +76,16 @@ export interface AuthResult {
 
 export function mapAuthLoginToUser(auth: AuthLoginResponse): User {
   return {
-    userId: String(auth.userId),
+    userId: auth.userId,
     email: auth.email,
-    name: auth.fullName,
+    name: auth.name,
     createdAt: new Date().toISOString(),
   }
 }
 
 export function mapUserResponseToUser(user: UserResponse): User {
   return {
-    userId: String(user.id),
+    userId: user.id,
     email: user.email,
     name: user.fullName,
     phone: user.phoneNumber ?? undefined,

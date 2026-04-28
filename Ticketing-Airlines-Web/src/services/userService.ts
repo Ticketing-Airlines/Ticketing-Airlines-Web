@@ -1,7 +1,7 @@
 import api from '@/lib/axios'
 
 export interface UserProfileResponse {
-  id: number
+  id: string
   fullName: string
   email: string
   phoneNumber: string | null
@@ -31,7 +31,7 @@ export interface UserProfileUpdateData {
   nationality?: string
 }
 
-async function getUserById(userId: number): Promise<UserProfileResponse | null> {
+async function getUserById(userId: string): Promise<UserProfileResponse | null> {
   try {
     const response = await api.get<UserProfileResponse>(`/api/users/${userId}`)
     return response.data
@@ -40,7 +40,7 @@ async function getUserById(userId: number): Promise<UserProfileResponse | null> 
   }
 }
 
-async function updateUser(userId: number, data: UpdateUserRequest): Promise<UserProfileResponse | null> {
+async function updateUser(userId: string, data: UpdateUserRequest): Promise<UserProfileResponse | null> {
   try {
     const response = await api.put<UserProfileResponse>(`/api/users/${userId}`, data)
     return response.data

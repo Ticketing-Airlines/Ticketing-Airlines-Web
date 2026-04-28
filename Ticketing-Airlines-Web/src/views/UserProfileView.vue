@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -94,8 +94,14 @@ const { validate: validatePassenger, errors: passengerErrors, clearErrors: clear
 })
 
 onMounted(() => {
-  if (authStore.user) {
+  if (authStore.user?.userId) {
     userStore.initializeUser(authStore.user.userId)
+  }
+})
+
+watch(() => authStore.user?.userId, (newUserId) => {
+  if (newUserId) {
+    userStore.initializeUser(newUserId)
   }
 })
 

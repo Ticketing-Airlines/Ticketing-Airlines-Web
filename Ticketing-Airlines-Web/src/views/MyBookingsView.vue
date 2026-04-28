@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Plane,
-  Calendar,
-  Users,
-  DollarSign,
   Search,
-  Filter,
   Eye,
-  Download,
-  X as XIcon
+  Download
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
@@ -36,7 +31,7 @@ const filteredBookings = computed(() => {
   }
 
   if (searchQuery.value) {
-    filtered = filtered.filter(b => 
+    filtered = filtered.filter(b =>
       b.reference.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       b.from.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       b.to.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -47,8 +42,14 @@ const filteredBookings = computed(() => {
 })
 
 onMounted(() => {
-  if (authStore.user) {
+  if (authStore.user?.userId) {
     userStore.initializeUser(authStore.user.userId)
+  }
+})
+
+watch(() => authStore.user?.userId, (newUserId) => {
+  if (newUserId) {
+    userStore.initializeUser(newUserId)
   }
 })
 
@@ -89,7 +90,7 @@ const getStatusColor = (status: string) => {
       <div class="absolute inset-0 opacity-5">
         <div class="absolute top-0 left-0 w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, #fff 20px, #fff 21px);"></div>
       </div>
-      
+
       <div class="relative container mx-auto px-4 z-10">
         <div class="inline-flex items-center rounded-full px-4 py-2 mb-4" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);">
           <Plane class="w-4 h-4 mr-2 text-white" />
@@ -110,8 +111,8 @@ const getStatusColor = (status: string) => {
               @click="filter = 'All'"
               :class="[
                 'font-black uppercase text-xs',
-                filter === 'All' 
-                  ? 'bg-gray-900 text-white' 
+                filter === 'All'
+                  ? 'bg-gray-900 text-white'
                   : 'bg-white text-gray-900 border-2 border-gray-900'
               ]"
             >
@@ -121,8 +122,8 @@ const getStatusColor = (status: string) => {
               @click="filter = 'Upcoming'"
               :class="[
                 'font-black uppercase text-xs',
-                filter === 'Upcoming' 
-                  ? 'bg-blue-600 text-white' 
+                filter === 'Upcoming'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-white text-blue-600 border-2 border-blue-600'
               ]"
             >
@@ -132,8 +133,8 @@ const getStatusColor = (status: string) => {
               @click="filter = 'Completed'"
               :class="[
                 'font-black uppercase text-xs',
-                filter === 'Completed' 
-                  ? 'bg-green-600 text-white' 
+                filter === 'Completed'
+                  ? 'bg-green-600 text-white'
                   : 'bg-white text-green-600 border-2 border-green-600'
               ]"
             >
@@ -143,8 +144,8 @@ const getStatusColor = (status: string) => {
               @click="filter = 'Cancelled'"
               :class="[
                 'font-black uppercase text-xs',
-                filter === 'Cancelled' 
-                  ? 'bg-red-600 text-white' 
+                filter === 'Cancelled'
+                  ? 'bg-red-600 text-white'
                   : 'bg-white text-red-600 border-2 border-red-600'
               ]"
             >

@@ -58,12 +58,11 @@ export const useUserStore = defineStore('user', () => {
     async function initializeUser(userId: string) {
         isLoading.value = true
         try {
-            const userIdNum = parseInt(userId, 10)
-            const userData = await userService.getUserById(userIdNum)
+            const userData = await userService.getUserById(userId)
             
             if (userData) {
                 profile.value = {
-                    userId: String(userData.id),
+                    userId: userData.id,
                     email: userData.email,
                     name: userData.fullName,
                     phone: userData.phoneNumber ?? '',
@@ -81,8 +80,6 @@ export const useUserStore = defineStore('user', () => {
     async function updateProfile(data: Partial<UserProfile>) {
         if (!profile.value) return
 
-        const userIdNum = parseInt(profile.value.userId, 10)
-        
         const nameParts = data.name?.split(' ') || []
         const firstName = nameParts[0] || ''
         const lastName = nameParts.slice(1).join(' ') || ''
@@ -95,7 +92,7 @@ export const useUserStore = defineStore('user', () => {
             gender: data.gender,
         }
 
-        const result = await userService.updateUser(userIdNum, updateData)
+        const result = await userService.updateUser(profile.value.userId, updateData)
         
         if (result && profile.value) {
             profile.value = {
