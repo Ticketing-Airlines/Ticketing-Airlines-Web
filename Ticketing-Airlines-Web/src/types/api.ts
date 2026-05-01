@@ -17,13 +17,31 @@ export function isApiError(error: unknown): error is AxiosError<ApiErrorResponse
 
 export function getApiErrorMessage(error: unknown): string {
   if (isApiError(error)) {
-    const data = error.response?.data
+    const data = error.response?.data as unknown
+    
+    // Check for string response first (like "Invalid credentials.")
+    if (typeof data === 'string' && data.trim()) {
+      return data
+    }
+    
+    // Then check for structured error response
     if (data && typeof data === 'object' && 'message' in data) {
       return (data as ApiErrorResponse).message
     }
+    
+    // Handle 401 based on endpoint context
     if (error.response?.status === 401) {
+      const url = error.config?.url || ''
+      
+      // Login endpoint: invalid credentials
+      if (url.includes('/auth/login')) {
+        return 'Invalid email or password. Please check your credentials and try again.'
+      }
+      
+      // Other endpoints: session expired
       return 'Session expired. Please log in again.'
     }
+    
     if (error.response?.status === 403) {
       return 'You do not have permission to perform this action.'
     }

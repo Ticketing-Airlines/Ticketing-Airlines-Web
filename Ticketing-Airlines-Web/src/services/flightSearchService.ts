@@ -1,24 +1,10 @@
 import type { 
   FlightSearchParams, 
-  FlightSearchResult, 
-  RoundTripResult, 
-  MultiCityResult, 
   FlightSearchResponse,
-  Airport
 } from '@/interfaces/interfaces'
-import { 
-  flightInstances, 
-  flightSchedules, 
-  aircrafts, 
-  airlines, 
-  fareBuckets 
-} from '@/data/mockData'
-import { airportService } from '@/services/airportService'
-
-function getAirports(): Airport[] {
-  const cached = airportService.getCachedAirports()
-  return cached ?? airportService.getFallbackAirports()
-}
+import api from '@/lib/axios'
+import type { BackendFlightSearchResponse } from '@/types/flightSearch'
+import { mapBackendFlightSearch } from '@/types/flightSearch'
 
 export class FlightSearchService {
   private static instance: FlightSearchService
@@ -30,241 +16,75 @@ export class FlightSearchService {
     return FlightSearchService.instance
   }
 
-  public searchFlights(params: FlightSearchParams): FlightSearchResponse {
+  public async searchFlights(params: FlightSearchParams): Promise<FlightSearchResponse> {
     const { from, to, departureDate, returnDate, passengers, tripType } = params
 
     if (!departureDate) {
-      return {
-        results: [],
-        totalResults: 0,
-        searchParams: params
-      }
+      throw new Error('Please select a departure date')
     }
 
-    const searchDate = departureDate.toISOString().split('T')[0]
-    const returnSearchDate = returnDate ? returnDate.toISOString().split('T')[0] : null
-
-    // Find origin and destination airports
-    const airports = getAirports()
-    const originAirport = airports.find(airport => airport.iataCode === from)
-    const destinationAirport = airports.find(airport => airport.iataCode === to)
-
-    if (!originAirport || !destinationAirport) {
-      return {
-        results: [],
-        totalResults: 0,
-        searchParams: params
-      }
+    if (!from || !to) {
+      throw new Error('Please select departure and destination airports')
     }
 
-    switch (tripType) {
-      case 'one-way':
-        return this.searchOneWay(originAirport, destinationAirport, searchDate, passengers)
-      case 'round-trip':
-        return this.searchRoundTrip(originAirport, destinationAirport, searchDate, returnSearchDate, passengers)
-      case 'multi-city':
-        return this.searchMultiCity(originAirport, destinationAirport, searchDate, passengers)
-      default:
-        return {
-          results: [],
-          totalResults: 0,
-          searchParams: params
-        }
-    }
-  }
-
-  private searchOneWay(
-    origin: Airport, 
-    destination: Airport, 
-    date: string, 
-    passengers: number
-  ): FlightSearchResponse {
-    const results = this.findFlights(origin, destination, date, passengers)
-    
-    return {
-      results,
-      totalResults: results.length,
-      searchParams: {
-        from: origin.iataCode,
-        to: destination.iataCode,
-        departureDate: new Date(date),
-        returnDate: null,
-        passengers,
-        tripType: 'one-way'
-      }
-    }
-  }
-
-  private searchRoundTrip(
-    origin: Airport, 
-    destination: Airport, 
-    departureDate: string, 
-    returnDate: string | null, 
-    passengers: number
-  ): FlightSearchResponse {
-    const outboundFlights = this.findFlights(origin, destination, departureDate, passengers)
-    
-    if (!returnDate) {
-      return {
-        results: outboundFlights,
-        totalResults: outboundFlights.length,
-        searchParams: {
-          from: origin.iataCode,
-          to: destination.iataCode,
-          departureDate: new Date(departureDate),
-          returnDate: null,
-          passengers,
-          tripType: 'round-trip'
-        }
-      }
+    if (tripType === 'round-trip' && !returnDate) {
+      throw new Error('Please select a return date for round-trip flights')
     }
 
-    const returnFlights = this.findFlights(destination, origin, returnDate, passengers)
-    
-    // Create round trip combinations
-    const roundTripResults: RoundTripResult[] = []
-    
-    outboundFlights.forEach(outbound => {
-      returnFlights.forEach(returnFlight => {
-        roundTripResults.push({
-          outbound,
-          return: returnFlight,
-          totalPrice: outbound.price + returnFlight.price,
-          currency: outbound.currency
-        })
-      })
-    })
-
-    return {
-      results: roundTripResults,
-      totalResults: roundTripResults.length,
-      searchParams: {
-        from: origin.iataCode,
-        to: destination.iataCode,
-        departureDate: new Date(departureDate),
-        returnDate: new Date(returnDate),
-        passengers,
-        tripType: 'round-trip'
-      }
+    // Format dates in local time (YYYY-MM-DD)
+    const formatDateLocal = (date: Date): string => {
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const d = String(date.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
     }
-  }
 
-  private searchMultiCity(
-    origin: Airport, 
-    destination: Airport, 
-    date: string, 
-    passengers: number
-  ): FlightSearchResponse {
-    // For multi-city, we'll simulate a complex itinerary
-    const outboundFlights = this.findFlights(origin, destination, date, passengers)
-    
-    // Add a stopover flight (simplified multi-city)
-    const stopoverDate = new Date(date)
-    stopoverDate.setDate(stopoverDate.getDate() + 2)
-    const stopoverFlights = this.findFlights(destination, origin, stopoverDate.toISOString().split('T')[0], passengers)
-    
-    const multiCityResults: MultiCityResult[] = []
-    
-    outboundFlights.forEach(outbound => {
-      stopoverFlights.forEach(returnFlight => {
-        multiCityResults.push({
-          segments: [outbound, returnFlight],
-          totalPrice: outbound.price + returnFlight.price,
-          currency: outbound.currency
-        })
-      })
-    })
-
-    return {
-      results: multiCityResults,
-      totalResults: multiCityResults.length,
-      searchParams: {
-        from: origin.iataCode,
-        to: destination.iataCode,
-        departureDate: new Date(date),
-        returnDate: null,
-        passengers,
-        tripType: 'multi-city'
-      }
+    const request = {
+      from,
+      to,
+      departureDate: formatDateLocal(departureDate),
+      returnDate: returnDate ? formatDateLocal(returnDate) : null,
+      passengers,
+      tripType,
     }
-  }
 
-  private findFlights(
-    origin: Airport, 
-    destination: Airport, 
-    date: string, 
-    passengers: number
-  ): FlightSearchResult[] {
-    const results: FlightSearchResult[] = []
-
-    // Find flight schedules for this route
-    const schedules = flightSchedules.filter(schedule => 
-      schedule.originAirportId === origin.airportId && 
-      schedule.destinationAirportId === destination.airportId
-    )
-
-    // Find flight instances for the given date
-    const instances = flightInstances.filter(instance => 
-      instance.flightDate === date && 
-      schedules.some(schedule => schedule.flightScheduleId === instance.flightScheduleId)
-    )
-
-    instances.forEach(instance => {
-      const schedule = schedules.find(s => s.flightScheduleId === instance.flightScheduleId)!
-      const aircraft = aircrafts.find(a => a.aircraftId === schedule.aircraftId)!
-      const airline = airlines.find(a => a.airlineId === schedule.operatingAirlineId)!
+    try {
+      const response = await api.post<BackendFlightSearchResponse>('/api/flights/search', request)
       
-      // Find available fare buckets
-      const availableFares = fareBuckets.filter(fare => 
-        fare.flightInstanceId === instance.flightInstanceId && 
-        (fare.total - fare.held - fare.sold) >= passengers
-      )
+      if (!response.data.success) {
+        throw new Error('Flight search failed. Please try again.')
+      }
 
-      availableFares.forEach(fare => {
-        const departureTime = this.formatTime(schedule.stdLocal)
-        const arrivalTime = this.formatTime(schedule.staLocal)
-        const duration = this.calculateDuration(schedule.stdLocal, schedule.staLocal)
+      const result = mapBackendFlightSearch(response.data)
+      
+      if (result.totalResults === 0) {
+        throw new Error('No flights found for your search. Please try different dates or destinations.')
+      }
 
-        results.push({
-          flightInstanceId: instance.flightInstanceId,
-          flightNumber: schedule.flightNumber,
-          originAirport: origin,
-          destinationAirport: destination,
-          departureTime,
-          arrivalTime,
-          duration,
-          price: fare.price,
-          currency: fare.currency,
-          fareCode: fare.code,
-          availableSeats: fare.total - fare.held - fare.sold,
-          aircraft,
-          airline
-        })
-      })
-    })
-
-    // Sort by price (lowest first)
-    return results.sort((a, b) => a.price - b.price)
-  }
-
-  private formatTime(timeString: string): string {
-    return timeString
-  }
-
-  private calculateDuration(departure: string, arrival: string): string {
-    const depTime = new Date(`2000-01-01T${departure}:00`)
-    const arrTime = new Date(`2000-01-01T${arrival}:00`)
-    
-    // Handle overnight flights
-    if (arrTime < depTime) {
-      arrTime.setDate(arrTime.getDate() + 1)
+      return result
+    } catch (error: unknown) {
+      console.error('Flight search error:', error)
+      
+      if (error instanceof Error) {
+        throw error
+      }
+      
+      const axiosError = error as { response?: { data?: { message?: string }; status?: number } }
+      
+      if (axiosError.response?.status === 404) {
+        throw new Error('No flights found for this route. Please try a different destination.')
+      }
+      
+      if (axiosError.response?.status === 400) {
+        throw new Error(axiosError.response.data?.message || 'Invalid search parameters. Please check your inputs.')
+      }
+      
+      if (axiosError.response?.status === 500) {
+        throw new Error('Server error. Please try again later.')
+      }
+      
+      throw new Error('Unable to search flights. Please check your connection and try again.')
     }
-    
-    const diffMs = arrTime.getTime() - depTime.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    
-    return `${diffHours}h ${diffMinutes}m`
   }
 }
 

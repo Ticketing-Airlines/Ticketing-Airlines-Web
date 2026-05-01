@@ -1,16 +1,9 @@
 import type { User } from '@/interfaces/interfaces'
-
-// ============================================================
-// Backend response types — mirror ASP.NET DTOs exactly
-// ============================================================
-
-// POST /api/auth/login
 export interface AuthLoginRequest {
   email: string
   password: string
 }
 
-// Response from AuthController login
 export interface AuthLoginResponse {
   userId: string
   email: string
@@ -23,7 +16,12 @@ export interface AuthLoginResponse {
   name: string
 }
 
-// POST /api/users/register
+export interface AlternativeLoginResponse extends Omit<AuthLoginResponse, 'sessionToken'> {
+  token: string | null
+}
+
+export type LoginResponse = AuthLoginResponse | AlternativeLoginResponse
+
 export interface RegisterRequest {
   firstName: string
   middleName: string | null
@@ -34,25 +32,19 @@ export interface RegisterRequest {
   dateOfBirth: string
   gender: string | null
 }
-
-// Response from UsersController register
 export interface RegisterResponse {
   id: string
   message: string
 }
-
-// POST /api/auth/forgot-password
 export interface ForgotPasswordRequest {
   email: string
 }
 
-// POST /api/auth/reset-password
 export interface ResetPasswordRequest {
   resetToken: string
   newPassword: string
 }
 
-// GET /api/users/{id}
 export interface UserResponse {
   id: string
   fullName: string
@@ -64,17 +56,13 @@ export interface UserResponse {
   createdAt: string
 }
 
-// ============================================================
-// Frontend auth result types — what the store receives
-// ============================================================
-
 export interface AuthResult {
   user: User
   token: string
   role: string
 }
 
-export function mapAuthLoginToUser(auth: AuthLoginResponse): User {
+export function mapAuthLoginToUser(auth: LoginResponse): User {
   const nameFromParts = [auth.firstName, auth.middleName, auth.lastName]
     .filter(n => n && n.trim() !== '')
     .join(' ')

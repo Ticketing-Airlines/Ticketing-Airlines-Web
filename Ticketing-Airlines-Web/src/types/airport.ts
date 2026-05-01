@@ -48,7 +48,10 @@ const COUNTRY_TO_ISO: Record<string, string> = {
   Brunei: 'BN',
 }
 
-export function countryToIso(country: string): string {
+export function countryToIso(country: string | undefined | null): string {
+  if (!country) {
+    return 'XX' // Default fallback for missing country
+  }
   return COUNTRY_TO_ISO[country] ?? country.substring(0, 2).toUpperCase()
 }
 

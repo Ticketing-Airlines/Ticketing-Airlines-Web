@@ -24,7 +24,9 @@ import {
 import Autoplay from 'embla-carousel-autoplay'
 
 import type { DestinationCard, Airport } from '@/interfaces/interfaces'
-import { destinationCards, airports } from '@/data/mockData'
+import { destinationCards } from '@/data/mockData'
+import { airportService } from '@/services/airportService'
+import { useToast } from '@/composables/useToast'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import LoadingScreen from '@/components/LoadingScreen.vue'
@@ -44,9 +46,15 @@ import hongkongImg from '@/assets/hongkong.webp'
 const router = useRouter()
 const flightStore = useFlightStore()
 const { searchParams } = storeToRefs(flightStore)
+const { showToast } = useToast()
 
 // Loading state
 const isLoading = ref(true)
+
+// Airports state
+const airports = ref<Airport[]>([])
+const isLoadingAirports = ref(false)
+const airportError = ref<string | null>(null)
 
 // Helper function to format DateValue
 const formatDate = (date: DateValue | undefined | null): string => {
@@ -60,7 +68,7 @@ const formatDate = (date: DateValue | undefined | null): string => {
 
 // Helper function to get airport by code
 const getAirportByCode = (code: string): Airport | undefined => {
-  return airports.find(airport => airport.iataCode === code)
+  return airports.value.find(airport => airport.iataCode === code)
 }
 
 // Computed properties
@@ -117,7 +125,7 @@ const searchFlights = () => {
 }
 
 // Trip type selection
-const selectTripType = (type: 'round-trip' | 'one-way' | 'multi-city') => {
+const selectTripType = (type: 'round-trip' | 'one-way') => {
   searchParams.value.tripType = type
 }
 
@@ -140,8 +148,26 @@ const bookDestination = (destination: DestinationCard) => {
 }
 
 // Initialize loading on component mount
-onMounted(() => {
+onMounted(async () => {
   isLoading.value = true
+  
+  // Load airports from backend
+  isLoadingAirports.value = true
+  airportError.value = null
+  
+  try {
+    const result = await airportService.getAirports()
+    airports.value = result.data
+  } catch (error) {
+    console.error('Failed to load airports:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load airports'
+    airportError.value = errorMessage
+    showToast(errorMessage, 'error')
+    // Keep airports empty - user will see the error
+    airports.value = []
+  } finally {
+    isLoadingAirports.value = false
+  }
 })
 </script>
 
@@ -390,17 +416,6 @@ onMounted(() => {
                   ]"
                 >
                   One Way
-                </button>
-                <button
-                  @click="selectTripType('multi-city')"
-                  :class="[
-                    'px-4 lg:px-6 py-2 lg:py-2.5 font-black text-xs lg:text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
-                    searchParams.tripType === 'multi-city'
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
-                  ]"
-                >
-                  Multi-city
                 </button>
               </div>
 

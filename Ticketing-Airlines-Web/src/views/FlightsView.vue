@@ -131,7 +131,7 @@ onMounted(() => {
       departureDate: new Date(departure as string),
       returnDate: returnDate ? new Date(returnDate as string) : null,
       passengers: parseInt(passengers as string || '1'),
-      tripType: (type as 'one-way' | 'round-trip' | 'multi-city') || 'round-trip'
+      tripType: (type as 'one-way' | 'round-trip') || 'round-trip'
     }
 
     flightStore.setSearchParams(params)
@@ -223,7 +223,7 @@ const toggleSort = () => {
         <!-- Trip Type Selection -->
         <div class="flex flex-wrap gap-2 mb-3">
           <button
-            v-for="type in ['round-trip', 'one-way', 'multi-city']"
+            v-for="type in ['round-trip', 'one-way']"
             :key="type"
             @click="searchParams.tripType = type as any"
             :class="[
@@ -567,52 +567,6 @@ const toggleSort = () => {
                         <div class="text-center">
                           <div class="text-base font-black text-gray-900">{{ trip.return.arrivalTime }}</div>
                           <div class="text-xs text-gray-600 font-bold">{{ trip.return.destinationAirport.iataCode }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Price and Actions -->
-                  <div class="text-center lg:text-right w-full lg:w-auto">
-                    <div class="text-2xl font-black text-gray-900 mb-1">{{ formatPrice(trip.totalPrice) }}</div>
-                    <div class="text-xs text-gray-600 font-bold mb-3">Total Price</div>
-                    <Button
-                      @click="selectFlight(trip)"
-                      class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-2 text-xs"
-                    >
-                      Select Trip
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <!-- Multi-city Results -->
-          <div v-else-if="searchParams.tripType === 'multi-city'">
-            <Card
-              v-for="trip in filteredResults as MultiCityResult[]"
-              :key="trip.segments.map(s => s.flightInstanceId).join('-')"
-              class="border-4 border-gray-900 rounded-none hover:shadow-lg transition-all duration-300"
-            >
-              <CardContent class="p-3">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                  <!-- Segments -->
-                  <div class="flex-1 w-full">
-                    <h4 class="text-sm font-black text-gray-900 mb-3 uppercase tracking-tight">Multi-City Trip</h4>
-                    <div class="space-y-3">
-                      <div
-                        v-for="(segment, index) in trip.segments"
-                        :key="segment.flightInstanceId"
-                        class="flex items-center gap-3"
-                      >
-                        <div class="w-7 h-7 bg-blue-600 flex items-center justify-center text-white font-black text-xs flex-shrink-0">
-                          {{ index + 1 }}
-                        </div>
-                        <div class="flex-1">
-                          <div class="font-black text-gray-900 text-sm">{{ segment.flightNumber }}</div>
-                          <div class="text-xs text-gray-600 font-bold">{{ segment.originAirport.iataCode }} → {{ segment.destinationAirport.iataCode }}</div>
-                          <div class="text-xs text-gray-500">{{ segment.departureTime }} - {{ segment.arrivalTime }} ({{ segment.duration }})</div>
                         </div>
                       </div>
                     </div>

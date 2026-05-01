@@ -1,10 +1,11 @@
 import api from '@/lib/axios'
 import type {
   AuthLoginRequest,
-  AuthLoginResponse,
+  LoginResponse,
   RegisterRequest,
   RegisterResponse,
   ForgotPasswordRequest,
+  ResetPasswordRequest,
   UserResponse,
   AuthResult,
 } from '@/types/auth'
@@ -12,12 +13,13 @@ import { mapAuthLoginToUser, mapUserResponseToUser } from '@/types/auth'
 
 async function login(email: string, password: string): Promise<AuthResult> {
   const request: AuthLoginRequest = { email, password }
-  const response = await api.post<AuthLoginResponse>('/api/auth/login', request)
+  const response = await api.post<LoginResponse>('/api/auth/login', request)
   const auth = response.data
 
   console.log('Login response from backend:', auth)
 
-  const token = auth.sessionToken ?? ''
+  // Defensive token extraction - handle both sessionToken and token fields
+  const token = ('sessionToken' in auth ? auth.sessionToken : auth.token) ?? ''
   const role = auth.role ?? 'Customer'
   const userId = String(auth.userId)
 
@@ -71,6 +73,17 @@ async function forgotPassword(email: string): Promise<boolean> {
   }
 }
 
+async function resetPassword(resetToken: string, newPassword: string): Promise<boolean> {
+  try {
+    const request: ResetPasswordRequest = { resetToken, newPassword }
+    await api.post('/api/auth/reset-password', request)
+    return true
+  } catch (error) {
+    console.error('Reset password error:', error)
+    return false
+  }
+}
+
 async function getCurrentUser(userId: string): Promise<AuthResult | null> {
   try {
     const response = await api.get<UserResponse>(`/api/users/${userId}`)
@@ -104,6 +117,7 @@ export const authService = {
   login,
   register,
   forgotPassword,
+  resetPassword,
   getCurrentUser,
   logout,
 }

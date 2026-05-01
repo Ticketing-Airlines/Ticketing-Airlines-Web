@@ -1,4 +1,11 @@
 // Example mock dataset, now importing interfaces from a separate file
+//
+// INTEGRATION STATUS:
+// ✅ KEEP: destinationCards, features, faqItems - Static marketing content
+// ✅ KEEP: aircraftSeatConfigs - Visual seat map configuration
+// ⚠️  DEPRECATED: flightInstances, flightSchedules, fareBuckets - Now using backend API
+//     These are kept only as fallback when VITE_ENABLE_MOCK_FALLBACK=true
+// ⚠️  AIRPORTS: airports array kept as fallback, but airportService.ts fetches from backend
 
 import boracayImg from '@/assets/boracay.webp'
 import cebuImg from '@/assets/cebu.webp'
@@ -189,7 +196,13 @@ export const seatBlueprints: SeatBlueprint[] = [
   )
 ]
 
-/** FLIGHT SCHEDULES (templates) */
+/** 
+ * FLIGHT SCHEDULES (templates)
+ * 
+ * @deprecated This mock data is being replaced by backend API integration.
+ * Only used as fallback when VITE_ENABLE_MOCK_FALLBACK=true.
+ * See: flightSearchService.ts for backend integration.
+ */
 export const flightSchedules: FlightSchedule[] = [
   // Manila to Cebu
   { flightScheduleId: 101, flightNumber: 'SS101', originAirportId: 1, destinationAirportId: 2, aircraftId: 1, operatingAirlineId: 1, stdLocal: '08:00', staLocal: '09:15', published: true },
@@ -226,7 +239,13 @@ export const flightSchedules: FlightSchedule[] = [
   { flightScheduleId: 1101, flightNumber: 'SS1101', originAirportId: 22, destinationAirportId: 1, aircraftId: 2, operatingAirlineId: 1, stdLocal: '07:20', staLocal: '10:45', published: true }
 ]
 
-/** FLIGHT INSTANCES (dated flights) */
+/** 
+ * FLIGHT INSTANCES (dated flights)
+ * 
+ * @deprecated This mock data is being replaced by backend API integration.
+ * Only used as fallback when VITE_ENABLE_MOCK_FALLBACK=true.
+ * See: flightSearchService.ts for backend integration.
+ */
 export const flightInstances: FlightInstance[] = [
   // Manila to Cebu routes
   { flightInstanceId: uuid('fi-101'), flightScheduleId: 101, flightDate: '2025-12-01', departureUtc: '2025-12-01T00:00:00Z', arrivalUtc: '2025-12-01T01:15:00Z', status: 'Scheduled' },
@@ -318,7 +337,13 @@ export const flightSeats: FlightSeat[] = [
   { flightSeatId: uuid('fs'), flightInstanceId: flightInstances[0].flightInstanceId, seatNumber: '1C', cabinClass: 'Economy', status: 'Available' },
 ]
 
-/** FARE BUCKETS (inventory-aware) - Comprehensive pricing for all flights */
+/** 
+ * FARE BUCKETS (inventory-aware) - Comprehensive pricing for all flights
+ * 
+ * @deprecated This mock data is being replaced by backend API integration.
+ * Only used as fallback when VITE_ENABLE_MOCK_FALLBACK=true.
+ * See: flightSearchService.ts for backend integration.
+ */
 export const fareBuckets: FareBucket[] = [
   // Generate fare buckets for all flight instances
   ...flightInstances.flatMap(flight => [
