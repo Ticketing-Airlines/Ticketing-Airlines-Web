@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -8,8 +8,6 @@ import {
   CheckCircle,
   Plane,
   Calendar,
-  MapPin,
-  ArrowRight,
   Download,
   Mail,
   ArrowLeft
@@ -17,10 +15,15 @@ import {
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { useBookingStore } from '@/stores/bookingStore'
+import type { 
+  FlightSearchResult, 
+  RoundTripResult, 
+  MultiCityResult 
+} from '@/interfaces/interfaces'
 
 const router = useRouter()
 const bookingStore = useBookingStore()
-const { bookingReference, selectedFlight, passengers, totalPrice, baseFare, taxes, fees } = storeToRefs(bookingStore)
+const { bookingPnr, selectedFlight, passengers, totalPrice, baseFare, taxes, fees } = storeToRefs(bookingStore)
 
 const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
@@ -41,24 +44,29 @@ const goHome = () => {
   router.push('/')
 }
 
-const getFlightProperty = (property: string) => {
+const getFlightProperty = (property: string): string | number | Record<string, unknown> => {
   if (!selectedFlight.value) return ''
   
-  if ('price' in selectedFlight.value) {
+  const flight = selectedFlight.value as FlightSearchResult | RoundTripResult | MultiCityResult
+  
+  if ('price' in flight) {
     // Single flight result
-    return (selectedFlight.value as any)[property]
-  } else if ('outbound' in selectedFlight.value) {
+    const singleFlight = flight as FlightSearchResult
+    return (singleFlight as Record<string, unknown>)[property] as string | number | Record<string, unknown>
+  } else if ('outbound' in flight) {
     // Round trip result
-    return (selectedFlight.value.outbound as any)[property]
-  } else if ('segments' in selectedFlight.value) {
+    const roundTrip = flight as RoundTripResult
+    return (roundTrip.outbound as Record<string, unknown>)[property] as string | number | Record<string, unknown>
+  } else if ('segments' in flight) {
     // Multi-city result
-    return (selectedFlight.value.segments[0] as any)[property]
+    const multiCity = flight as MultiCityResult
+    return (multiCity.segments[0] as Record<string, unknown>)[property] as string | number | Record<string, unknown>
   }
   return ''
 }
 
 onMounted(() => {
-  if (!bookingReference.value) {
+  if (!bookingPnr.value) {
     // Redirect to home if no booking reference (page reload or direct access)
     router.push('/')
   }
@@ -87,7 +95,7 @@ onMounted(() => {
         <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-4 border-white/20">
           <h2 class="text-2xl font-black text-white mb-4">Booking Reference</h2>
           <div class="text-4xl font-black text-white tracking-wider">
-            {{ bookingReference }}
+            {{ bookingPnr }}
           </div>
           <p class="text-green-100 font-bold mt-2">Save this reference for your records</p>
         </div>

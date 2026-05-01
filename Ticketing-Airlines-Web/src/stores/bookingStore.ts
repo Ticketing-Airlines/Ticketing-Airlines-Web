@@ -6,72 +6,90 @@ import type {
     MultiCityResult,
     FareBundleType
 } from '@/interfaces/interfaces'
+import type { BookingPassenger } from '@/types/booking'
+import type { FlightAddOn } from '@/types/flightAddOn'
+import type { AddOnPrice } from '@/types/addOnPrice'
+import type { PaymentMethod } from '@/types/paymentMethod'
 import { bookings as mockBookings } from '@/data/mockData'
-import { getBundleByType } from '@/data/fareBundles'
-
-export interface Passenger {
-    id: number
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    nationality: string
-    passportNumber: string
-    dateOfBirth: string
-    passengerType: 'Adult' | 'Child' | 'Infant'
-}
 
 export interface ContactInfo {
     email: string
     phone: string
-    address: string
-    city: string
-    postalCode: string
-    country: string
 }
 
-export interface PaymentInfo {
-    method: string
-    cardNumber: string
-    expiryDate: string
-    cvv: string
-    cardholderName: string
+// Legacy types for retrieve booking feature (mock data)
+interface LegacyBooking {
+    reference: string
+    status: string
+    bookingDate: string
+    destination?: string
+    date?: string
+    amount?: number
+    outbound?: {
+        from: string
+        to: string
+        flightNumber: string
+        date: string
+        time: string
+        duration: string
+    }
+    passengers?: Array<{
+        id: number
+        name: string
+        type: string
+        seat: string
+        meal: string
+    }>
+    pricing?: {
+        baseFare: number
+        taxes: number
+        addOns: number
+        total: number
+    }
 }
 
 export const useBookingStore = defineStore('booking', () => {
     // State
     const currentStep = ref(1)
     const selectedFlight = ref<FlightSearchResult | RoundTripResult | MultiCityResult | null>(null)
-    const passengers = ref<Passenger[]>([])
+    const passengers = ref<BookingPassenger[]>([])
     const contactInfo = ref<ContactInfo>({
         email: '',
-        phone: '',
-        address: '',
-        city: '',
-        postalCode: '',
-        country: 'Philippines'
+        phone: ''
     })
-    const paymentInfo = ref<PaymentInfo>({
-        method: '',
-        cardNumber: '',
-        expiryDate: '',
-        cvv: '',
-        cardholderName: ''
-    })
-    const bookingReference = ref<string>('')
+    const selectedPaymentMethod = ref<string>('')
+    const bookingPnr = ref<string>('')
+    const bookingId = ref<string>('')
     const isProcessing = ref(false)
-    const selectedBundle = ref<FareBundleType>('SKYPLUS') // Default to SkyPlus (recommended)
-
-    // Add-ons State
-    const addOns = ref({
-        baggage: [] as { passengerId: number, weight: number, price: number }[],
-        meals: [] as { passengerId: number, mealId: string, price: number }[],
-        seats: [] as { passengerId: number, seatNumber: string, price: number }[]
+    const error = ref<string | null>(null)
+    const selectedBundle = ref<FareBundleType>('SKYPLUS')
+    
+    // Add-ons data
+    const availableAddOns = ref<FlightAddOn[]>([])
+    const addOnPrices = ref<AddOnPrice[]>([])
+    const paymentMethods = ref<PaymentMethod[]>([])
+    
+    // Flight IDs extracted from selected flight
+    const flightIds = computed(() => {
+        if (!selectedFlight.value) return []
+        
+        if ('flightInstanceId' in selectedFlight.value) {
+            // One-way flight
+            return [parseInt(selectedFlight.value.flightInstanceId)]
+        } else if ('outbound' in selectedFlight.value) {
+            // Round-trip
+            const ids = [parseInt(selectedFlight.value.outbound.flightInstanceId)]
+            if (selectedFlight.value.return) {
+                ids.push(parseInt(selectedFlight.value.return.flightInstanceId))
+            }
+            return ids
+        }
+        return []
     })
 
-    // Manage Booking State
-    const retrievedBooking = ref<any>(null)
-    const userBookings = ref<any[]>([])
+    // Manage Booking State (for retrieve booking feature - legacy)
+    const retrievedBooking = ref<LegacyBooking | null>(null)
+    const userBookings = ref<LegacyBooking[]>([])
     const isSearchingBooking = ref(false)
     const bookingError = ref('')
 
@@ -79,28 +97,41 @@ export const useBookingStore = defineStore('booking', () => {
     const baseFare = computed(() => {
         if (!selectedFlight.value) return 0
 
-        let basePrice = 0
         if ('price' in selectedFlight.value) {
-            basePrice = selectedFlight.value.price
+            return selectedFlight.value.price
         } else if ('totalPrice' in selectedFlight.value) {
-            basePrice = selectedFlight.value.totalPrice
+            return selectedFlight.value.totalPrice
         }
+        return 0
+    })
 
-        // Apply bundle price modifier
-        const bundle = getBundleByType(selectedBundle.value)
-        return bundle ? Math.round(basePrice * bundle.priceModifier) : basePrice
+    const bundleIncrement = computed(() => {
+        // Bundle increment will be added per passenger
+        // This is a placeholder - actual value comes from FlightBundle API
+        const increments: Record<FareBundleType, number> = {
+            'SKYLITE': 0,
+            'SKYPLUS': 600,
+            'SKYFLEX': 1200
+        }
+        return increments[selectedBundle.value] || 0
     })
 
     const taxes = computed(() => Math.round(baseFare.value * 0.12))
     const fees = computed(() => 500)
 
-    const totalPrice = computed(() => {
-        const addOnsTotal =
-            addOns.value.baggage.reduce((sum, item) => sum + item.price, 0) +
-            addOns.value.meals.reduce((sum, item) => sum + item.price, 0) +
-            addOns.value.seats.reduce((sum, item) => sum + item.price, 0)
+    const addOnsTotal = computed(() => {
+        return passengers.value.reduce((total, passenger) => {
+            return total + passenger.selectedAddOns.reduce((sum, addOnPriceId) => {
+                const addOnPrice = addOnPrices.value.find(ap => ap.id === addOnPriceId)
+                return sum + (addOnPrice?.priceAmount || 0)
+            }, 0)
+        }, 0)
+    })
 
-        return ((baseFare.value + taxes.value + fees.value) * passengers.value.length) + addOnsTotal
+    const totalPrice = computed(() => {
+        const farePerPassenger = baseFare.value + bundleIncrement.value
+        const passengersTotal = farePerPassenger * passengers.value.length
+        return passengersTotal + taxes.value + fees.value + addOnsTotal.value
     })
 
     // Actions
@@ -113,21 +144,22 @@ export const useBookingStore = defineStore('booking', () => {
         selectedFlight.value = flight
         selectedBundle.value = bundle
 
-        // Initialize passengers
+        // Initialize passengers with backend-aligned structure
         passengers.value = Array.from({ length: passengerCount }, (_, index) => ({
-            id: index + 1,
+            id: `passenger-${index + 1}`,
             firstName: '',
             lastName: '',
-            email: '',
-            phone: '',
+            middleName: '',
+            dateOfBirth: null,
+            gender: 'M' as 'M' | 'F' | 'O',
+            passengerType: 'ADT' as 'ADT' | 'CHD' | 'SENIOR' | 'INFANT',
             nationality: 'PH',
-            passportNumber: '',
-            dateOfBirth: '',
-            passengerType: 'Adult'
+            flightSeatId: undefined,
+            selectedAddOns: []
         }))
     }
 
-    function updatePassenger(index: number, data: Partial<Passenger>) {
+    function updatePassenger(index: number, data: Partial<BookingPassenger>) {
         if (passengers.value[index]) {
             passengers.value[index] = { ...passengers.value[index], ...data }
         }
@@ -137,46 +169,35 @@ export const useBookingStore = defineStore('booking', () => {
         contactInfo.value = { ...contactInfo.value, ...data }
     }
 
-    function setPaymentInfo(data: Partial<PaymentInfo>) {
-        paymentInfo.value = { ...paymentInfo.value, ...data }
+    function setPaymentMethod(method: string) {
+        selectedPaymentMethod.value = method
     }
 
     function setBundle(bundle: FareBundleType) {
         selectedBundle.value = bundle
     }
 
-    function updateBaggage(passengerId: number, weight: number, price: number) {
-        const index = addOns.value.baggage.findIndex(b => b.passengerId === passengerId)
-        if (index !== -1) {
-            if (weight === 0) {
-                addOns.value.baggage.splice(index, 1)
-            } else {
-                addOns.value.baggage[index] = { passengerId, weight, price }
-            }
-        } else if (weight > 0) {
-            addOns.value.baggage.push({ passengerId, weight, price })
-        }
+    function setAvailableAddOns(addOns: FlightAddOn[]) {
+        availableAddOns.value = addOns
     }
 
-    function updateMeal(passengerId: number, mealId: string, price: number) {
-        const index = addOns.value.meals.findIndex(m => m.passengerId === passengerId)
-        if (index !== -1) {
-            if (!mealId) {
-                addOns.value.meals.splice(index, 1)
-            } else {
-                addOns.value.meals[index] = { passengerId, mealId, price }
-            }
-        } else if (mealId) {
-            addOns.value.meals.push({ passengerId, mealId, price })
-        }
+    function setAddOnPrices(prices: AddOnPrice[]) {
+        addOnPrices.value = prices
     }
 
-    function selectSeat(passengerId: number, seatNumber: string, price: number) {
-        const index = addOns.value.seats.findIndex(s => s.passengerId === passengerId)
-        if (index !== -1) {
-            addOns.value.seats[index] = { passengerId, seatNumber, price }
+    function setPaymentMethods(methods: PaymentMethod[]) {
+        paymentMethods.value = methods
+    }
+
+    function toggleAddOnForPassenger(passengerIndex: number, addOnPriceId: number) {
+        const passenger = passengers.value[passengerIndex]
+        if (!passenger) return
+
+        const index = passenger.selectedAddOns.indexOf(addOnPriceId)
+        if (index > -1) {
+            passenger.selectedAddOns.splice(index, 1)
         } else {
-            addOns.value.seats.push({ passengerId, seatNumber, price })
+            passenger.selectedAddOns.push(addOnPriceId)
         }
     }
 
@@ -184,27 +205,17 @@ export const useBookingStore = defineStore('booking', () => {
         currentStep.value = step
     }
 
-    async function processPayment() {
-        isProcessing.value = true
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000))
+    function setBookingResult(pnr: string, id: string) {
+        bookingPnr.value = pnr
+        bookingId.value = id
+    }
 
-            // Generate random booking reference
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-            let result = ''
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length))
-            }
-            bookingReference.value = result
+    function setError(errorMessage: string | null) {
+        error.value = errorMessage
+    }
 
-            return true
-        } catch (error) {
-            console.error('Payment processing failed:', error)
-            return false
-        } finally {
-            isProcessing.value = false
-        }
+    function setProcessing(processing: boolean) {
+        isProcessing.value = processing
     }
 
     function resetBooking() {
@@ -213,43 +224,33 @@ export const useBookingStore = defineStore('booking', () => {
         passengers.value = []
         contactInfo.value = {
             email: '',
-            phone: '',
-            address: '',
-            city: '',
-            postalCode: '',
-            country: 'Philippines'
+            phone: ''
         }
-        paymentInfo.value = {
-            method: '',
-            cardNumber: '',
-            expiryDate: '',
-            cvv: '',
-            cardholderName: ''
-        }
-        bookingReference.value = ''
+        selectedPaymentMethod.value = ''
+        bookingPnr.value = ''
+        bookingId.value = ''
         isProcessing.value = false
+        error.value = null
         selectedBundle.value = 'SKYPLUS'
+        availableAddOns.value = []
+        addOnPrices.value = []
+        paymentMethods.value = []
     }
 
+    // Legacy functions for retrieve booking feature
     async function retrieveBooking(reference: string, lastName: string) {
         isSearchingBooking.value = true
         bookingError.value = ''
         try {
-            // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1500))
 
-            // Mock validation
             if (reference.length < 6 || lastName.length < 2) {
                 throw new Error('Invalid booking reference or last name')
             }
 
-            // Check against mock data first
             const foundMock = mockBookings.find(b => b.pnr === reference.toUpperCase())
 
             if (foundMock) {
-                // Construct a full booking object from mock data parts if needed, 
-                // or just return a standard mock structure for now to ensure UI works
-                // For simplicity in this phase, we'll return a rich object similar to the previous mock
                 retrievedBooking.value = {
                     reference: foundMock.pnr,
                     status: foundMock.status,
@@ -281,52 +282,12 @@ export const useBookingStore = defineStore('booking', () => {
                 return true
             }
 
-            // Fallback for testing specific PNRs not in mockData but used in manual tests
-            if (reference.toUpperCase() === 'TEST01') {
-                retrievedBooking.value = {
-                    reference: 'TEST01',
-                    status: 'Confirmed',
-                    bookingDate: 'January 15, 2024',
-                    outbound: {
-                        from: 'Manila (MNL)',
-                        to: 'Cebu (CEB)',
-                        flightNumber: '5J 561',
-                        date: 'February 15, 2024',
-                        time: '06:00 - 07:25',
-                        duration: '1h 25m'
-                    },
-                    return: {
-                        from: 'Cebu (CEB)',
-                        to: 'Manila (MNL)',
-                        flightNumber: '5J 562',
-                        date: 'February 18, 2024',
-                        time: '08:00 - 09:25',
-                        duration: '1h 25m'
-                    },
-                    passengers: [
-                        {
-                            id: 1,
-                            name: 'John Doe',
-                            type: 'Adult',
-                            seat: '12A',
-                            meal: 'Standard'
-                        }
-                    ],
-                    pricing: {
-                        baseFare: 8500,
-                        taxes: 1200,
-                        addOns: 500,
-                        total: 10200
-                    }
-                }
-                return true
-            }
-
             throw new Error('Booking not found. Please check your details and try again.')
 
-        } catch (error: any) {
-            console.error('Failed to retrieve booking:', error)
-            bookingError.value = error.message || 'Booking not found'
+        } catch (error) {
+            const err = error as Error
+            console.error('Failed to retrieve booking:', err)
+            bookingError.value = err.message || 'Booking not found'
             retrievedBooking.value = null
             return false
         } finally {
@@ -339,20 +300,17 @@ export const useBookingStore = defineStore('booking', () => {
         try {
             await new Promise(resolve => setTimeout(resolve, 1000))
 
-            // Filter mock bookings by email
             const userMockBookings = mockBookings.filter(b => b.contactEmail === email)
 
-            // Transform to UI friendly format
             userBookings.value = userMockBookings.map(b => ({
                 reference: b.pnr,
                 status: b.status,
                 bookingDate: new Date(b.bookingDate).toLocaleDateString(),
-                destination: 'Cebu (CEB)', // Mock destination for list view
+                destination: 'Cebu (CEB)',
                 date: 'Oct 16, 2025',
                 amount: b.totalAmount
             }))
 
-            // Add some dummy data if empty for demo purposes
             if (userBookings.value.length === 0) {
                 userBookings.value = [
                     {
@@ -362,14 +320,6 @@ export const useBookingStore = defineStore('booking', () => {
                         destination: 'Boracay (MPH)',
                         date: 'Nov 20, 2025',
                         amount: 5499
-                    },
-                    {
-                        reference: 'PQR456',
-                        status: 'Completed',
-                        bookingDate: 'Sep 01, 2025',
-                        destination: 'Davao (DVO)',
-                        date: 'Sep 15, 2025',
-                        amount: 4199
                     }
                 ]
             }
@@ -382,35 +332,57 @@ export const useBookingStore = defineStore('booking', () => {
     }
 
     return {
+        // State
         currentStep,
         selectedFlight,
         passengers,
         contactInfo,
-        paymentInfo,
-        bookingReference,
+        selectedPaymentMethod,
+        bookingPnr,
+        bookingId,
         isProcessing,
+        error,
+        selectedBundle,
+        availableAddOns,
+        addOnPrices,
+        paymentMethods,
+        
+        // Computed
+        flightIds,
         baseFare,
+        bundleIncrement,
         taxes,
         fees,
+        addOnsTotal,
         totalPrice,
+        
+        // Legacy (for retrieve booking)
         retrievedBooking,
         userBookings,
         isSearchingBooking,
         bookingError,
+        
+        // Actions
         initBooking,
         updatePassenger,
         setContactInfo,
-        setPaymentInfo,
+        setPaymentMethod,
+        setBundle,
+        setAvailableAddOns,
+        setAddOnPrices,
+        setPaymentMethods,
+        toggleAddOnForPassenger,
         setStep,
-        processPayment,
+        setBookingResult,
+        setError,
+        setProcessing,
         resetBooking,
         retrieveBooking,
-        getUserBookings,
-        addOns,
-        updateBaggage,
-        updateMeal,
-        selectSeat,
-        selectedBundle,
-        setBundle
+        getUserBookings
+    }
+}, {
+    persist: {
+        key: 'booking-store',
+        storage: localStorage
     }
 })
