@@ -33,7 +33,27 @@ export const airportService = {
       return { data: filtered, total: filtered.length }
     } catch (error: unknown) {
       console.error('Failed to load airports:', error)
-      throw new Error('Unable to load airports. Please check your connection and try again.')
+      
+      const axiosError = error as { response?: { status?: number } }
+      
+      if (axiosError.response?.status === 404) {
+        throw new Error('Airport information is not available at this time.')
+      }
+      
+      if (axiosError.response?.status === 500) {
+        throw new Error('Our system is experiencing issues. Please refresh the page and try again.')
+      }
+      
+      if (axiosError.response?.status === 503) {
+        throw new Error('Our airport service is temporarily unavailable. Please try again in a few moments.')
+      }
+      
+      // Network or timeout errors
+      if (!axiosError.response) {
+        throw new Error('Unable to connect. Please check your internet connection and refresh the page.')
+      }
+      
+      throw new Error('Unable to load airport information. Please refresh the page and try again.')
     }
   },
 
