@@ -20,15 +20,23 @@ export class FlightSearchService {
     const { from, to, departureDate, returnDate, passengers, tripType } = params
 
     if (!departureDate) {
-      throw new Error('Please select a departure date')
+      throw new Error('Please select a departure date to continue your search.')
     }
 
     if (!from || !to) {
-      throw new Error('Please select departure and destination airports')
+      throw new Error('Please select both departure and destination airports.')
+    }
+
+    if (from === to) {
+      throw new Error('Departure and destination airports must be different.')
     }
 
     if (tripType === 'round-trip' && !returnDate) {
-      throw new Error('Please select a return date for round-trip flights')
+      throw new Error('Please select a return date for your round-trip journey.')
+    }
+
+    if (returnDate && departureDate && returnDate < departureDate) {
+      throw new Error('Return date must be after the departure date.')
     }
 
     // Format dates in local time (YYYY-MM-DD)
@@ -52,13 +60,13 @@ export class FlightSearchService {
       const response = await api.post<BackendFlightSearchResponse>('/api/flights/search', request)
       
       if (!response.data.success) {
-        throw new Error('Flight search failed. Please try again.')
+        throw new Error('We couldn\'t complete your search. Please try again in a moment.')
       }
 
       const result = mapBackendFlightSearch(response.data)
       
       if (result.totalResults === 0) {
-        throw new Error('No flights found for your search. Please try different dates or destinations.')
+        throw new Error('No flights found for your selected route and dates. Please try different options.')
       }
 
       return result
@@ -66,24 +74,37 @@ export class FlightSearchService {
       console.error('Flight search error:', error)
       
       if (error instanceof Error) {
-        throw error
+        // If it's already a user-friendly error message, throw it as is
+        if (error.message.includes('Please') || error.message.includes('No flights')) {
+          throw error
+        }
       }
       
       const axiosError = error as { response?: { data?: { message?: string }; status?: number } }
       
       if (axiosError.response?.status === 404) {
-        throw new Error('No flights found for this route. Please try a different destination.')
+        throw new Error('This route is not currently available. Please try a different destination.')
       }
       
       if (axiosError.response?.status === 400) {
-        throw new Error(axiosError.response.data?.message || 'Invalid search parameters. Please check your inputs.')
+        const backendMessage = axiosError.response.data?.message
+        throw new Error(backendMessage || 'Please check your search details and try again.')
       }
       
       if (axiosError.response?.status === 500) {
-        throw new Error('Server error. Please try again later.')
+        throw new Error('Our system is experiencing issues. Please try again in a few moments.')
+      }
+
+      if (axiosError.response?.status === 503) {
+        throw new Error('Our flight search service is temporarily unavailable. Please try again shortly.')
       }
       
-      throw new Error('Unable to search flights. Please check your connection and try again.')
+      // Network or timeout errors
+      if (!axiosError.response) {
+        throw new Error('Unable to connect to our servers. Please check your internet connection and try again.')
+      }
+      
+      throw new Error('Something went wrong while searching for flights. Please try again.')
     }
   }
 }

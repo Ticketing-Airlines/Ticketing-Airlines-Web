@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
   Check, 
-  X, 
-  Package, 
   Luggage,
   Armchair,
   RotateCcw,
   Wallet,
-  Star
+  Star,
+  Package,
+  Loader2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-vue-next'
-import type { FareBundleType, FareBundle } from '@/interfaces/interfaces'
-import { fareBundles } from '@/data/fareBundles'
+import type { FareBundleType } from '@/interfaces/interfaces'
+import type { FlightBundle } from '@/types/flightBundle'
+import { flightBundleService } from '@/services/flightBundleService'
 
 interface Props {
   basePrice: number
@@ -28,15 +31,42 @@ const emit = defineEmits<{
   (e: 'select', bundle: FareBundleType): void
 }>()
 
+// State
+const bundles = ref<FlightBundle[]>([])
+const isLoading = ref(true)
+const error = ref<string | null>(null)
+
+// Load bundles from API
+const loadBundles = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    bundles.value = await flightBundleService.getAll()
+    
+    if (bundles.value.length === 0) {
+      error.value = 'No fare bundles are currently available. Please contact support for assistance.'
+    }
+  } catch (err) {
+    console.error('Failed to load flight bundles:', err)
+    error.value = 'We couldn\'t load the fare options. Please try again or contact support if the problem persists.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadBundles()
+})
+
 const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
 }
 
-const getBundlePrice = (bundle: FareBundle) => {
-  return Math.round(props.basePrice * bundle.priceModifier)
+const getBundlePrice = (bundle: FlightBundle) => {
+  return props.basePrice + bundle.priceIncrement
 }
 
-const getBundleColor = (bundleType: FareBundleType) => {
+const getBundleColor = (bundleType: string) => {
   switch (bundleType) {
     case 'SKYLITE':
       return 'bg-white'
@@ -49,7 +79,7 @@ const getBundleColor = (bundleType: FareBundleType) => {
   }
 }
 
-const getBundleBorderColor = (bundleType: FareBundleType) => {
+const getBundleBorderColor = (bundleType: string) => {
   switch (bundleType) {
     case 'SKYPLUS':
       return 'border-blue-600'
@@ -60,7 +90,7 @@ const getBundleBorderColor = (bundleType: FareBundleType) => {
   }
 }
 
-const isRecommended = (bundleType: FareBundleType) => {
+const isRecommended = (bundleType: string) => {
   return bundleType === 'SKYPLUS'
 }
 </script>
@@ -72,11 +102,40 @@ const isRecommended = (bundleType: FareBundleType) => {
       <p class="text-gray-600 font-bold">Select the bundle that best fits your travel needs</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-16">
+      <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+        <Loader2 class="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+      <h4 class="text-lg font-black text-gray-900 mb-2">Loading Fare Options</h4>
+      <p class="text-sm text-gray-600 font-bold">Please wait while we prepare your fare bundles...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border-4 border-red-600 p-8 text-center">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <AlertCircle class="w-8 h-8 text-red-600" />
+      </div>
+      <h4 class="text-xl font-black text-gray-900 mb-3">Unable to Load Fare Options</h4>
+      <p class="text-sm text-gray-600 font-bold mb-6">{{ error }}</p>
+      <Button
+        @click="loadBundles"
+        class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-3 text-sm"
+      >
+        <RefreshCw class="w-4 h-4 mr-2" />
+        Try Again
+      </Button>
+      <p class="text-xs text-gray-500 font-bold mt-4">
+        If the problem continues, please contact our support team
+      </p>
+    </div>
+
+    <!-- Bundles Grid -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card
-        v-for="bundle in fareBundles"
-        :key="bundle.type"
-        @click="emit('select', bundle.type)"
+        v-for="bundle in bundles"
+        :key="bundle.id"
+        @click="emit('select', bundle.type as FareBundleType)"
         :class="[
           'border-4 rounded-none cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative',
           props.selectedBundle === bundle.type ? getBundleBorderColor(bundle.type) : 'border-gray-900',
@@ -194,7 +253,7 @@ const isRecommended = (bundleType: FareBundleType) => {
     </div>
 
     <!-- Feature Comparison Note -->
-    <div class="bg-gray-100 p-4 border-4 border-gray-900">
+    <div v-if="!isLoading && !error" class="bg-gray-100 p-4 border-4 border-gray-900">
       <p class="text-sm text-gray-700 font-bold text-center">
         <Check class="w-4 h-4 inline text-green-600" /> 
         All fares include complimentary snacks and beverages during your flight
