@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,7 +8,6 @@ import {
   Search,
   Plane,
   MapPin,
-  Luggage,
   Edit,
   X,
   Clock,
@@ -22,9 +21,13 @@ import {
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import ModifyBookingModal from '@/components/booking/ModifyBookingModal.vue'
+import CancelBookingModal from '@/components/booking/CancelBookingModal.vue'
 import { useBookingStore } from '@/stores/bookingStore'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { useToast } from '@/composables/useToast'
+import { bookingService } from '@/services/bookingService'
 
 import { useValidation, rules } from '@/composables/useValidation'
 
@@ -32,11 +35,42 @@ import { useValidation, rules } from '@/composables/useValidation'
 const bookingStore = useBookingStore()
 const { retrievedBooking, isSearchingBooking, bookingError } = storeToRefs(bookingStore)
 const router = useRouter()
+const { showToast } = useToast()
 
 // Reactive state
 const searchForm = reactive({
   bookingReference: '',
   lastName: ''
+})
+
+// Modal states
+const showModifyModal = ref(false)
+const showCancelModal = ref(false)
+const isProcessing = ref(false)
+
+// Booking data for backend API
+const backendBooking = ref<{
+  bookingId: string
+  pnr: string
+  contactEmail: string
+  contactPhone: string
+  totalPrice: number
+  status: string
+  flights: Array<{ id: number; flightNumber: string }>
+  passengers: Array<{
+    passengerId: string
+    firstName: string
+    lastName: string
+    seatNumber: string | null
+    addOns?: Array<{ addOnPriceId: number }>
+  }>
+} | null>(null)
+
+// Check if booking is cancelled/archived
+const isBookingCancelled = computed(() => {
+  if (!backendBooking.value) return false
+  const status = backendBooking.value.status.toLowerCase()
+  return status === 'archived' || status === 'cancelled'
 })
 
 // Validation
@@ -54,7 +88,16 @@ onMounted(() => {
 const searchBooking = async () => {
   if (!validate()) return
 
-  await bookingStore.retrieveBooking(searchForm.bookingReference, searchForm.lastName)
+  const success = await bookingStore.retrieveBooking(searchForm.bookingReference, searchForm.lastName)
+  
+  if (success) {
+    // Also fetch the backend booking data for management operations
+    try {
+      backendBooking.value = await bookingService.getByPnr(searchForm.bookingReference)
+    } catch (error) {
+      console.error('Failed to fetch backend booking:', error)
+    }
+  }
 }
 
 const checkIn = () => {
@@ -73,19 +116,64 @@ const checkIn = () => {
 }
 
 const selectSeats = () => {
-  console.log('Opening seat selection...')
-}
-
-const addBaggage = () => {
-  console.log('Opening baggage options...')
+  showToast('Seat selection is only available during the booking process. Please contact customer support to change seats for an existing booking.', 'info')
 }
 
 const modifyBooking = () => {
-  console.log('Opening booking modification...')
+  if (!backendBooking.value) {
+    showToast('Unable to load booking details', 'error')
+    return
+  }
+  showModifyModal.value = true
 }
 
 const cancelBooking = () => {
-  console.log('Opening cancellation process...')
+  if (!backendBooking.value) {
+    showToast('Unable to load booking details', 'error')
+    return
+  }
+  showCancelModal.value = true
+}
+
+// Handle booking modification
+const handleBookingUpdate = async (data: { email: string; phone: string }) => {
+  isProcessing.value = true
+  try {
+    await bookingService.updateContact(backendBooking.value.pnr, {
+      contactEmail: data.email,
+      contactPhone: data.phone
+    })
+    
+    showToast('Contact information updated successfully!', 'success')
+    showModifyModal.value = false
+    
+    // Refresh booking data
+    await searchBooking()
+  } catch (error) {
+    const err = error as Error
+    showToast(err.message || 'Failed to update booking', 'error')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// Handle booking cancellation
+const handleBookingCancel = async () => {
+  isProcessing.value = true
+  try {
+    await bookingService.archive(backendBooking.value!.pnr)
+    
+    showToast('Booking cancelled successfully. Refund will be processed according to our policy.', 'success')
+    showCancelModal.value = false
+    
+    // Refresh the booking to show updated status instead of clearing
+    await searchBooking()
+  } catch (error) {
+    const err = error as Error
+    showToast(err.message || 'Failed to cancel booking', 'error')
+  } finally {
+    isProcessing.value = false
+  }
 }
 </script>
 
@@ -93,6 +181,18 @@ const cancelBooking = () => {
   <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
     <!-- Navigation Bar -->
     <NavigationBar />
+
+    <!-- Processing Overlay -->
+    <Transition name="fade">
+      <div v-if="isProcessing" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white p-8 shadow-2xl">
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-16 h-16 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+            <p class="font-bold text-gray-900">Processing your request...</p>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white py-16 lg:py-20 overflow-hidden">
@@ -233,10 +333,16 @@ const cancelBooking = () => {
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <div class="px-3 py-1.5 bg-green-500 font-black text-xs uppercase tracking-wide">
+              <div 
+                :class="[
+                  'px-3 py-1.5 font-black text-xs uppercase tracking-wide',
+                  isBookingCancelled ? 'bg-red-500' : 'bg-green-500'
+                ]"
+              >
                 {{ retrievedBooking.status }}
               </div>
-              <CheckCircle class="w-5 h-5 text-green-500" />
+              <CheckCircle v-if="!isBookingCancelled" class="w-5 h-5 text-green-500" />
+              <X v-else class="w-5 h-5 text-red-500" />
             </div>
           </div>
         </div>
@@ -435,10 +541,29 @@ const cancelBooking = () => {
         <div class="bg-white p-4 lg:p-5 shadow-xl">
           <div class="mb-4">
             <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight mb-1">Manage Your Trip</h3>
-            <p class="text-gray-600 font-semibold text-sm">Select an option to modify or manage your booking</p>
+            <p class="text-gray-600 font-semibold text-sm">
+              {{ isBookingCancelled ? 'This booking has been cancelled' : 'Select an option to modify or manage your booking' }}
+            </p>
           </div>
 
-          <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <!-- Cancelled Booking Message -->
+          <div v-if="isBookingCancelled" class="bg-red-50 border-l-4 border-red-600 p-6">
+            <div class="flex items-start gap-4">
+              <AlertCircle class="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <div>
+                <h4 class="font-black text-red-900 uppercase text-sm mb-2">Booking Cancelled</h4>
+                <p class="text-sm text-red-800 font-semibold leading-relaxed mb-3">
+                  This booking has been cancelled. Refunds will be processed according to our cancellation policy within 7-14 business days.
+                </p>
+                <p class="text-xs text-red-700 font-semibold">
+                  For questions about your refund, please contact customer support at <span class="font-black">+63 2 8702 0888</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Booking Actions -->
+          <div v-else class="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <!-- Check In Button -->
             <Button @click="checkIn" class="h-auto py-4 bg-green-600 hover:bg-green-700 flex-col gap-2 group relative overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-green-700 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
@@ -452,12 +577,6 @@ const cancelBooking = () => {
               <span class="font-black uppercase text-xs">Select Seats</span>
             </Button>
 
-            <!-- Add Baggage -->
-            <Button @click="addBaggage" variant="outline" class="h-auto py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white flex-col gap-2 transition-all">
-              <Luggage class="w-6 h-6" />
-              <span class="font-black uppercase text-xs">Add Baggage</span>
-            </Button>
-
             <!-- Modify Booking -->
             <Button @click="modifyBooking" variant="outline" class="h-auto py-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white flex-col gap-2 transition-all">
               <Edit class="w-6 h-6" />
@@ -465,7 +584,7 @@ const cancelBooking = () => {
             </Button>
 
             <!-- Cancel Booking -->
-            <Button @click="cancelBooking" class="h-auto py-4 bg-red-600 hover:bg-red-700 flex-col gap-2 group relative overflow-hidden col-span-2 lg:col-span-1">
+            <Button @click="cancelBooking" class="h-auto py-4 bg-red-600 hover:bg-red-700 flex-col gap-2 group relative overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-br from-red-500 to-red-700 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
               <X class="w-6 h-6 relative z-10" />
               <span class="font-black uppercase text-xs relative z-10">Cancel</span>
@@ -700,5 +819,36 @@ const cancelBooking = () => {
 
     <!-- Footer -->
     <AppFooter />
+
+    <!-- Modals -->
+    <ModifyBookingModal
+      v-if="backendBooking"
+      :is-open="showModifyModal"
+      :current-email="backendBooking.contactEmail"
+      :current-phone="backendBooking.contactPhone"
+      @close="showModifyModal = false"
+      @update="handleBookingUpdate"
+    />
+
+    <CancelBookingModal
+      v-if="backendBooking"
+      :is-open="showCancelModal"
+      :booking-reference="backendBooking.pnr"
+      :total-amount="backendBooking.totalPrice"
+      @close="showCancelModal = false"
+      @confirm="handleBookingCancel"
+    />
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -19,6 +19,13 @@ export const rules = {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         return emailRegex.test(value) || message
     },
+    phone: (message = 'Invalid phone number') => (value: unknown): string | boolean => {
+        if (!value) return true // Allow empty if not required
+        if (typeof value !== 'string') return message
+        // Accept various phone formats: +63 912 345 6789, 09123456789, +639123456789, etc.
+        const phoneRegex = /^(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/
+        return phoneRegex.test(value.replace(/\s/g, '')) || message
+    },
     minLength: (min: number, message?: string) => (value: unknown): string | boolean => {
         if (!value) return true
         if (typeof value !== 'string') return message || 'Must be a string'
@@ -86,12 +93,18 @@ export function useValidation<T extends Record<string, unknown>>(
         isSubmitted.value = false
     }
 
+    const resetValidation = () => {
+        errors.value = {}
+        isSubmitted.value = false
+    }
+
     return {
         errors,
         isSubmitted,
         isValid,
         validate,
         clearErrors,
+        resetValidation,
         rules // Keep returning rules for backward compatibility if needed, or remove
     }
 }
