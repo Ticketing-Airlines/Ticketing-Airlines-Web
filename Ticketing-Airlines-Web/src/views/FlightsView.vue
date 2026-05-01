@@ -360,8 +360,51 @@ const toggleSort = () => {
       </div>
     </section>
 
+    <!-- Loading State -->
+    <section v-if="isSearching" class="py-12">
+      <div class="max-w-4xl mx-auto px-3 text-center">
+        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Loader2 class="w-10 h-10 text-blue-600 animate-spin" />
+        </div>
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-3">Searching for Flights</h2>
+        <p class="text-base text-gray-600 font-bold mb-2">
+          We're finding the best flights for your journey...
+        </p>
+        <p class="text-sm text-gray-500 font-bold">
+          This usually takes just a few seconds
+        </p>
+      </div>
+    </section>
+
+    <!-- Error State -->
+    <section v-else-if="flightStore.error" class="py-12">
+      <div class="max-w-4xl mx-auto px-3 text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <AlertCircle class="w-10 h-10 text-red-600" />
+        </div>
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-3">Unable to Search Flights</h2>
+        <p class="text-base text-gray-600 font-bold mb-6">
+          {{ flightStore.error }}
+        </p>
+        <div class="space-y-3">
+          <Button
+            @click="handleSearch"
+            class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-3 text-sm"
+          >
+            <Search class="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+          <div class="text-xs text-gray-500 font-bold space-y-1">
+            <p>• Check your internet connection</p>
+            <p>• Make sure all fields are filled correctly</p>
+            <p>• Try different dates or destinations</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Results Section -->
-    <section v-if="searchResults.length > 0" class="py-4">
+    <section v-else-if="searchResults.length > 0" class="py-4">
       <div class="max-w-7xl mx-auto px-3">
         <!-- Results Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
@@ -608,31 +651,37 @@ const toggleSort = () => {
       </div>
     </section>
 
-    <!-- Empty State -->
-    <section v-else-if="!isSearching && searchResults.length === 0" class="py-12">
+    <!-- Empty State (Initial or No Results) -->
+    <section v-else class="py-12">
       <div class="max-w-4xl mx-auto px-3 text-center">
-        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-          <AlertCircle class="w-10 h-10 text-gray-400" />
+        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Plane class="w-10 h-10 text-blue-600" />
         </div>
 
-        <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-3">No Flights Found</h2>
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-3">
+          {{ totalResults === 0 && !isSearching ? 'No Flights Available' : 'Ready to Search' }}
+        </h2>
         <p class="text-base text-gray-600 font-bold mb-6">
-          We couldn't find any flights matching your search criteria. Try adjusting your search parameters.
+          {{ totalResults === 0 && !isSearching 
+            ? 'We couldn\'t find any flights for your selected route and dates. Please try different options.' 
+            : 'Enter your travel details above and click "Search Flights" to find available options.' 
+          }}
         </p>
 
-        <div class="space-y-3">
-          <Button
-            @click="handleSearch"
-            class="bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black px-6 py-2 text-xs"
-          >
-            <Search class="w-4 h-4 mr-2" />
-            Try Different Dates
-          </Button>
-
-          <div class="text-xs text-gray-500 font-bold space-y-1">
-            <p>• Try searching for nearby airports</p>
-            <p>• Check different departure dates</p>
-            <p>• Consider flexible travel dates</p>
+        <div v-if="totalResults === 0 && !isSearching" class="space-y-3">
+          <div class="text-sm text-gray-500 font-bold space-y-2 max-w-md mx-auto">
+            <p class="flex items-center justify-center gap-2">
+              <span class="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+              Try selecting different travel dates
+            </p>
+            <p class="flex items-center justify-center gap-2">
+              <span class="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+              Check if the route is available
+            </p>
+            <p class="flex items-center justify-center gap-2">
+              <span class="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+              Consider nearby airports
+            </p>
           </div>
         </div>
       </div>
