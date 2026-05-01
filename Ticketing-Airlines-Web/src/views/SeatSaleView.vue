@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, type Component } from 'vue'
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,155 +15,71 @@ import {
   Users,
   MapPin,
   Tag,
-  TrendingDown
+  TrendingDown,
+  Loader2
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import { seatSaleService } from '@/services/seatSaleService'
+import type { SeatSale, SeatSaleConfig } from '@/types/seatSale'
+import { getApiErrorMessage } from '@/types/api'
+import { useToast } from '@/composables/useToast'
 
-// Import destination images
-import cebuImg from '@/assets/cebu.webp'
-import davaoImg from '@/assets/davao.webp'
-import singaporeImg from '@/assets/singapore.webp'
-import hongkongImg from '@/assets/hongkong.webp'
-import bangkokImg from '@/assets/bangkok.webp'
-import palawanImg from '@/assets/palawan.webp'
+const { showToast } = useToast()
 
-// Interface for seat sale deal
-interface SeatSaleDeal {
-  id: number
-  destination: string
-  country: string
-  type: string
-  originalPrice: number
-  salePrice: number
-  discount: number
-  priceNote: string
-  travelPeriod: string
-  bookingDeadline: string
-  seatsLeft: number
-  featured: boolean
-  gradient: string
-  features: string[]
-  image: string
-  description: string
-}
-
-// Mock seat sale deals data
-const seatSaleDeals = ref<SeatSaleDeal[]>([
-  {
-    id: 1,
-    destination: 'Cebu',
-    country: 'Philippines',
-    type: 'domestic',
-    originalPrice: 8500,
-    salePrice: 2999,
-    discount: 65,
-    priceNote: 'Base fare, one way',
-    travelPeriod: 'May 1 - Aug 31, 2026',
-    bookingDeadline: 'May 31, 2026',
-    seatsLeft: 45,
-    featured: true,
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    features: ['7kg cabin baggage', 'Seat selection available'],
-    image: cebuImg,
-    description: 'Queen City of the South'
-  },
-  {
-    id: 2,
-    destination: 'Davao',
-    country: 'Philippines',
-    type: 'domestic',
-    originalPrice: 9200,
-    salePrice: 3499,
-    discount: 62,
-    priceNote: 'Base fare, one way',
-    travelPeriod: 'May 15 - Aug 15, 2026',
-    bookingDeadline: 'May 31, 2026',
-    seatsLeft: 23,
-    featured: false,
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    features: ['7kg cabin baggage', 'Online check-in'],
-    image: davaoImg,
-    description: 'Home of Mount Apo'
-  },
-  {
-    id: 3,
-    destination: 'Singapore',
-    country: 'Singapore',
-    type: 'international',
-    originalPrice: 15800,
-    salePrice: 7999,
-    discount: 49,
-    priceNote: 'Base fare, one way',
-    travelPeriod: 'Jun 1 - Sep 30, 2026',
-    bookingDeadline: 'May 31, 2026',
-    seatsLeft: 8,
-    featured: true,
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    features: ['7kg cabin baggage', 'Meal included'],
-    image: singaporeImg,
-    description: 'Lion City'
-  },
-  {
-    id: 4,
-    destination: 'Bangkok',
-    country: 'Thailand',
-    type: 'international',
-    originalPrice: 18500,
-    salePrice: 9999,
-    discount: 46,
-    priceNote: 'Base fare, one way',
-    travelPeriod: 'Jun 1 - Sep 30, 2026',
-    bookingDeadline: 'May 31, 2026',
-    seatsLeft: 15,
-    featured: false,
-    gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    features: ['7kg cabin baggage', 'Priority boarding'],
-    image: bangkokImg,
-    description: 'City of Angels'
-  },
-  {
-    id: 5,
-    destination: 'Hong Kong',
-    country: 'Hong Kong',
-    type: 'international',
-    originalPrice: 22000,
-    salePrice: 12999,
-    discount: 41,
-    priceNote: 'Base fare, one way',
-    travelPeriod: 'Jul 1 - Oct 31, 2026',
-    bookingDeadline: 'May 31, 2026',
-    seatsLeft: 32,
-    featured: false,
-    gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    features: ['7kg cabin baggage', 'Flexible rebooking'],
-    image: hongkongImg,
-    description: 'Pearl of the Orient'
-  },
-  {
-    id: 6,
-    destination: 'Palawan',
-    country: 'Philippines',
-    type: 'domestic',
-    originalPrice: 35000,
-    salePrice: 19999,
-    discount: 43,
-    priceNote: 'Base fare, one way',
-    travelPeriod: 'Aug 1 - Nov 30, 2026',
-    bookingDeadline: 'May 31, 2026',
-    seatsLeft: 5,
-    featured: true,
-    gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-    features: ['7kg cabin baggage', 'Premium meal'],
-    image: palawanImg,
-    description: 'The Last Frontier'
-  }
-])
-
+// State
+const seatSaleDeals = ref<SeatSale[]>([])
+const seatSaleConfig = ref<SeatSaleConfig | null>(null)
 const selectedDestination = ref('all')
 const priceRange = ref('all')
 const email = ref('')
 const timeRemaining = ref('')
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+// Icon mapping for terms and conditions
+const getIconComponent = (iconName: string) => {
+  const icons: Record<string, Component> = {
+    'AlertCircle': AlertCircle,
+    'Calendar': Calendar,
+    'CreditCard': CreditCard,
+    'Users': Users,
+    'Clock': Clock,
+    'Check': Check,
+    'Plane': Plane,
+    'MapPin': MapPin,
+    'Tag': Tag
+  }
+  return icons[iconName] || AlertCircle
+}
+
+// Color mapping for terms and conditions
+const getColorClasses = (color: string) => {
+  const colorMap: Record<string, { bg: string, bgLight: string, text: string, hover: string }> = {
+    'orange': { bg: 'bg-orange-600', bgLight: 'bg-orange-100', text: 'text-orange-600', hover: 'hover:bg-orange-600' },
+    'blue': { bg: 'bg-blue-600', bgLight: 'bg-blue-100', text: 'text-blue-600', hover: 'hover:bg-blue-600' },
+    'green': { bg: 'bg-green-600', bgLight: 'bg-green-100', text: 'text-green-600', hover: 'hover:bg-green-600' },
+    'purple': { bg: 'bg-purple-600', bgLight: 'bg-purple-100', text: 'text-purple-600', hover: 'hover:bg-purple-600' },
+    'red': { bg: 'bg-red-600', bgLight: 'bg-red-100', text: 'text-red-600', hover: 'hover:bg-red-600' },
+    'yellow': { bg: 'bg-yellow-600', bgLight: 'bg-yellow-100', text: 'text-yellow-600', hover: 'hover:bg-yellow-600' }
+  }
+  return colorMap[color] || colorMap['orange']
+}
+
+// Helper function to format date range
+const formatDateRange = (start: string, end: string): string => {
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
+  return `${startDate.toLocaleDateString('en-US', options)} - ${endDate.toLocaleDateString('en-US', options)}`
+}
+
+// Helper function to format single date
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
+  return date.toLocaleDateString('en-US', options)
+}
 
 // Computed property for filtered deals
 const filteredDeals = computed(() => {
@@ -177,7 +93,7 @@ const filteredDeals = computed(() => {
   // Filter by price range
   if (priceRange.value !== 'all') {
     filtered = filtered.filter(deal => {
-      const price = deal.salePrice
+      const price = deal.pricing.salePrice
       switch (priceRange.value) {
         case 'under5k': return price < 5000
         case '5k-10k': return price >= 5000 && price <= 10000
@@ -196,11 +112,36 @@ const filteredDeals = computed(() => {
   })
 })
 
+// Load seat sale data
+const loadSeatSales = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    // Load deals and config in parallel
+    const [dealsResult, config] = await Promise.all([
+      seatSaleService.getActiveDeals(),
+      seatSaleService.getConfig()
+    ])
+    
+    seatSaleDeals.value = dealsResult.deals
+    seatSaleConfig.value = config
+  } catch (err: unknown) {
+    console.error('Failed to load seat sales:', err)
+    error.value = getApiErrorMessage(err)
+    showToast('Failed to load seat sale deals', 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
 // Timer for countdown
 let timer: ReturnType<typeof setInterval>
 
 const updateCountdown = () => {
-  const saleEndDate = new Date('2026-05-31T23:59:59')
+  if (!seatSaleConfig.value) return
+  
+  const saleEndDate = new Date(seatSaleConfig.value.saleEndDate)
   const now = new Date()
   const diff = saleEndDate.getTime() - now.getTime()
 
@@ -216,20 +157,22 @@ const updateCountdown = () => {
   }
 }
 
-const bookDeal = (deal: SeatSaleDeal) => {
+const bookDeal = (deal: SeatSale) => {
   console.log('Booking deal:', deal)
-  alert(`Booking ${deal.destination} for ₱${deal.salePrice.toLocaleString()}!\nThis will redirect to the booking page.`)
+  showToast(`Booking ${deal.destination} for ₱${deal.pricing.salePrice.toLocaleString()}!`, 'info')
+  // TODO: Redirect to booking page with deal information
 }
 
 const subscribe = () => {
   if (email.value) {
     console.log('Subscribing email:', email.value)
-    alert('Thank you for subscribing! You will receive exclusive seat sale alerts.')
+    showToast('Thank you for subscribing! You will receive exclusive seat sale alerts.', 'success')
     email.value = ''
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadSeatSales()
   updateCountdown()
   timer = setInterval(updateCountdown, 1000)
 })
@@ -258,12 +201,12 @@ onUnmounted(() => {
           <span class="font-black text-xs text-white uppercase tracking-widest">Limited Time Offer</span>
         </div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-3 leading-tight uppercase tracking-tight">
-          SEAT SALE
+          {{ seatSaleConfig?.saleTitle || 'SEAT SALE' }}
         </h1>
         <p class="text-sm sm:text-base lg:text-lg text-white/90 max-w-2xl mx-auto font-bold mb-4">
-          Unbeatable deals to your dream destinations
+          {{ seatSaleConfig?.saleSubtitle || 'Unbeatable deals to your dream destinations' }}
         </p>
-        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 border-2 border-white/30">
+        <div v-if="seatSaleConfig" class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 border-2 border-white/30">
           <Clock class="h-4 w-4 text-white" />
           <span class="text-sm font-black uppercase tracking-wider">Sale ends in: {{ timeRemaining }}</span>
         </div>
@@ -328,25 +271,38 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center py-20">
+          <Loader2 class="h-12 w-12 animate-spin text-blue-600" />
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="text-center py-20">
+          <AlertCircle class="h-16 w-16 text-red-600 mx-auto mb-4" />
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Failed to Load Deals</h3>
+          <p class="text-gray-600 mb-4">{{ error }}</p>
+          <Button @click="loadSeatSales" class="bg-blue-600 hover:bg-blue-700 text-white">
+            Try Again
+          </Button>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="filteredDeals.length === 0" class="text-center py-20">
+          <Tag class="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 class="text-xl font-bold text-gray-900 mb-2">No Deals Available</h3>
+          <p class="text-gray-600">Check back later for amazing seat sale deals!</p>
+        </div>
+
+        <!-- Deals Grid -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card
             v-for="deal in filteredDeals"
             :key="deal.id"
             class="group overflow-hidden bg-white border-4 border-gray-900 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 p-0 gap-0 relative"
             :class="deal.featured ? 'ring-4 ring-orange-500 ring-offset-2' : ''"
           >
-            <!-- Destination Image with Badges -->
-            <div class="relative h-40 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-              <!-- Background Image -->
-              <img
-                :src="deal.image"
-                :alt="deal.destination"
-                class="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 transition-opacity duration-300"
-              />
-
-              <!-- Gradient Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-
+            <!-- Header with Badges -->
+            <div class="relative bg-gray-900 p-3 border-b-4 border-gray-900">
               <!-- Featured Badge -->
               <div v-if="deal.featured" class="absolute top-2 left-2 z-10">
                 <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-2 py-1 border-2 border-black">
@@ -357,14 +313,14 @@ onUnmounted(() => {
               <!-- Discount Badge -->
               <div class="absolute top-2 right-2 z-10">
                 <div class="bg-red-600 text-white px-2 py-1 border-2 border-white">
-                  <span class="text-xs font-black uppercase tracking-wider">{{ deal.discount }}% OFF</span>
+                  <span class="text-xs font-black uppercase tracking-wider">{{ deal.pricing.discount }}% OFF</span>
                 </div>
               </div>
 
-              <!-- Content -->
-              <div class="absolute bottom-2 left-2 right-2 z-10">
+              <!-- Destination Info -->
+              <div class="pt-8">
                 <CardTitle class="text-lg font-black text-white mb-0.5 uppercase tracking-tight">{{ deal.destination }}</CardTitle>
-                <CardDescription class="text-gray-200 font-bold text-xs">{{ deal.description }}</CardDescription>
+                <CardDescription class="text-gray-300 font-bold text-xs">{{ deal.description }}</CardDescription>
               </div>
             </div>
 
@@ -374,42 +330,38 @@ onUnmounted(() => {
                 <div class="text-center border-b-2 border-gray-900 pb-2">
                   <div class="flex items-center justify-center gap-1.5 mb-0.5">
                     <span class="text-sm text-gray-400 line-through font-bold">
-                      ₱{{ deal.originalPrice.toLocaleString() }}
+                      ₱{{ deal.pricing.originalPrice.toLocaleString() }}
                     </span>
                     <span class="text-2xl font-black text-red-600">
-                      ₱{{ deal.salePrice.toLocaleString() }}
+                      ₱{{ deal.pricing.salePrice.toLocaleString() }}
                     </span>
                   </div>
-                  <p class="text-xs text-gray-600 font-bold">{{ deal.priceNote }}</p>
+                  <p class="text-xs text-gray-600 font-bold">{{ deal.pricing.priceNote }}</p>
                 </div>
 
                 <!-- Deal Details -->
                 <div class="space-y-1 text-xs">
                   <div class="flex items-center justify-between">
                     <span class="text-gray-600 font-bold">Travel:</span>
-                    <span class="font-black text-gray-900">{{ deal.travelPeriod }}</span>
+                    <span class="font-black text-gray-900">{{ formatDateRange(deal.validity.travelPeriodStart, deal.validity.travelPeriodEnd) }}</span>
                   </div>
                   <div class="flex items-center justify-between">
                     <span class="text-gray-600 font-bold">Book by:</span>
-                    <span class="font-black text-red-600">{{ deal.bookingDeadline }}</span>
+                    <span class="font-black text-red-600">{{ formatDate(deal.validity.bookingDeadline) }}</span>
                   </div>
                   <div class="flex items-center justify-between">
                     <span class="text-gray-600 font-bold">Seats:</span>
-                    <span class="font-black" :class="deal.seatsLeft < 10 ? 'text-red-600' : 'text-green-600'">
-                      {{ deal.seatsLeft }} left
+                    <span class="font-black" :class="deal.availability.isLowAvailability ? 'text-red-600' : 'text-green-600'">
+                      {{ deal.availability.seatsLeft }} left
                     </span>
                   </div>
                 </div>
 
                 <!-- Features -->
                 <div class="space-y-1 border-t-2 border-gray-900 pt-2">
-                  <div class="flex items-center gap-1.5 text-xs text-gray-700">
+                  <div v-for="(feature, index) in deal.features.slice(0, 2)" :key="index" class="flex items-center gap-1.5 text-xs text-gray-700">
                     <Check class="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                    <span class="font-bold">{{ deal.features[0] }}</span>
-                  </div>
-                  <div class="flex items-center gap-1.5 text-xs text-gray-700">
-                    <Check class="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                    <span class="font-bold">{{ deal.features[1] }}</span>
+                    <span class="font-bold">{{ feature }}</span>
                   </div>
                 </div>
 
@@ -419,7 +371,7 @@ onUnmounted(() => {
                   @click="bookDeal(deal)"
                 >
                   <Plane class="mr-1.5 h-3.5 w-3.5" />
-                  Book Now - Save {{ deal.discount }}%
+                  Book Now - Save {{ deal.pricing.discount }}%
                 </Button>
               </div>
             </CardContent>
@@ -473,7 +425,36 @@ onUnmounted(() => {
     <section class="bg-white py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h3 class="text-2xl font-black mb-4 text-center text-gray-900 uppercase tracking-tight">Terms & Conditions</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center py-8">
+          <Loader2 class="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+        
+        <!-- Terms Grid -->
+        <div v-else-if="seatSaleConfig?.termsAndConditions && seatSaleConfig.termsAndConditions.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div 
+            v-for="term in seatSaleConfig.termsAndConditions" 
+            :key="term.id"
+            class="text-center group bg-gray-50 p-4 border-4 border-gray-900 relative transform hover:-translate-y-1 transition-all duration-300"
+            :class="getColorClasses(term.color).hover"
+          >
+            <div 
+              class="w-12 h-12 flex items-center justify-center mx-auto mb-2 group-hover:bg-white transition-colors duration-300"
+              :class="getColorClasses(term.color).bgLight"
+            >
+              <component :is="getIconComponent(term.icon)" class="h-6 w-6 transition-colors duration-300" :class="getColorClasses(term.color).text" />
+            </div>
+            <p class="text-xs text-gray-700 font-bold group-hover:text-white transition-colors duration-300">{{ term.description }}</p>
+            <div 
+              class="absolute top-1 left-1 w-full h-full -z-10 group-hover:top-1.5 group-hover:left-1.5 transition-all duration-300"
+              :class="getColorClasses(term.color).bg"
+            ></div>
+          </div>
+        </div>
+        
+        <!-- Default Terms (Fallback) -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           <div class="text-center group bg-gray-50 p-4 border-4 border-gray-900 relative transform hover:-translate-y-1 transition-all duration-300 hover:bg-orange-600">
             <div class="w-12 h-12 bg-orange-100 flex items-center justify-center mx-auto mb-2 group-hover:bg-white transition-colors duration-300">
               <AlertCircle class="h-6 w-6 text-orange-600 transition-colors duration-300" />
