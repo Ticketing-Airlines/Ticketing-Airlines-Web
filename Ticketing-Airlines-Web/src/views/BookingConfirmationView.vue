@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -10,11 +10,13 @@ import {
   Calendar,
   Download,
   Mail,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { useBookingStore } from '@/stores/bookingStore'
+import { generateETicketPDF } from '@/utils/ticketPdfGenerator'
 import type { 
   FlightSearchResult, 
   RoundTripResult, 
@@ -23,15 +25,46 @@ import type {
 
 const router = useRouter()
 const bookingStore = useBookingStore()
-const { bookingPnr, selectedFlight, passengers, totalPrice, baseFare, taxes, fees } = storeToRefs(bookingStore)
+const { bookingPnr, selectedFlight, passengers, totalPrice, baseFare, taxes, fees, contactInfo, selectedBundle } = storeToRefs(bookingStore)
+
+const isGeneratingPdf = ref(false)
 
 const formatPrice = (price: number) => {
   return `₱${price.toLocaleString()}`
 }
 
-const downloadTicket = () => {
-  // Simulate ticket download
-  alert('Ticket download started!')
+const downloadTicket = async () => {
+  if (!selectedFlight.value || !bookingPnr.value) {
+    alert('Booking information is incomplete')
+    return
+  }
+
+  try {
+    isGeneratingPdf.value = true
+    
+    await generateETicketPDF({
+      pnr: bookingPnr.value,
+      bookingDate: new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      passengers: passengers.value,
+      flight: selectedFlight.value,
+      contactEmail: contactInfo.value.email,
+      contactPhone: contactInfo.value.phone,
+      totalPrice: totalPrice.value,
+      baseFare: baseFare.value,
+      taxes: taxes.value,
+      fees: fees.value,
+      bundleName: selectedBundle.value
+    })
+  } catch (error) {
+    console.error('Failed to generate PDF:', error)
+    alert('Failed to generate e-ticket. Please try again.')
+  } finally {
+    isGeneratingPdf.value = false
+  }
 }
 
 const sendEmail = () => {
@@ -186,10 +219,12 @@ onMounted(() => {
               <div class="mt-6 space-y-3">
                 <Button
                   @click="downloadTicket"
+                  :disabled="isGeneratingPdf"
                   class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black py-3"
                 >
-                  <Download class="w-4 h-4 mr-2" />
-                  Download E-Ticket
+                  <Loader2 v-if="isGeneratingPdf" class="w-4 h-4 mr-2 animate-spin" />
+                  <Download v-else class="w-4 h-4 mr-2" />
+                  {{ isGeneratingPdf ? 'Generating...' : 'Download E-Ticket' }}
                 </Button>
                 
                 <Button
