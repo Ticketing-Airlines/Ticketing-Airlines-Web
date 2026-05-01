@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,9 +40,14 @@ const searchForm = reactive({
 })
 
 // Validation
-const { validate, errors, isValid } = useValidation(searchForm, {
+const { validate, errors } = useValidation(searchForm, {
   bookingReference: [rules.required('Booking reference is required')],
   lastName: [rules.required('Last name is required')]
+})
+
+// Clear any previous search results when component mounts
+onMounted(() => {
+  bookingStore.clearRetrievedBooking()
 })
 
 // Methods

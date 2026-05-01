@@ -95,6 +95,51 @@ export class BookingService {
     }
   }
 
+  public async getByPnrAndLastName(pnr: string, lastName: string): Promise<BookingResponse> {
+    try {
+      const response = await api.get<BookingResponse>(`/api/booking/${pnr}`)
+      const booking = mapBookingResponse(response.data)
+      
+      // Validate that at least one passenger has the matching last name
+      // Support partial matching (e.g., "Inot" matches "Keith Inot")
+      const normalizedSearchName = lastName.toLowerCase().trim()
+      const hasMatchingPassenger = booking.passengers.some(
+        passenger => {
+          const passengerLastName = passenger.lastName.toLowerCase().trim()
+          // Check if the search term matches the full last name or is contained in it
+          return passengerLastName === normalizedSearchName || 
+                 passengerLastName.includes(normalizedSearchName) ||
+                 normalizedSearchName.includes(passengerLastName)
+        }
+      )
+      
+      if (!hasMatchingPassenger) {
+        throw new Error('Booking not found. Please check your details and try again.')
+      }
+      
+      return booking
+    } catch (error) {
+      console.error(`Failed to fetch booking ${pnr} with last name validation:`, error)
+      
+      const axiosError = error as { response?: { status?: number }; message?: string }
+      
+      if (axiosError.response?.status === 404) {
+        throw new Error('Booking not found. Please check your booking reference.')
+      }
+      
+      // Re-throw validation errors
+      if (axiosError.message?.includes('Please check your details')) {
+        throw error
+      }
+      
+      if (!axiosError.response) {
+        throw new Error('Unable to connect. Please check your internet connection.')
+      }
+      
+      throw new Error('Unable to retrieve booking details. Please try again.')
+    }
+  }
+
   public async confirmPayment(pnr: string, request: ConfirmPaymentRequest): Promise<BookingResponse> {
     try {
       const response = await api.post<BookingResponse>(`/api/booking/${pnr}/confirm`, request)

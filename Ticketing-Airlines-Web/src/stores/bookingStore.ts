@@ -11,6 +11,7 @@ import type { FlightAddOn } from '@/types/flightAddOn'
 import type { AddOnPrice } from '@/types/addOnPrice'
 import type { PaymentMethod } from '@/types/paymentMethod'
 import { bookings as mockBookings } from '@/data/mockData'
+import { bookingService } from '@/services/bookingService'
 
 export interface ContactInfo {
     email: string
@@ -26,6 +27,14 @@ interface LegacyBooking {
     date?: string
     amount?: number
     outbound?: {
+        from: string
+        to: string
+        flightNumber: string
+        date: string
+        time: string
+        duration: string
+    }
+    return?: {
         from: string
         to: string
         flightNumber: string
@@ -241,58 +250,177 @@ export const useBookingStore = defineStore('booking', () => {
     async function retrieveBooking(reference: string, lastName: string) {
         isSearchingBooking.value = true
         bookingError.value = ''
+        retrievedBooking.value = null
+        
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500))
-
-            if (reference.length < 6 || lastName.length < 2) {
-                throw new Error('Invalid booking reference or last name')
-            }
-
-            const foundMock = mockBookings.find(b => b.pnr === reference.toUpperCase())
-
-            if (foundMock) {
-                retrievedBooking.value = {
-                    reference: foundMock.pnr,
-                    status: foundMock.status,
-                    bookingDate: new Date(foundMock.bookingDate).toLocaleDateString(),
-                    outbound: {
-                        from: 'Manila (MNL)',
-                        to: 'Cebu (CEB)',
-                        flightNumber: 'SS 101',
-                        date: 'October 16, 2025',
-                        time: '08:00 - 09:15',
-                        duration: '1h 15m'
-                    },
-                    passengers: [
-                        {
-                            id: 1,
-                            name: foundMock.contactName,
-                            type: 'Adult',
-                            seat: '1A',
-                            meal: 'Standard'
-                        }
-                    ],
-                    pricing: {
-                        baseFare: 2500,
-                        taxes: 500,
-                        addOns: 299,
-                        total: foundMock.totalAmount
-                    }
-                }
-                return true
-            }
-
-            throw new Error('Booking not found. Please check your details and try again.')
-
+            // Call the real backend API
+            const booking = await bookingService.getByPnrAndLastName(reference, lastName)
+            
+            // Transform the backend response to the legacy format for the UI
+            retrievedBooking.value = transformBookingToLegacyFormat(booking)
+            return true
         } catch (error) {
             const err = error as Error
             console.error('Failed to retrieve booking:', err)
-            bookingError.value = err.message || 'Booking not found'
+            bookingError.value = err.message || 'Booking not found. Please check your details and try again.'
             retrievedBooking.value = null
             return false
         } finally {
             isSearchingBooking.value = false
         }
+    }
+
+    // Helper function to transform backend BookingResponse to legacy format
+    function transformBookingToLegacyFormat(booking: {
+        pnr: string
+        status: string
+        bookingDate: string
+        totalPrice: number
+        flights?: Array<{
+            id: number
+            flightNumber: string
+            aircraftName?: string
+            origin?: string
+            destination?: string
+            departureTime: string
+            arrivalTime: string
+            price: number
+        }>
+        passengers: Array<{
+            firstName: string
+            lastName: string
+            passengerType: string
+            seatNumber?: string | null
+        }>
+    }): LegacyBooking {
+        // Get the first flight for outbound
+        const outboundFlight = booking.flights?.[0]
+        const returnFlight = booking.flights?.[1]
+        
+        // Helper to extract airport code and city name from full airport name
+        const getAirportInfo = (airportName?: string): { city: string; code: string } => {
+            if (!airportName) return { city: 'Unknown', code: 'N/A' }
+            
+            // Map of full airport names to city and code
+            const airportMap: Record<string, { city: string; code: string }> = {
+                'Ninoy Aquino International Airport': { city: 'Manila', code: 'MNL' },
+                'Mactan–Cebu International Airport': { city: 'Cebu', code: 'CEB' },
+                'Mactan-Cebu International Airport': { city: 'Cebu', code: 'CEB' },
+                'Clark International Airport': { city: 'Clark', code: 'CRK' },
+                'Francisco Bangoy International Airport': { city: 'Davao', code: 'DVO' },
+                'Iloilo International Airport': { city: 'Iloilo', code: 'ILO' },
+                'Kalibo International Airport': { city: 'Kalibo', code: 'KLO' },
+                'Puerto Princesa International Airport': { city: 'Puerto Princesa', code: 'PPS' },
+                'Laoag International Airport': { city: 'Laoag', code: 'LAO' },
+                'Zamboanga International Airport': { city: 'Zamboanga', code: 'ZAM' }
+            }
+            
+            return airportMap[airportName] || { 
+                city: airportName.split(' ')[0], 
+                code: airportName.substring(0, 3).toUpperCase() 
+            }
+        }
+        
+        return {
+            reference: booking.pnr,
+            status: booking.status,
+            bookingDate: new Date(booking.bookingDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }),
+            outbound: outboundFlight ? {
+                from: (() => {
+                    const info = getAirportInfo(outboundFlight.origin)
+                    return `${info.city} (${info.code})`
+                })(),
+                to: (() => {
+                    const info = getAirportInfo(outboundFlight.destination)
+                    return `${info.city} (${info.code})`
+                })(),
+                flightNumber: outboundFlight.flightNumber,
+                date: new Date(outboundFlight.departureTime).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }),
+                time: `${new Date(outboundFlight.departureTime).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })} - ${new Date(outboundFlight.arrivalTime).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })}`,
+                duration: calculateDuration(outboundFlight.departureTime, outboundFlight.arrivalTime)
+            } : undefined,
+            return: returnFlight ? {
+                from: (() => {
+                    const info = getAirportInfo(returnFlight.origin)
+                    return `${info.city} (${info.code})`
+                })(),
+                to: (() => {
+                    const info = getAirportInfo(returnFlight.destination)
+                    return `${info.city} (${info.code})`
+                })(),
+                flightNumber: returnFlight.flightNumber,
+                date: new Date(returnFlight.departureTime).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }),
+                time: `${new Date(returnFlight.departureTime).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })} - ${new Date(returnFlight.arrivalTime).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })}`,
+                duration: calculateDuration(returnFlight.departureTime, returnFlight.arrivalTime)
+            } : undefined,
+            passengers: booking.passengers.map((p: {
+                firstName: string
+                lastName: string
+                passengerType: string
+                seatNumber?: string | null
+            }, index: number) => ({
+                id: index + 1,
+                name: `${p.firstName} ${p.lastName}`,
+                type: getPassengerTypeLabel(p.passengerType),
+                seat: p.seatNumber || 'Not selected',
+                meal: 'Standard' // Default value as backend doesn't provide meal info
+            })),
+            pricing: {
+                baseFare: Math.round(booking.totalPrice * 0.85), // Approximate base fare
+                taxes: Math.round(booking.totalPrice * 0.12), // Approximate taxes
+                addOns: Math.round(booking.totalPrice * 0.03), // Approximate add-ons
+                total: booking.totalPrice
+            }
+        }
+    }
+
+    // Helper function to calculate flight duration
+    function calculateDuration(departureTime: string, arrivalTime: string): string {
+        const departure = new Date(departureTime)
+        const arrival = new Date(arrivalTime)
+        const durationMs = arrival.getTime() - departure.getTime()
+        const hours = Math.floor(durationMs / (1000 * 60 * 60))
+        const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60))
+        return `${hours}h ${minutes}m`
+    }
+
+    // Helper function to get passenger type label
+    function getPassengerTypeLabel(type: string): string {
+        const labels: Record<string, string> = {
+            'ADT': 'Adult',
+            'CHD': 'Child',
+            'SENIOR': 'Senior',
+            'INFANT': 'Infant'
+        }
+        return labels[type] || 'Adult'
     }
 
     async function getUserBookings(email: string) {
@@ -329,6 +457,11 @@ export const useBookingStore = defineStore('booking', () => {
         } finally {
             isSearchingBooking.value = false
         }
+    }
+
+    function clearRetrievedBooking() {
+        retrievedBooking.value = null
+        bookingError.value = ''
     }
 
     return {
@@ -378,11 +511,13 @@ export const useBookingStore = defineStore('booking', () => {
         setProcessing,
         resetBooking,
         retrieveBooking,
-        getUserBookings
+        getUserBookings,
+        clearRetrievedBooking
     }
 }, {
     persist: {
         key: 'booking-store',
-        storage: localStorage
+        storage: localStorage,
+        omit: ['retrievedBooking', 'userBookings', 'isSearchingBooking', 'bookingError']
     }
 })

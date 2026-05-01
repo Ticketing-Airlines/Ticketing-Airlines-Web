@@ -30,20 +30,27 @@ export interface UpdateBookingRequest {
 }
 
 // Response types
-export interface BookingFlightResponse {
-  id: string
-  bookingId: string
-  flightId: number
-  flight?: {
-    flightNumber: string
-    departureTime: string
-    arrivalTime: string
-  }
+export interface FlightResponse {
+  id: number
+  flightNumber: string
+  aircraftName?: string
+  origin?: string
+  destination?: string
+  departureTime: string
+  arrivalTime: string
+  price: number
+}
+
+export interface BookingAddOnResponse {
+  bookingAddOnId: number
+  addOnPriceId: number
+  addOnName: string
+  addOnCode: string
+  priceAtBooking: number
 }
 
 export interface BookingPassengerResponse {
-  bookingPassengerId: string
-  bookingId: string
+  passengerId: string | null
   firstName: string
   lastName: string
   middleName: string | null
@@ -51,13 +58,16 @@ export interface BookingPassengerResponse {
   gender: string
   passengerType: string
   flightSeatId: string | null
-  userId: string | null
+  seatNumber: string | null
+  addOns: BookingAddOnResponse[]
 }
 
 export interface BookingResponse {
   bookingId: string
   pnr: string
+  flights: FlightResponse[]
   flightBundleId: number
+  flightBundleName: string
   userId: string | null
   contactEmail: string
   contactPhone: string
@@ -68,8 +78,6 @@ export interface BookingResponse {
   paymentReference: string | null
   bookingDate: string
   paymentDate: string | null
-  updatedAt: string | null
-  bookingFlights: BookingFlightResponse[]
   passengers: BookingPassengerResponse[]
 }
 
