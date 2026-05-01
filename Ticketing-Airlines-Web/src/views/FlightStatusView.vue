@@ -193,7 +193,7 @@ const recentSearches = ref([
                   <Input
                     id="flightNumber"
                     v-model="searchForm.flightNumber"
-                    placeholder="SS 101"
+                    placeholder="SS051 or SS 051"
                     class="h-12 text-lg font-bold border-0 border-b-4 border-gray-900 rounded-none bg-gray-50 focus:bg-white focus:border-green-600 focus:ring-0 transition-all uppercase tracking-widest"
                     required
                   />
@@ -332,11 +332,11 @@ const recentSearches = ref([
                     <div class="space-y-1 lg:space-y-2">
                       <div class="flex justify-between items-center py-1 lg:py-2 border-t border-blue-200">
                         <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">Terminal</span>
-                        <span class="text-sm font-black text-gray-900">{{ flightStatus.departure.terminal }}</span>
+                        <span class="text-sm font-black text-gray-900">{{ flightStatus.departure.terminal || 'TBA' }}</span>
                       </div>
                       <div class="flex justify-between items-center py-1 lg:py-2 border-t border-blue-200">
                         <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">Gate</span>
-                        <span class="text-sm font-black text-gray-900">{{ flightStatus.departure.gate }}</span>
+                        <span class="text-sm font-black text-gray-900">{{ flightStatus.departure.gate || 'TBA' }}</span>
                       </div>
                     </div>
                   </div>
@@ -349,7 +349,7 @@ const recentSearches = ref([
                     </div>
                     <div class="bg-blue-600 p-2 lg:p-4">
                       <div class="text-xs font-black text-blue-200 uppercase tracking-widest mb-1 lg:mb-2">Actual Departure</div>
-                      <div class="text-2xl lg:text-3xl font-black text-white">{{ flightStatus.departure.actualTime || '--:--' }}</div>
+                      <div class="text-2xl lg:text-3xl font-black text-white">{{ flightStatus.departure.actualTime || 'Not Yet Departed' }}</div>
                     </div>
                   </div>
 
@@ -384,11 +384,11 @@ const recentSearches = ref([
                     <div class="space-y-1 lg:space-y-2">
                       <div class="flex justify-between items-center py-1 lg:py-2 border-t border-green-200">
                         <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">Terminal</span>
-                        <span class="text-sm font-black text-gray-900">{{ flightStatus.arrival.terminal }}</span>
+                        <span class="text-sm font-black text-gray-900">{{ flightStatus.arrival.terminal || 'TBA' }}</span>
                       </div>
                       <div class="flex justify-between items-center py-1 lg:py-2 border-t border-green-200">
                         <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">Gate</span>
-                        <span class="text-sm font-black text-gray-900">{{ flightStatus.arrival.gate }}</span>
+                        <span class="text-sm font-black text-gray-900">{{ flightStatus.arrival.gate || 'TBA' }}</span>
                       </div>
                     </div>
                   </div>
@@ -401,7 +401,7 @@ const recentSearches = ref([
                     </div>
                     <div class="bg-green-600 p-2 lg:p-4">
                       <div class="text-xs font-black text-green-200 uppercase tracking-widest mb-1 lg:mb-2">Estimated Arrival</div>
-                      <div class="text-2xl lg:text-3xl font-black text-white">{{ flightStatus.arrival.estimatedTime }}</div>
+                      <div class="text-2xl lg:text-3xl font-black text-white">{{ flightStatus.arrival.estimatedTime || flightStatus.arrival.scheduledTime }}</div>
                     </div>
                   </div>
 

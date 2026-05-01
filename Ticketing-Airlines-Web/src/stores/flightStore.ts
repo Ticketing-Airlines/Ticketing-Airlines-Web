@@ -81,16 +81,23 @@ export const useFlightStore = defineStore('flight', () => {
         }
 
         try {
+            const formattedFlightNumber = flightNumber.trim().toUpperCase().replace(/\s+/g, '')
+            
             const response = await api.post<BackendFlightStatusResponse>('/api/flights/status', {
-                flightNumber: flightNumber.trim().toUpperCase(),
+                flightNumber: formattedFlightNumber,
                 date
             })
             
-            if (!response.data.success) {
-                throw new Error('Flight status lookup failed')
+            if (!response.data.success || !response.data.data) {
+                throw new Error(response.data.message || 'Flight status lookup failed')
             }
             
-            flightStatus.value = mapBackendFlightStatus(response.data)
+            const mappedStatus = mapBackendFlightStatus(response.data)
+            if (!mappedStatus) {
+                throw new Error('Failed to process flight status data')
+            }
+            
+            flightStatus.value = mappedStatus
             return true
 
         } catch (error: unknown) {
