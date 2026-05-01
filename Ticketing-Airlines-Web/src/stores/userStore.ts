@@ -26,11 +26,7 @@ export interface UserProfile {
     email: string
     name: string
     phone: string
-    address?: string
-    city?: string
-    country?: string
     dateOfBirth: string
-    nationality?: string
     gender?: string
 }
 
@@ -69,16 +65,21 @@ export const useUserStore = defineStore('user', () => {
                     dateOfBirth: userData.dateOfBirth,
                     gender: userData.gender ?? undefined,
                 }
+            } else {
+                throw new Error('User data not found')
             }
-        } catch {
-            // Fail silently - profile remains null
+        } catch (error) {
+            profile.value = null
+            throw error
         } finally {
             isLoading.value = false
         }
     }
 
     async function updateProfile(data: Partial<UserProfile>) {
-        if (!profile.value) return
+        if (!profile.value) {
+            throw new Error('No profile loaded')
+        }
 
         const nameParts = data.name?.split(' ') || []
         const firstName = nameParts[0] || ''
@@ -92,16 +93,23 @@ export const useUserStore = defineStore('user', () => {
             gender: data.gender,
         }
 
-        const result = await userService.updateUser(profile.value.userId, updateData)
-        
-        if (result && profile.value) {
-            profile.value = {
-                ...profile.value,
-                name: result.fullName,
-                phone: result.phoneNumber ?? profile.value.phone,
-                dateOfBirth: result.dateOfBirth,
-                gender: result.gender ?? profile.value.gender,
+        try {
+            const result = await userService.updateUser(profile.value.userId, updateData)
+            
+            if (result && profile.value) {
+                profile.value = {
+                    ...profile.value,
+                    name: result.fullName,
+                    phone: result.phoneNumber ?? profile.value.phone,
+                    dateOfBirth: result.dateOfBirth,
+                    gender: result.gender ?? profile.value.gender,
+                }
             }
+            
+            return result
+        } catch (error) {
+            // Re-throw the error so the component can handle it
+            throw error
         }
     }
 

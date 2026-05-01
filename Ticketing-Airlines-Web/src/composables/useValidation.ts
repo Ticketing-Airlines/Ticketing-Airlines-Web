@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, unref, type Ref } from 'vue'
 
 export type ValidationRule = (value: any) => string | boolean
 export type ValidationRules = Record<string, ValidationRule[]>
@@ -25,13 +25,14 @@ export const rules = {
     }
 }
 
-export function useValidation<T extends Record<string, any>>(initialData: T, validationRules: ValidationRules) {
+export function useValidation<T extends Record<string, any>>(initialData: T | Ref<T>, validationRules: ValidationRules) {
     const errors = ref<Record<string, string>>({})
     const isSubmitted = ref(false)
 
     const isValid = computed(() => {
+        const data = unref(initialData)
         for (const key in validationRules) {
-            const value = initialData[key]
+            const value = data[key]
             const fieldRules = validationRules[key]
 
             for (const rule of fieldRules) {
@@ -49,8 +50,9 @@ export function useValidation<T extends Record<string, any>>(initialData: T, val
         errors.value = {}
         let valid = true
 
+        const data = unref(initialData)
         for (const key in validationRules) {
-            const value = initialData[key]
+            const value = data[key]
             const fieldRules = validationRules[key]
 
             for (const rule of fieldRules) {

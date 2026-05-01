@@ -14,30 +14,31 @@ import {
   Plus,
   Trash2,
   Check,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { useUserStore } from '@/stores/userStore'
 import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
+import { useToast } from '@/composables/useToast'
 
 import { useValidation, rules } from '@/composables/useValidation'
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
 const { profile, savedPassengers, paymentMethods, isLoading } = storeToRefs(userStore)
+const { showToast } = useToast()
 
 const activeSection = ref<'profile' | 'passengers' | 'payments' | 'settings'>('profile')
 const isEditing = ref(false)
+const isSaving = ref(false)
 const editForm = ref({
   name: '',
   phone: '',
-  address: '',
-  city: '',
-  country: '',
   dateOfBirth: '',
-  nationality: ''
+  gender: ''
 })
 
 function formatDate(dateStr: string): string {
@@ -73,6 +74,7 @@ const formattedDateOfBirth = computed(() => {
 const { validate: validateProfile, errors: profileErrors } = useValidation(editForm, {
   name: [rules.required('Full name is required')],
   phone: [rules.required('Phone number is required')],
+  gender: [rules.required('Please select your gender')],
 })
 
 const newPassenger = ref({
@@ -93,15 +95,23 @@ const { validate: validatePassenger, errors: passengerErrors, clearErrors: clear
   dateOfBirth: [rules.required('Date of birth is required')]
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (authStore.user?.userId) {
-    userStore.initializeUser(authStore.user.userId)
+    try {
+      await userStore.initializeUser(authStore.user.userId)
+    } catch (error) {
+      showToast('Unable to load your profile. Please refresh the page', 'error')
+    }
   }
 })
 
-watch(() => authStore.user?.userId, (newUserId) => {
+watch(() => authStore.user?.userId, async (newUserId) => {
   if (newUserId) {
-    userStore.initializeUser(newUserId)
+    try {
+      await userStore.initializeUser(newUserId)
+    } catch (error) {
+      showToast('Unable to load your profile. Please refresh the page', 'error')
+    }
   }
 })
 
@@ -110,21 +120,32 @@ const startEditing = () => {
     editForm.value = {
       name: profile.value.name,
       phone: profile.value.phone,
-      address: profile.value.address || '',
-      city: profile.value.city || '',
-      country: profile.value.country || '',
       dateOfBirth: formatDateForInput(profile.value.dateOfBirth),
-      nationality: profile.value.nationality || ''
+      gender: profile.value.gender || ''
     }
     isEditing.value = true
   }
 }
 
-const saveProfile = () => {
-  if (!validateProfile()) return
+const saveProfile = async () => {
+  if (!validateProfile()) {
+    showToast('Please check all required fields', 'error')
+    return
+  }
   
-  userStore.updateProfile(editForm.value)
-  isEditing.value = false
+  isSaving.value = true
+  try {
+    await userStore.updateProfile(editForm.value)
+    isEditing.value = false
+    showToast('Your profile has been updated', 'success')
+  } catch (error: any) {
+    showToast(
+      error.response?.data?.message || 'Unable to update profile. Please try again',
+      'error'
+    )
+  } finally {
+    isSaving.value = false
+  }
 }
 
 const cancelEdit = () => {
@@ -288,25 +309,24 @@ const removePayment = (id: string) => {
                     <div class="font-black text-lg text-gray-900">{{ formattedDateOfBirth || 'Not provided' }}</div>
                   </div>
                   <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Address</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.address || 'Not provided' }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">City</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.city || 'Not provided' }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Country</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.country || 'Not provided' }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Nationality</div>
-                    <div class="font-black text-lg text-gray-900">{{ profile.nationality || 'Not provided' }}</div>
+                    <div class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Gender</div>
+                    <div class="font-black text-lg text-gray-900">{{ profile.gender || 'Not provided' }}</div>
                   </div>
                 </div>
               </div>
 
-              <form v-else @submit.prevent="saveProfile" class="space-y-6">
+              <form v-else @submit.prevent="saveProfile" class="space-y-6 relative">
+                <!-- Loading Overlay -->
+                <div 
+                  v-if="isSaving" 
+                  class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg"
+                >
+                  <div class="text-center">
+                    <Loader2 class="w-12 h-12 mx-auto text-blue-600 animate-spin mb-3" />
+                    <p class="font-black text-gray-900 uppercase tracking-widest">Updating Profile...</p>
+                  </div>
+                </div>
+
                 <div class="grid md:grid-cols-2 gap-6">
                   <div>
                     <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Full Name</Label>
@@ -323,29 +343,37 @@ const removePayment = (id: string) => {
                     <Input v-model="editForm.dateOfBirth" type="date" class="h-12 border-2 border-gray-900 font-bold" />
                   </div>
                   <div>
-                    <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Address</Label>
-                    <Input v-model="editForm.address" class="h-12 border-2 border-gray-900 font-bold" />
-                  </div>
-                  <div>
-                    <Label class="text-xs font-black uppercase tracking-widest mb-2 block">City</Label>
-                    <Input v-model="editForm.city" class="h-12 border-2 border-gray-900 font-bold" />
-                  </div>
-                  <div>
-                    <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Country</Label>
-                    <Input v-model="editForm.country" class="h-12 border-2 border-gray-900 font-bold" />
-                  </div>
-                  <div>
-                    <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Nationality</Label>
-                    <Input v-model="editForm.nationality" class="h-12 border-2 border-gray-900 font-bold" />
+                    <Label class="text-xs font-black uppercase tracking-widest mb-2 block">Gender</Label>
+                    <select 
+                      v-model="editForm.gender" 
+                      class="w-full h-12 border-2 px-4 font-bold rounded-md"
+                      :class="profileErrors.gender ? 'border-red-600' : 'border-gray-900'"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                    <span v-if="profileErrors.gender" class="text-red-600 text-xs font-bold mt-1 block">{{ profileErrors.gender }}</span>
                   </div>
                 </div>
 
                 <div class="flex gap-4">
-                  <Button type="submit" class="bg-green-600 hover:bg-green-700 font-black uppercase">
-                    <Save class="w-4 h-4 mr-2" />
-                    Save Changes
+                  <Button 
+                    type="submit" 
+                    class="bg-green-600 hover:bg-green-700 font-black uppercase"
+                    :disabled="isSaving"
+                  >
+                    <Loader2 v-if="isSaving" class="w-4 h-4 mr-2 animate-spin" />
+                    <Save v-else class="w-4 h-4 mr-2" />
+                    {{ isSaving ? 'Saving...' : 'Save Changes' }}
                   </Button>
-                  <Button type="button" @click="cancelEdit" variant="outline" class="border-2 border-gray-900 font-black uppercase">
+                  <Button 
+                    type="button" 
+                    @click="cancelEdit" 
+                    variant="outline" 
+                    class="border-2 border-gray-900 font-black uppercase"
+                    :disabled="isSaving"
+                  >
                     <X class="w-4 h-4 mr-2" />
                     Cancel
                   </Button>
