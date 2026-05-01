@@ -693,7 +693,7 @@ const toggleSort = () => {
     <!-- Bundle Selector Modal -->
     <div
       v-if="showBundleModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3"
+      class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-3"
       @click.self="showBundleModal = false"
     >
       <div class="bg-white border-4 border-gray-900 max-w-6xl w-full max-h-[90vh] overflow-y-auto">

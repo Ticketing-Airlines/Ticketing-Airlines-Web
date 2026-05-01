@@ -97,11 +97,6 @@ const isRecommended = (bundleType: string) => {
 
 <template>
   <div class="space-y-6">
-    <div>
-      <h3 class="text-2xl font-black text-gray-900 mb-2">Choose Your Fare Bundle</h3>
-      <p class="text-gray-600 font-bold">Select the bundle that best fits your travel needs</p>
-    </div>
-
     <!-- Loading State -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-16">
       <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
