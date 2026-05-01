@@ -165,30 +165,30 @@ onMounted(() => {
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
 
               <!-- Hero Content -->
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-16 lg:pt-20">
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-20 lg:pt-24 xl:pt-32">
                 <!-- Badge -->
-                <div class="inline-flex items-center px-3 py-1.5 mb-3 bg-white/20 backdrop-blur-md border-2 border-white/30">
-                  <Plane class="w-3.5 h-3.5 mr-1.5 text-white" />
-                  <span class="font-black text-xs text-white uppercase tracking-widest">Discover Boracay</span>
+                <div class="inline-flex items-center px-4 py-2 lg:px-5 lg:py-2.5 mb-4 lg:mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
+                  <Plane class="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-white" />
+                  <span class="font-black text-xs lg:text-sm text-white uppercase tracking-widest">Discover Boracay</span>
                 </div>
 
                 <!-- Main Title -->
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight text-white uppercase tracking-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 lg:mb-4 leading-tight text-white uppercase tracking-tight">
                   Paradise<br/>
                   <span class="text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text">Awaits</span>
                 </h1>
 
                 <!-- Subtitle -->
-                <p class="text-xs sm:text-sm lg:text-base max-w-2xl mx-auto mb-4 font-bold text-white/90 leading-relaxed">
+                <p class="text-sm sm:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto mb-5 lg:mb-6 font-bold text-white/90 leading-relaxed">
                   Pristine white beaches and crystal clear waters.
                 </p>
 
                 <!-- CTA Button -->
-                <Button class="h-9 px-5 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <Button class="h-10 lg:h-12 px-6 lg:px-8 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs lg:text-sm uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
                   <span class="flex items-center gap-2">
-                    <Zap class="w-3.5 h-3.5" />
+                    <Zap class="w-4 h-4 lg:w-5 lg:h-5" />
                     Book Now
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
                   </span>
                 </Button>
               </div>
@@ -201,26 +201,26 @@ onMounted(() => {
               <img :src="cebuImg" alt="Cebu" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
 
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-16 lg:pt-20">
-                <div class="inline-flex items-center px-3 py-1.5 mb-3 bg-white/20 backdrop-blur-md border-2 border-white/30">
-                  <Plane class="w-3.5 h-3.5 mr-1.5 text-white" />
-                  <span class="font-black text-xs text-white uppercase tracking-widest">Explore Cebu</span>
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-20 lg:pt-24 xl:pt-32">
+                <div class="inline-flex items-center px-4 py-2 lg:px-5 lg:py-2.5 mb-4 lg:mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
+                  <Plane class="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-white" />
+                  <span class="font-black text-xs lg:text-sm text-white uppercase tracking-widest">Explore Cebu</span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight text-white uppercase tracking-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 lg:mb-4 leading-tight text-white uppercase tracking-tight">
                   Queen City<br/>
                   <span class="text-transparent bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text">of the South</span>
                 </h1>
 
-                <p class="text-xs sm:text-sm lg:text-base max-w-2xl mx-auto mb-4 font-bold text-white/90 leading-relaxed">
+                <p class="text-sm sm:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto mb-5 lg:mb-6 font-bold text-white/90 leading-relaxed">
                   Discover the rich history, vibrant culture, and natural wonders of Cebu.
                 </p>
 
-                <Button class="h-9 px-5 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <Button class="h-10 lg:h-12 px-6 lg:px-8 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs lg:text-sm uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
                   <span class="flex items-center gap-2">
-                    <Zap class="w-3.5 h-3.5" />
+                    <Zap class="w-4 h-4 lg:w-5 lg:h-5" />
                     Book Now
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
                   </span>
                 </Button>
               </div>
@@ -233,26 +233,26 @@ onMounted(() => {
               <img :src="palawanImg" alt="Palawan" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
 
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-16 lg:pt-20">
-                <div class="inline-flex items-center px-3 py-1.5 mb-3 bg-white/20 backdrop-blur-md border-2 border-white/30">
-                  <Plane class="w-3.5 h-3.5 mr-1.5 text-white" />
-                  <span class="font-black text-xs text-white uppercase tracking-widest">Discover Palawan</span>
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-20 lg:pt-24 xl:pt-32">
+                <div class="inline-flex items-center px-4 py-2 lg:px-5 lg:py-2.5 mb-4 lg:mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
+                  <Plane class="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-white" />
+                  <span class="font-black text-xs lg:text-sm text-white uppercase tracking-widest">Discover Palawan</span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight text-white uppercase tracking-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 lg:mb-4 leading-tight text-white uppercase tracking-tight">
                   The Last<br/>
                   <span class="text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text">Frontier</span>
                 </h1>
 
-                <p class="text-xs sm:text-sm lg:text-base max-w-2xl mx-auto mb-4 font-bold text-white/90 leading-relaxed">
+                <p class="text-sm sm:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto mb-5 lg:mb-6 font-bold text-white/90 leading-relaxed">
                   Breathtaking landscapes and pristine waters.
                 </p>
 
-                <Button class="h-9 px-5 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <Button class="h-10 lg:h-12 px-6 lg:px-8 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs lg:text-sm uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
                   <span class="flex items-center gap-2">
-                    <Zap class="w-3.5 h-3.5" />
+                    <Zap class="w-4 h-4 lg:w-5 lg:h-5" />
                     Book Now
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
                   </span>
                 </Button>
               </div>
@@ -265,26 +265,26 @@ onMounted(() => {
               <img :src="davaoImg" alt="Davao" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
 
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-16 lg:pt-20">
-                <div class="inline-flex items-center px-3 py-1.5 mb-3 bg-white/20 backdrop-blur-md border-2 border-white/30">
-                  <Plane class="w-3.5 h-3.5 mr-1.5 text-white" />
-                  <span class="font-black text-xs text-white uppercase tracking-widest">Explore Davao</span>
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-20 lg:pt-24 xl:pt-32">
+                <div class="inline-flex items-center px-4 py-2 lg:px-5 lg:py-2.5 mb-4 lg:mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
+                  <Plane class="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-white" />
+                  <span class="font-black text-xs lg:text-sm text-white uppercase tracking-widest">Explore Davao</span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight text-white uppercase tracking-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 lg:mb-4 leading-tight text-white uppercase tracking-tight">
                   Durian<br/>
                   <span class="text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text">Capital</span>
                 </h1>
 
-                <p class="text-xs sm:text-sm lg:text-base max-w-2xl mx-auto mb-4 font-bold text-white/90 leading-relaxed">
+                <p class="text-sm sm:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto mb-5 lg:mb-6 font-bold text-white/90 leading-relaxed">
                   Experience the natural wonders and cultural diversity of Davao City.
                 </p>
 
-                <Button class="h-9 px-5 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <Button class="h-10 lg:h-12 px-6 lg:px-8 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs lg:text-sm uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
                   <span class="flex items-center gap-2">
-                    <Zap class="w-3.5 h-3.5" />
+                    <Zap class="w-4 h-4 lg:w-5 lg:h-5" />
                     Book Now
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
                   </span>
                 </Button>
               </div>
@@ -297,26 +297,26 @@ onMounted(() => {
               <img :src="singaporeImg" alt="Singapore" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
 
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-16 lg:pt-20">
-                <div class="inline-flex items-center px-3 py-1.5 mb-3 bg-white/20 backdrop-blur-md border-2 border-white/30">
-                  <Plane class="w-3.5 h-3.5 mr-1.5 text-white" />
-                  <span class="font-black text-xs text-white uppercase tracking-widest">Visit Singapore</span>
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-20 lg:pt-24 xl:pt-32">
+                <div class="inline-flex items-center px-4 py-2 lg:px-5 lg:py-2.5 mb-4 lg:mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
+                  <Plane class="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-white" />
+                  <span class="font-black text-xs lg:text-sm text-white uppercase tracking-widest">Visit Singapore</span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight text-white uppercase tracking-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 lg:mb-4 leading-tight text-white uppercase tracking-tight">
                   Lion<br/>
                   <span class="text-transparent bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text">City</span>
                 </h1>
 
-                <p class="text-xs sm:text-sm lg:text-base max-w-2xl mx-auto mb-4 font-bold text-white/90 leading-relaxed">
+                <p class="text-sm sm:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto mb-5 lg:mb-6 font-bold text-white/90 leading-relaxed">
                   Discover the modern marvels and cultural heritage of Singapore.
                 </p>
 
-                <Button class="h-9 px-5 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <Button class="h-10 lg:h-12 px-6 lg:px-8 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs lg:text-sm uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
                   <span class="flex items-center gap-2">
-                    <Zap class="w-3.5 h-3.5" />
+                    <Zap class="w-4 h-4 lg:w-5 lg:h-5" />
                     Book Now
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
                   </span>
                 </Button>
               </div>
@@ -329,26 +329,26 @@ onMounted(() => {
               <img :src="hongkongImg" alt="Hong Kong" class="w-full h-full object-cover object-center" style="aspect-ratio: 16/9;" />
               <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80"></div>
 
-              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-16 lg:pt-20">
-                <div class="inline-flex items-center px-3 py-1.5 mb-3 bg-white/20 backdrop-blur-md border-2 border-white/30">
-                  <Plane class="w-3.5 h-3.5 mr-1.5 text-white" />
-                  <span class="font-black text-xs text-white uppercase tracking-widest">Explore Hong Kong</span>
+              <div class="absolute inset-0 flex flex-col items-center justify-start text-center px-4 pt-20 lg:pt-24 xl:pt-32">
+                <div class="inline-flex items-center px-4 py-2 lg:px-5 lg:py-2.5 mb-4 lg:mb-6 bg-white/20 backdrop-blur-md border-2 border-white/30">
+                  <Plane class="w-4 h-4 lg:w-5 lg:h-5 mr-2 text-white" />
+                  <span class="font-black text-xs lg:text-sm text-white uppercase tracking-widest">Explore Hong Kong</span>
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2 leading-tight text-white uppercase tracking-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 lg:mb-4 leading-tight text-white uppercase tracking-tight">
                   Pearl of<br/>
                   <span class="text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text">the Orient</span>
                 </h1>
 
-                <p class="text-xs sm:text-sm lg:text-base max-w-2xl mx-auto mb-4 font-bold text-white/90 leading-relaxed">
+                <p class="text-sm sm:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto mb-5 lg:mb-6 font-bold text-white/90 leading-relaxed">
                   Experience the vibrant city and stunning skyline of Hong Kong.
                 </p>
 
-                <Button class="h-9 px-5 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <Button class="h-10 lg:h-12 px-6 lg:px-8 bg-white text-gray-900 hover:bg-gray-100 font-black text-xs lg:text-sm uppercase tracking-wider shadow-lg transform hover:-translate-y-1 transition-all duration-300">
                   <span class="flex items-center gap-2">
-                    <Zap class="w-3.5 h-3.5" />
+                    <Zap class="w-4 h-4 lg:w-5 lg:h-5" />
                     Book Now
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
                   </span>
                 </Button>
               </div>
@@ -357,22 +357,22 @@ onMounted(() => {
         </CarouselContent>
 
         <!-- Carousel Controls -->
-        <CarouselPrevious class="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-16 h-16" />
-        <CarouselNext class="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-16 h-16" />
+        <CarouselPrevious class="absolute left-4 lg:left-8 xl:left-12 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-12 h-12 lg:w-16 lg:h-16" />
+        <CarouselNext class="absolute right-4 lg:right-8 xl:right-12 top-1/2 -translate-y-1/2 z-20 bg-transparent border-none hover:bg-transparent text-white/50 hover:text-white w-12 h-12 lg:w-16 lg:h-16" />
       </Carousel>
 
       <!-- Search Form Overlay -->
       <div class="absolute bottom-0 left-0 right-0 z-10 pointer-events-auto">
-        <div class="w-full max-w-4xl mx-auto px-3 pb-3">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8">
           <!-- Flight Search Form -->
           <Card class="bg-white shadow-2xl border-4 border-gray-900 overflow-hidden">
-            <CardContent class="p-3">
+            <CardContent class="p-4 lg:p-6">
               <!-- Trip Type Buttons -->
-              <div class="flex flex-wrap gap-2 mb-3">
+              <div class="flex flex-wrap gap-2 lg:gap-3 mb-4 lg:mb-6">
                 <button
                   @click="selectTripType('round-trip')"
                   :class="[
-                    'px-3 py-1.5 font-black text-xs uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
+                    'px-4 lg:px-6 py-2 lg:py-2.5 font-black text-xs lg:text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
                     searchParams.tripType === 'round-trip'
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
@@ -383,7 +383,7 @@ onMounted(() => {
                 <button
                   @click="selectTripType('one-way')"
                   :class="[
-                    'px-3 py-1.5 font-black text-xs uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
+                    'px-4 lg:px-6 py-2 lg:py-2.5 font-black text-xs lg:text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
                     searchParams.tripType === 'one-way'
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
@@ -394,7 +394,7 @@ onMounted(() => {
                 <button
                   @click="selectTripType('multi-city')"
                   :class="[
-                    'px-3 py-1.5 font-black text-xs uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
+                    'px-4 lg:px-6 py-2 lg:py-2.5 font-black text-xs lg:text-sm uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
                     searchParams.tripType === 'multi-city'
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-900 border-gray-900 hover:bg-gray-50'
@@ -405,14 +405,14 @@ onMounted(() => {
               </div>
 
               <!-- Search Form Grid -->
-              <div :class="`grid gap-2 mb-3 ${searchParams.tripType === 'round-trip' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`">
+              <div :class="`grid gap-3 lg:gap-4 mb-4 lg:mb-6 ${searchParams.tripType === 'round-trip' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`">
                 <!-- From -->
                 <div class="relative">
-                  <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">From</label>
+                  <label class="block text-xs lg:text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">From</label>
                   <Select v-model="searchParams.from">
-                    <SelectTrigger class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs">
-                      <div class="flex items-center gap-1.5">
-                        <MapPin class="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
+                    <SelectTrigger class="h-12 lg:h-14 px-3 lg:px-4 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-sm lg:text-base">
+                      <div class="flex items-center gap-2">
+                        <MapPin class="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
                         <SelectValue :placeholder="fromAirport ? `${fromAirport.city} (${fromAirport.iataCode})` : 'Select departure city'" />
                       </div>
                     </SelectTrigger>
@@ -428,11 +428,11 @@ onMounted(() => {
 
                 <!-- To -->
                 <div class="relative">
-                  <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">To</label>
+                  <label class="block text-xs lg:text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">To</label>
                   <Select v-model="searchParams.to">
-                    <SelectTrigger class="h-10 px-2.5 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-xs">
-                      <div class="flex items-center gap-1.5">
-                        <MapPin class="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
+                    <SelectTrigger class="h-12 lg:h-14 px-3 lg:px-4 border-4 border-gray-900 rounded-none focus:ring-0 focus:border-blue-600 text-gray-900 font-bold text-sm lg:text-base">
+                      <div class="flex items-center gap-2">
+                        <MapPin class="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" />
                         <SelectValue :placeholder="toAirport ? `${toAirport.city} (${toAirport.iataCode})` : 'Select destination city'" />
                       </div>
                     </SelectTrigger>
@@ -448,15 +448,15 @@ onMounted(() => {
 
                 <!-- Departure Date -->
                 <div>
-                  <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Departure</label>
+                  <label class="block text-xs lg:text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Departure</label>
                   <Popover>
                     <PopoverTrigger as-child>
                       <Button
                         variant="outline"
-                        class="w-full h-10 justify-start text-left border-4 border-gray-900 rounded-none hover:border-blue-600 focus:ring-0 focus:border-blue-600 text-gray-900 font-bold px-2.5 text-xs"
+                        class="w-full h-12 lg:h-14 justify-start text-left border-4 border-gray-900 rounded-none hover:border-blue-600 focus:ring-0 focus:border-blue-600 text-gray-900 font-bold px-3 lg:px-4 text-sm lg:text-base"
                       >
-                        <CalendarIcon class="mr-1.5 h-3.5 w-3.5 text-gray-600 flex-shrink-0" />
-                        <span class="text-xs truncate">{{ departureDateValue ? formatDate(departureDateValue) : "Apr 22, 2026" }}</span>
+                        <CalendarIcon class="mr-2 h-4 w-4 lg:h-5 lg:w-5 text-gray-600 flex-shrink-0" />
+                        <span class="truncate">{{ departureDateValue ? formatDate(departureDateValue) : "Apr 22, 2026" }}</span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent class="w-auto p-0 border-4 border-gray-900 rounded-none">
@@ -467,15 +467,15 @@ onMounted(() => {
 
                 <!-- Return Date -->
                 <div v-if="searchParams.tripType === 'round-trip'">
-                  <label class="block text-xs font-black text-gray-900 mb-1.5 uppercase tracking-widest">Return</label>
+                  <label class="block text-xs lg:text-sm font-black text-gray-900 mb-2 uppercase tracking-widest">Return</label>
                   <Popover>
                     <PopoverTrigger as-child>
                       <Button
                         variant="outline"
-                        class="w-full h-10 justify-start text-left border-4 border-gray-900 rounded-none hover:border-blue-600 focus:ring-0 focus:border-blue-600 text-gray-900 font-bold px-2.5 text-xs"
+                        class="w-full h-12 lg:h-14 justify-start text-left border-4 border-gray-900 rounded-none hover:border-blue-600 focus:ring-0 focus:border-blue-600 text-gray-900 font-bold px-3 lg:px-4 text-sm lg:text-base"
                       >
-                        <CalendarIcon class="mr-1.5 h-3.5 w-3.5 text-gray-600 flex-shrink-0" />
-                        <span class="text-xs truncate">{{ returnDateValue ? formatDate(returnDateValue) : "Return date" }}</span>
+                        <CalendarIcon class="mr-2 h-4 w-4 lg:h-5 lg:w-5 text-gray-600 flex-shrink-0" />
+                        <span class="truncate">{{ returnDateValue ? formatDate(returnDateValue) : "Return date" }}</span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent class="w-auto p-0 border-4 border-gray-900 rounded-none">
@@ -488,11 +488,11 @@ onMounted(() => {
               <!-- Search Button -->
               <Button
                 @click="searchFlights"
-                class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2"
+                class="w-full h-12 lg:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-black text-sm lg:text-base uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2"
               >
-                <Search class="w-4 h-4" />
+                <Search class="w-4 h-4 lg:w-5 lg:h-5" />
                 <span>Search Flights</span>
-                <ArrowRight class="w-3.5 h-3.5" />
+                <ArrowRight class="w-4 h-4 lg:w-5 lg:h-5" />
               </Button>
             </CardContent>
           </Card>
