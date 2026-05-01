@@ -37,7 +37,7 @@ export interface RegisterRequest {
 
 // Response from UsersController register
 export interface RegisterResponse {
-  id: number
+  id: string
   message: string
 }
 
@@ -75,10 +75,14 @@ export interface AuthResult {
 }
 
 export function mapAuthLoginToUser(auth: AuthLoginResponse): User {
+  const nameFromParts = [auth.firstName, auth.middleName, auth.lastName]
+    .filter(n => n && n.trim() !== '')
+    .join(' ')
+  
   return {
-    userId: auth.userId,
+    userId: String(auth.userId),
     email: auth.email,
-    name: auth.name,
+    name: auth.name || nameFromParts || auth.email,
     createdAt: new Date().toISOString(),
   }
 }

@@ -15,12 +15,21 @@ async function login(email: string, password: string): Promise<AuthResult> {
   const response = await api.post<AuthLoginResponse>('/api/auth/login', request)
   const auth = response.data
 
+  console.log('Login response from backend:', auth)
+
   const token = auth.sessionToken ?? ''
   const role = auth.role ?? 'Customer'
+  const userId = String(auth.userId)
+
+  if (!userId || userId === 'undefined' || userId === 'null') {
+    throw new Error('Invalid userId received from server')
+  }
 
   localStorage.setItem('authToken', token)
   localStorage.setItem('userRole', role)
-  localStorage.setItem('userId', String(auth.userId))
+  localStorage.setItem('userId', userId)
+
+  console.log('Stored in localStorage:', { userId, token: token.substring(0, 10) + '...', role })
 
   return {
     user: mapAuthLoginToUser(auth),
@@ -37,7 +46,7 @@ async function register(data: {
   password: string
   dateOfBirth: string
   gender?: string
-}): Promise<{ userId: number; message: string }> {
+}): Promise<{ userId: string; message: string }> {
   const request: RegisterRequest = {
     firstName: data.firstName,
     middleName: null,

@@ -67,8 +67,10 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('rememberedEmail')
       }
 
+      console.log('Login successful:', { userId: result.user.userId, token: result.token })
       return true
     } catch (error: unknown) {
+      console.error('Login error:', error)
       const apiMessage = getApiErrorMessage(error)
 
       if (ENABLE_MOCK_FALLBACK && isNetworkError(error)) {
@@ -82,6 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
           }
           isAuthenticated.value = true
           localStorage.setItem('authToken', `mock-token-${foundUser.userId}`)
+          localStorage.setItem('userId', foundUser.userId)
           successMessage.value = `Login successful! Welcome back, ${foundUser.name}.`
           if (rememberMe.value) {
             localStorage.setItem('rememberedEmail', email)
@@ -109,7 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
 
     try {
-      await authService.register({
+      const result = await authService.register({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -118,9 +121,11 @@ export const useAuthStore = defineStore('auth', () => {
         dateOfBirth: data.dateOfBirth,
       })
 
+      console.log('Registration successful:', result)
       successMessage.value = 'Account created successfully! Please sign in.'
       return true
     } catch (error: unknown) {
+      console.error('Registration error:', error)
       const apiMessage = getApiErrorMessage(error)
 
       if (ENABLE_MOCK_FALLBACK && isNetworkError(error)) {
@@ -138,6 +143,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = newUser
         isAuthenticated.value = true
         localStorage.setItem('authToken', `mock-token-${newUser.userId}`)
+        localStorage.setItem('userId', newUser.userId)
         successMessage.value = `Account created successfully! Welcome, ${data.firstName}!`
         return true
       }
@@ -188,23 +194,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function checkAuthStatus() {
     const token = localStorage.getItem('authToken')
-    if (!token) return
-
     const userId = localStorage.getItem('userId')
-    if (userId && !token.startsWith('mock-token-')) {
-      try {
-        const result = await authService.getCurrentUser(userId)
-        if (result) {
-          user.value = result.user
-          isAuthenticated.value = true
-          return
-        }
-      } catch {
-        // Fall through to token parsing
-      }
+    
+    console.log('checkAuthStatus called:', { token: token?.substring(0, 20) + '...', userId })
+
+    if (!token) {
+      console.log('No token found, user not authenticated')
+      isAuthenticated.value = false
+      user.value = null
+      return
     }
 
-    // Fallback: parse mock tokens
+    // Handle mock tokens
     if (token.startsWith('mock-token-')) {
       const mockUserId = token.replace('mock-token-', '')
       const foundUser = users.find(u => u.userId === mockUserId)
@@ -216,12 +217,55 @@ export const useAuthStore = defineStore('auth', () => {
           createdAt: foundUser.createdAt ?? new Date().toISOString(),
         }
         isAuthenticated.value = true
+        console.log('Mock user authenticated:', foundUser.name)
         return
       }
+      // Invalid mock token
+      console.log('Invalid mock token')
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userId')
+      isAuthenticated.value = false
+      user.value = null
+      return
     }
 
-    // Invalid token
-    localStorage.removeItem('authToken')
+    // Handle real backend tokens
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      // Token exists but no userId - clear everything
+      console.log('Token exists but userId is invalid:', userId)
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userRole')
+      localStorage.removeItem('userId')
+      isAuthenticated.value = false
+      user.value = null
+      return
+    }
+
+    try {
+      console.log('Fetching user data for userId:', userId)
+      const result = await authService.getCurrentUser(userId)
+      if (result) {
+        user.value = result.user
+        isAuthenticated.value = true
+        console.log('User authenticated:', result.user.name)
+      } else {
+        // Failed to get user - clear auth
+        console.log('Failed to get user data, clearing auth')
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('userId')
+        localStorage.removeItem('userRole')
+        isAuthenticated.value = false
+        user.value = null
+      }
+    } catch (error) {
+      console.error('Failed to check auth status:', error)
+      // On error, clear auth state
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('userRole')
+      isAuthenticated.value = false
+      user.value = null
+    }
   }
 
   function loadRememberedEmail() {

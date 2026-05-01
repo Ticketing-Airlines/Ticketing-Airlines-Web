@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plane, Mail, Lock, Eye, EyeOff, ArrowRight, Zap, CheckCircle, Shield } from 'lucide-vue-next'
+import { Plane, Mail, Lock, Eye, EyeOff, ArrowRight, Zap } from 'lucide-vue-next'
 import NavigationBar from '@/components/layout/NavigationBar.vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useToast } from '@/composables/useToast'
 
 const isSignUp = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
+const { success, error, warning } = useToast()
 
 // Login form fields
 const loginEmail = ref('')
@@ -104,9 +106,14 @@ async function handleLoginSubmit() {
   if (!validateLogin()) return
   authStore.clearErrors()
   authStore.clearMessages()
-  const success = await authStore.login(loginEmail.value, loginPassword.value)
-  if (success) {
-    router.push('/')
+  const loginSuccess = await authStore.login(loginEmail.value, loginPassword.value)
+  if (loginSuccess) {
+    success(`Welcome back, ${authStore.user?.name || 'User'}! Login successful.`)
+    setTimeout(() => {
+      router.push('/')
+    }, 500)
+  } else {
+    error(authStore.errorMessage || 'Login failed. Please check your credentials.')
   }
 }
 
@@ -114,7 +121,7 @@ async function handleSignUpSubmit() {
   if (!validateSignUp()) return
   authStore.clearErrors()
   authStore.clearMessages()
-  const success = await authStore.signUp({
+  const signUpSuccess = await authStore.signUp({
     firstName: signUpFirstName.value,
     lastName: signUpLastName.value,
     email: signUpEmail.value,
@@ -122,21 +129,35 @@ async function handleSignUpSubmit() {
     password: signUpPassword.value,
     dateOfBirth: signUpDateOfBirth.value,
   })
-  if (success) {
-    router.push('/')
+  if (signUpSuccess) {
+    success(`Account created successfully! Welcome, ${signUpFirstName.value}!`)
+    isSignUp.value = false
+    loginEmail.value = signUpEmail.value
+    signUpFirstName.value = ''
+    signUpLastName.value = ''
+    signUpEmail.value = ''
+    signUpPhone.value = ''
+    signUpPassword.value = ''
+    signUpConfirmPassword.value = ''
+    signUpDateOfBirth.value = ''
+  } else {
+    error(authStore.errorMessage || 'Registration failed. Please try again.')
   }
 }
 
 function handleForgotPassword() {
   if (!loginEmail.value) {
     errors.value.email = 'Please enter your email address first'
+    warning('Please enter your email address first')
     return
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginEmail.value)) {
     errors.value.email = 'Please enter a valid email address'
+    warning('Please enter a valid email address')
     return
   }
   authStore.forgotPassword(loginEmail.value)
+  success('Password reset instructions will be sent to your email.')
 }
 </script>
 
@@ -192,20 +213,6 @@ function handleForgotPassword() {
                     <div class="flex flex-col items-center gap-3">
                       <div class="w-8 h-8 border-[3px] border-gray-900 border-t-blue-600 rounded-full animate-spin"></div>
                       <span class="text-xs font-black uppercase tracking-widest text-gray-900">{{ isSignUp ? 'Creating Account...' : 'Signing In...' }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Success/Error Messages -->
-                  <div v-if="authStore.successMessage" class="mb-4 p-3 bg-green-50 border-2 border-green-600">
-                    <div class="flex items-center gap-2">
-                      <CheckCircle class="w-4 h-4 text-green-600" />
-                      <p class="text-green-700 text-xs font-black uppercase tracking-wide">{{ authStore.successMessage }}</p>
-                    </div>
-                  </div>
-                  <div v-if="authStore.errorMessage" class="mb-4 p-3 bg-red-50 border-2 border-red-600">
-                    <div class="flex items-center gap-2">
-                      <Shield class="w-4 h-4 text-red-600" />
-                      <p class="text-red-700 text-xs font-black uppercase tracking-wide">{{ authStore.errorMessage }}</p>
                     </div>
                   </div>
 
