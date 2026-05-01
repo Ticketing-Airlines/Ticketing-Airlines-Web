@@ -139,14 +139,15 @@ const closeMobileMenu = () => {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent class="bg-white border-4 border-gray-900 shadow-2xl rounded-none p-6 min-w-[280px] z-50">
                     <div class="space-y-3">
-                      <NavigationMenuLink as-child>
+                      <!-- Check In - Temporarily disabled -->
+                      <!-- <NavigationMenuLink as-child>
                         <router-link to="/check-in" class="block px-4 py-3 text-gray-900 hover:bg-gray-900 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-green-600">
                           <div class="flex items-center justify-between">
                             <span>Check In</span>
                             <ArrowRight class="w-4 h-4" />
                           </div>
                         </router-link>
-                      </NavigationMenuLink>
+                      </NavigationMenuLink> -->
                       <NavigationMenuLink as-child>
                         <router-link to="/manage-booking" class="block px-4 py-3 text-gray-900 hover:bg-gray-900 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-green-600">
                           <div class="flex items-center justify-between">
@@ -340,12 +341,13 @@ const closeMobileMenu = () => {
           <div class="border-l-4 border-green-600 pl-6">
             <h3 class="text-lg font-black text-gray-900 uppercase tracking-wider mb-4">Manage</h3>
             <div class="space-y-3">
-              <router-link to="/check-in" @click="closeMobileMenu" class="block px-4 py-3 text-gray-700 hover:bg-gray-900 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-green-600">
+              <!-- Check In - Temporarily disabled -->
+              <!-- <router-link to="/check-in" @click="closeMobileMenu" class="block px-4 py-3 text-gray-700 hover:bg-gray-900 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-green-600">
                 <div class="flex items-center justify-between">
                   <span>Check In</span>
                   <ArrowRight class="w-4 h-4" />
                 </div>
-              </router-link>
+              </router-link> -->
               <router-link to="/manage-booking" @click="closeMobileMenu" class="block px-4 py-3 text-gray-700 hover:bg-gray-900 hover:text-white font-bold uppercase tracking-wide transition-all duration-300 border-l-4 border-transparent hover:border-green-600">
                 <div class="flex items-center justify-between">
                   <span>Manage Booking</span>
