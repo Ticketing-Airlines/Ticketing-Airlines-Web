@@ -69,7 +69,7 @@ const { isValid: isFormValid, errors } = useValidation(searchParams.value, {
   departureDate: [rules.required('Departure date is required')],
   // Conditional validation for return date
   returnDate: [
-    (value: any) => {
+    (value: Date | null) => {
       if (searchParams.value.tripType === 'round-trip' && !value) {
         return 'Return date is required'
       }
@@ -121,7 +121,7 @@ const filteredResults = computed(() => {
 })
 
 // Initialize search from route params
-onMounted(() => {
+onMounted(async () => {
   const { from, to, departure, return: returnDate, passengers, type } = route.query
 
   if (from && to && departure) {
@@ -136,9 +136,12 @@ onMounted(() => {
 
     flightStore.setSearchParams(params)
 
-    // Auto-search if we have the required params
-    if (isFormValid.value) {
-      flightStore.searchFlights()
+    // Auto-search - always trigger if we have URL params
+    // The backend will validate and return appropriate errors if needed
+    try {
+      await flightStore.searchFlights()
+    } catch (error) {
+      console.error('Auto-search failed:', error)
     }
   }
 })
@@ -223,9 +226,9 @@ const toggleSort = () => {
         <!-- Trip Type Selection -->
         <div class="flex flex-wrap gap-2 mb-3">
           <button
-            v-for="type in ['round-trip', 'one-way']"
+            v-for="type in (['round-trip', 'one-way'] as const)"
             :key="type"
-            @click="searchParams.tripType = type as any"
+            @click="searchParams.tripType = type"
             :class="[
               'px-3 py-1.5 font-black text-xs uppercase tracking-wider border-4 transition-all duration-300 whitespace-nowrap',
               searchParams.tripType === type
@@ -249,7 +252,14 @@ const toggleSort = () => {
               >
                 <div class="flex items-center gap-1.5">
                   <MapPin class="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
-                  <SelectValue placeholder="Select departure city" />
+                  <SelectValue>
+                    <template v-if="searchParams.from">
+                      {{ getAirportByCode(searchParams.from)?.city || searchParams.from }} ({{ searchParams.from }})
+                    </template>
+                    <template v-else>
+                      Select departure city
+                    </template>
+                  </SelectValue>
                 </div>
               </SelectTrigger>
               <SelectContent class="border-4 border-gray-900 rounded-none">
@@ -273,7 +283,14 @@ const toggleSort = () => {
               >
                 <div class="flex items-center gap-1.5">
                   <MapPin class="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
-                  <SelectValue placeholder="Select destination city" />
+                  <SelectValue>
+                    <template v-if="searchParams.to">
+                      {{ getAirportByCode(searchParams.to)?.city || searchParams.to }} ({{ searchParams.to }})
+                    </template>
+                    <template v-else>
+                      Select destination city
+                    </template>
+                  </SelectValue>
                 </div>
               </SelectTrigger>
               <SelectContent class="border-4 border-gray-900 rounded-none">
